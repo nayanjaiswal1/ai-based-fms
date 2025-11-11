@@ -4,13 +4,14 @@ import { useCallback, useMemo } from 'react';
 /**
  * Generic hook for managing filters through URL search params
  * Makes filters bookmarkable and shareable across all pages
+ * Uses standard react-router-dom useSearchParams hook
  */
-export function useUrlFilters<T extends Record<string, any>>() {
+export function useUrlFilters<T extends Record<string, unknown>>() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Parse all URL params into typed filters object
   const filters = useMemo((): Partial<T> => {
-    const params: Record<string, any> = {};
+    const params: Record<string, unknown> = {};
 
     searchParams.forEach((value, key) => {
       // Try to parse JSON for arrays/objects

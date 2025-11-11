@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
-import { useForm, UseFormReturn, FieldValues, DefaultValues } from 'react-hook-form';
+import { useForm, UseFormReturn, FieldValues, DefaultValues, Path, FieldError } from 'react-hook-form';
 
-export interface FormField<T extends FieldValues = any> {
-  name: keyof T;
+export interface FormField<T extends FieldValues = FieldValues> {
+  name: Path<T>;
   label: string;
   type: 'text' | 'email' | 'password' | 'number' | 'date' | 'select' | 'textarea' | 'color';
   placeholder?: string;
@@ -52,8 +52,8 @@ export default function Form<T extends FieldValues>({
     const baseClasses =
       'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
 
-    const fieldName = String(field.name);
-    const error = errors[field.name];
+    const fieldName = field.name as string;
+    const error = errors[field.name] as FieldError | undefined;
 
     return (
       <div key={fieldName}>

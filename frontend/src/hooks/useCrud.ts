@@ -1,19 +1,24 @@
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
-import { AxiosResponse } from 'axios';
+
+interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  success?: boolean;
+}
 
 interface CrudApi<T> {
-  getAll: (params?: any) => Promise<AxiosResponse<T[]>>;
-  getOne: (id: string) => Promise<AxiosResponse<T>>;
-  create: (data: Partial<T>) => Promise<AxiosResponse<T>>;
-  update: (id: string, data: Partial<T>) => Promise<AxiosResponse<T>>;
-  delete: (id: string) => Promise<AxiosResponse<void>>;
+  getAll: (params?: Record<string, unknown>) => Promise<ApiResponse<T[]>>;
+  getOne?: (id: string) => Promise<ApiResponse<T>>;
+  create: (data: Partial<T>) => Promise<ApiResponse<T>>;
+  update: (id: string, data: Partial<T>) => Promise<ApiResponse<T>>;
+  delete: (id: string) => Promise<ApiResponse<void>>;
 }
 
 interface UseCrudOptions<T> {
   queryKey: string;
   api: CrudApi<T>;
-  queryParams?: any;
-  queryOptions?: Omit<UseQueryOptions<AxiosResponse<T[]>>, 'queryKey' | 'queryFn'>;
+  queryParams?: Record<string, unknown>;
+  queryOptions?: Omit<UseQueryOptions<ApiResponse<T[]>>, 'queryKey' | 'queryFn'>;
 }
 
 /**

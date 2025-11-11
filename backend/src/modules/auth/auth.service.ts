@@ -13,6 +13,7 @@ import { User } from '@database/entities';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import axios from 'axios';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -166,10 +167,36 @@ export class AuthService {
         user: this.sanitizeUser(user),
         ...tokens,
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(
         error.response?.data?.error_description || 'Google OAuth failed'
       );
+    }
+  }
+
+  async handleGoogleCallback(code: string, res: Response) {
+    try {
+      const result = await this.googleOAuth(code);
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+
+      // Redirect to frontend with success message
+      const redirectUrl = new URL(frontendUrl);
+      redirectUrl.pathname = '/auth/callback/google';
+      redirectUrl.searchParams.set('success', 'true');
+      redirectUrl.searchParams.set('accessToken', result.accessToken);
+      redirectUrl.searchParams.set('refreshToken', result.refreshToken);
+
+      return res.redirect(redirectUrl.toString());
+    } catch (error: any) {
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+
+      // Redirect to frontend with error
+      const redirectUrl = new URL(frontendUrl);
+      redirectUrl.pathname = '/auth/callback/google';
+      redirectUrl.searchParams.set('success', 'false');
+      redirectUrl.searchParams.set('error', error.message || 'Authentication failed');
+
+      return res.redirect(redirectUrl.toString());
     }
   }
 

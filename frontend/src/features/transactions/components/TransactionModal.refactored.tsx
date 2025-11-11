@@ -6,8 +6,19 @@ import Modal from '@components/ui/Modal';
 import Form, { FormField } from '@components/ui/Form';
 import { format } from 'date-fns';
 
+interface Transaction {
+  id: string;
+  type: 'income' | 'expense';
+  amount: number;
+  description: string;
+  date: string;
+  accountId: string;
+  categoryId?: string;
+  notes?: string;
+}
+
 interface TransactionModalProps {
-  transaction?: any;
+  transaction?: Transaction;
   onClose: () => void;
 }
 
@@ -23,9 +34,9 @@ interface TransactionFormData {
 }
 
 export default function TransactionModal({ transaction, onClose }: TransactionModalProps) {
-  const { create, update, isMutating } = useCrud({
+  const { create, update, isMutating } = useCrud<Transaction>({
     queryKey: 'transactions',
-    api: transactionsApi as any,
+    api: transactionsApi,
   });
 
   // Fetch dropdown options
@@ -80,13 +91,13 @@ export default function TransactionModal({ transaction, onClose }: TransactionMo
       label: 'Account',
       type: 'select',
       required: true,
-      options: accounts?.data?.map((a: any) => ({ value: a.id, label: a.name })) || [],
+      options: accounts?.data?.map((a) => ({ value: a.id, label: a.name })) || [],
     },
     {
       name: 'categoryId',
       label: 'Category',
       type: 'select',
-      options: categories?.data?.map((c: any) => ({ value: c.id, label: c.name })) || [],
+      options: categories?.data?.map((c) => ({ value: c.id, label: c.name })) || [],
     },
     {
       name: 'notes',
