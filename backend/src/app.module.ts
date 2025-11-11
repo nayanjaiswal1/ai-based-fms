@@ -27,6 +27,7 @@ import { BudgetsModule } from '@modules/budgets/budgets.module';
 import { GroupsModule } from '@modules/groups/groups.module';
 import { InvestmentsModule } from '@modules/investments/investments.module';
 import { LendBorrowModule } from '@modules/lend-borrow/lend-borrow.module';
+import { NotificationsModule } from '@modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { LendBorrowModule } from '@modules/lend-borrow/lend-borrow.module';
     GroupsModule,
     InvestmentsModule,
     LendBorrowModule,
+    NotificationsModule,
   ],
   providers: [
     {
