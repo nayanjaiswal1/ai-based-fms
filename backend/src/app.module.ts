@@ -24,6 +24,9 @@ import { TransactionsModule } from '@modules/transactions/transactions.module';
 import { CategoriesModule } from '@modules/categories/categories.module';
 import { TagsModule } from '@modules/tags/tags.module';
 import { BudgetsModule } from '@modules/budgets/budgets.module';
+import { GroupsModule } from '@modules/groups/groups.module';
+import { InvestmentsModule } from '@modules/investments/investments.module';
+import { LendBorrowModule } from '@modules/lend-borrow/lend-borrow.module';
 
 @Module({
   imports: [
@@ -74,6 +77,9 @@ import { BudgetsModule } from '@modules/budgets/budgets.module';
     CategoriesModule,
     TagsModule,
     BudgetsModule,
+    GroupsModule,
+    InvestmentsModule,
+    LendBorrowModule,
   ],
   providers: [
     {
