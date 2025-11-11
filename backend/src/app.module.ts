@@ -21,6 +21,8 @@ import { RolesGuard } from '@common/guards/roles.guard';
 import { AuthModule } from '@modules/auth/auth.module';
 import { AccountsModule } from '@modules/accounts/accounts.module';
 import { TransactionsModule } from '@modules/transactions/transactions.module';
+import { CategoriesModule } from '@modules/categories/categories.module';
+import { TagsModule } from '@modules/tags/tags.module';
 
 @Module({
   imports: [
@@ -68,6 +70,8 @@ import { TransactionsModule } from '@modules/transactions/transactions.module';
     AuthModule,
     AccountsModule,
     TransactionsModule,
+    CategoriesModule,
+    TagsModule,
   ],
   providers: [
     {
