@@ -30,6 +30,7 @@ import { LendBorrowModule } from '@modules/lend-borrow/lend-borrow.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
 import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { AiModule } from '@modules/ai/ai.module';
+import { ImportModule } from '@modules/import/import.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { AiModule } from '@modules/ai/ai.module';
     NotificationsModule,
     AnalyticsModule,
     AiModule,
+    ImportModule,
   ],
   providers: [
     {
