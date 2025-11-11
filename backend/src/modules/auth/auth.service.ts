@@ -12,6 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '@database/entities';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -110,6 +111,66 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async googleOAuth(code: string) {
+    try {
+      // Exchange code for access token
+      const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+        code,
+        client_id: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+        client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET'),
+        redirect_uri: this.configService.get<string>('GOOGLE_REDIRECT_URI'),
+        grant_type: 'authorization_code',
+      });
+
+      const { access_token } = tokenResponse.data;
+
+      // Get user info from Google
+      const userInfoResponse = await axios.get(
+        'https://www.googleapis.com/oauth2/v2/userinfo',
+        {
+          headers: { Authorization: `Bearer ${access_token}` },
+        }
+      );
+
+      const { email, name, given_name, family_name, picture } = userInfoResponse.data;
+
+      // Check if user exists
+      let user = await this.userRepository.findOne({ where: { email } });
+
+      if (!user) {
+        // Register new user
+        user = this.userRepository.create({
+          email,
+          firstName: given_name || name?.split(' ')[0] || '',
+          lastName: family_name || name?.split(' ').slice(1).join(' ') || '',
+          password: await bcrypt.hash(Math.random().toString(36), 10), // Random password for OAuth users
+          avatar: picture,
+          emailVerified: true, // Google-verified email
+        });
+
+        await this.userRepository.save(user);
+      } else {
+        // Update last login
+        user.lastLoginAt = new Date();
+        if (picture && !user.avatar) {
+          user.avatar = picture;
+        }
+        await this.userRepository.save(user);
+      }
+
+      const tokens = await this.generateTokens(user);
+
+      return {
+        user: this.sanitizeUser(user),
+        ...tokens,
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        error.response?.data?.error_description || 'Google OAuth failed'
+      );
+    }
   }
 
   private async generateTokens(user: User) {

@@ -3,6 +3,7 @@ import { useAuthStore } from '@stores/authStore';
 import Layout from '@components/layout/Layout';
 import LoginPage from '@features/auth/pages/LoginPage';
 import RegisterPage from '@features/auth/pages/RegisterPage';
+import GoogleCallbackPage from '@features/auth/pages/GoogleCallbackPage';
 import DashboardPage from '@features/dashboard/pages/DashboardPage';
 import TransactionsPage from '@features/transactions/pages/TransactionsPage';
 import AccountsPage from '@features/accounts/pages/AccountsPage';
@@ -25,6 +26,7 @@ function App() {
       {/* Public routes */}
       <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
       <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
+      <Route path="/auth/callback/google" element={<GoogleCallbackPage />} />
 
       {/* Protected routes */}
       <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
