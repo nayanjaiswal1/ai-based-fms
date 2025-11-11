@@ -1,0 +1,126 @@
+import { useForm, FieldValues } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FormConfig } from '../../lib/form/types';
+import { FormField } from './FormField';
+import { Loader2 } from 'lucide-react';
+
+interface ConfigurableFormProps<TFieldValues extends FieldValues> {
+  config: FormConfig<TFieldValues>;
+  onSubmit: (data: TFieldValues) => Promise<void> | void;
+  isLoading?: boolean;
+  submitLabel?: string;
+  cancelLabel?: string;
+  onCancel?: () => void;
+  className?: string;
+}
+
+export function ConfigurableForm<TFieldValues extends FieldValues>({
+  config,
+  onSubmit,
+  isLoading = false,
+  submitLabel = 'Submit',
+  cancelLabel = 'Cancel',
+  onCancel,
+  className = '',
+}: ConfigurableFormProps<TFieldValues>) {
+  const form = useForm<TFieldValues>({
+    resolver: zodResolver(config.schema),
+    defaultValues: config.defaultValues as any,
+    mode: 'onChange',
+  });
+
+  const {
+    handleSubmit,
+    formState: { isDirty },
+    watch,
+  } = form;
+
+  const onFormSubmit = handleSubmit(async (data) => {
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      console.error('Form submission error:', error);
+    }
+  });
+
+  return (
+    <form onSubmit={onFormSubmit} className={`space-y-6 ${className}`}>
+      {config.sections.map((section, sectionIndex) => {
+        // Check section condition
+        if (section.condition) {
+          const values = watch() as Partial<TFieldValues>;
+          if (!section.condition(values)) {
+            return null;
+          }
+        }
+
+        return (
+          <div key={sectionIndex} className="space-y-4">
+            {section.title && (
+              <div className="border-b border-gray-200 pb-2">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {section.title}
+                </h3>
+                {section.description && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    {section.description}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div
+              className={`
+                grid gap-4
+                ${section.columns ? `grid-cols-${section.columns}` : 'grid-cols-1'}
+              `}
+              style={{
+                gridTemplateColumns: section.columns
+                  ? `repeat(${section.columns}, minmax(0, 1fr))`
+                  : undefined,
+              }}
+            >
+              {section.fields.map((field, fieldIndex) => (
+                <div
+                  key={`${sectionIndex}-${fieldIndex}`}
+                  style={{
+                    gridColumn: field.grid?.colSpan
+                      ? `span ${field.grid.colSpan}`
+                      : undefined,
+                    gridRow: field.grid?.rowSpan
+                      ? `span ${field.grid.rowSpan}`
+                      : undefined,
+                  }}
+                >
+                  <FormField field={field} form={form} />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Form Actions */}
+      <div className="flex items-center justify-end gap-3 pt-4">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isLoading}
+            className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {cancelLabel}
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={isLoading || !isDirty}
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {isLoading ? 'Saving...' : submitLabel}
+        </button>
+      </div>
+    </form>
+  );
+}

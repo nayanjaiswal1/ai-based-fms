@@ -177,15 +177,14 @@ export default function AccountsPage() {
       )}
 
       {/* Modal */}
-      {isModalOpen && (
-        <AccountModal
-          account={selectedAccount}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedAccount(null);
-          }}
-        />
-      )}
+      <AccountModal
+        account={selectedAccount}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedAccount(null);
+        }}
+      />
     </div>
   );
 }
