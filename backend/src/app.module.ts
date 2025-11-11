@@ -23,6 +23,7 @@ import { AccountsModule } from '@modules/accounts/accounts.module';
 import { TransactionsModule } from '@modules/transactions/transactions.module';
 import { CategoriesModule } from '@modules/categories/categories.module';
 import { TagsModule } from '@modules/tags/tags.module';
+import { BudgetsModule } from '@modules/budgets/budgets.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { TagsModule } from '@modules/tags/tags.module';
     TransactionsModule,
     CategoriesModule,
     TagsModule,
+    BudgetsModule,
   ],
   providers: [
     {
