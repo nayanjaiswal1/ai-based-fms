@@ -31,6 +31,9 @@ import { NotificationsModule } from '@modules/notifications/notifications.module
 import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { AiModule } from '@modules/ai/ai.module';
 import { ImportModule } from '@modules/import/import.module';
+import { EmailModule } from '@modules/email/email.module';
+import { ChatModule } from '@modules/chat/chat.module';
+import { AdminModule } from '@modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -88,6 +91,9 @@ import { ImportModule } from '@modules/import/import.module';
     AnalyticsModule,
     AiModule,
     ImportModule,
+    EmailModule,
+    ChatModule,
+    AdminModule,
   ],
   providers: [
     {
