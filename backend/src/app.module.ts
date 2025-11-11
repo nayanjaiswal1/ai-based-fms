@@ -29,6 +29,7 @@ import { InvestmentsModule } from '@modules/investments/investments.module';
 import { LendBorrowModule } from '@modules/lend-borrow/lend-borrow.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
 import { AnalyticsModule } from '@modules/analytics/analytics.module';
+import { AiModule } from '@modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { AnalyticsModule } from '@modules/analytics/analytics.module';
     LendBorrowModule,
     NotificationsModule,
     AnalyticsModule,
+    AiModule,
   ],
   providers: [
     {
