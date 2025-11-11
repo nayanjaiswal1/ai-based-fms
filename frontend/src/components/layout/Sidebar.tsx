@@ -7,6 +7,11 @@ import {
   Users,
   TrendingUp,
   BarChart3,
+  HandCoins,
+  Sparkles,
+  Upload,
+  Mail,
+  Bell,
   Settings,
 } from 'lucide-react';
 
@@ -17,7 +22,12 @@ const navigation = [
   { name: 'Budgets', href: '/budgets', icon: Target },
   { name: 'Groups', href: '/groups', icon: Users },
   { name: 'Investments', href: '/investments', icon: TrendingUp },
+  { name: 'Lend/Borrow', href: '/lend-borrow', icon: HandCoins },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'AI Assistant', href: '/ai', icon: Sparkles },
+  { name: 'Import', href: '/import', icon: Upload },
+  { name: 'Email', href: '/email', icon: Mail },
+  { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
