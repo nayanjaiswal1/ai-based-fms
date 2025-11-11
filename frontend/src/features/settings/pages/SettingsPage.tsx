@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Folder, Tag, Bell, Mail } from 'lucide-react';
+import { Folder, Tag, Bell, Key } from 'lucide-react';
 import CategoriesTab from '../components/CategoriesTab';
 import TagsTab from '../components/TagsTab';
 import RemindersTab from '../components/RemindersTab';
+import OAuthTab from '../components/OAuthTab';
 
-type Tab = 'categories' | 'tags' | 'reminders';
+type Tab = 'categories' | 'tags' | 'reminders' | 'oauth';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('categories');
@@ -13,6 +14,7 @@ export default function SettingsPage() {
     { id: 'categories' as Tab, label: 'Categories', icon: Folder },
     { id: 'tags' as Tab, label: 'Tags', icon: Tag },
     { id: 'reminders' as Tab, label: 'Reminders', icon: Bell },
+    { id: 'oauth' as Tab, label: 'OAuth', icon: Key },
   ];
 
   return (
@@ -21,7 +23,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Manage your categories, tags, and reminders
+          Manage your categories, tags, reminders, and OAuth connections
         </p>
       </div>
 
@@ -53,6 +55,7 @@ export default function SettingsPage() {
         {activeTab === 'categories' && <CategoriesTab />}
         {activeTab === 'tags' && <TagsTab />}
         {activeTab === 'reminders' && <RemindersTab />}
+        {activeTab === 'oauth' && <OAuthTab />}
       </div>
     </div>
   );

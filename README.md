@@ -24,9 +24,6 @@ The Finance Management System (FMS) helps individuals and groups manage their fi
 
 ## 📚 Documentation
 
-- [📋 Requirements Specification](docs/FMS-Requirements-Specification.md) - Complete functional requirements
-- [📊 Progress Tracking](docs/PROGRESS.md) - Detailed implementation status (70% overall)
-- [📝 Remaining Tasks](docs/REMAINING_TASKS.md) - What's left to complete
 - [🏗️ Architecture](docs/Architecture.md) - Technical architecture and design
 - [🚀 Deployment Guide](docs/Deployment-Guide.md) - Production deployment instructions
 - [💻 Development Guide](docs/Development-Guide.md) - Setup and development workflow
@@ -368,7 +365,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For questions, issues, or feature requests:
 - Create an issue in the repository
 - Check the [documentation](docs/)
-- Review [REMAINING_TASKS.md](docs/REMAINING_TASKS.md)
+- Review the [Development Guide](docs/Development-Guide.md)
 
 ---
 
