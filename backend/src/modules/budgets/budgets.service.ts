@@ -1,16 +1,21 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
-import { Budget, Transaction } from '@database/entities';
+import { Budget, Transaction, NotificationType } from '@database/entities';
 import { CreateBudgetDto, UpdateBudgetDto } from './dto/budget.dto';
+import { NotificationsGateway } from '@modules/notifications/notifications.gateway';
 
 @Injectable()
 export class BudgetsService {
+  // Track which budgets have been alerted at which percentage to avoid duplicate notifications
+  private alertedBudgets: Map<string, number> = new Map();
+
   constructor(
     @InjectRepository(Budget)
     private budgetRepository: Repository<Budget>,
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   async create(userId: string, createDto: CreateBudgetDto) {
@@ -112,15 +117,24 @@ export class BudgetsService {
 
       const spent = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
       budget.spent = spent;
-      await this.budgetRepository.save(budget);
-      return budget;
+      const savedBudget = await this.budgetRepository.save(budget);
+
+      // Check and send budget alert if threshold exceeded
+      await this.checkAndSendBudgetAlert(savedBudget);
+
+      return savedBudget;
     }
 
     const transactions = await this.transactionRepository.find({ where });
     const spent = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
 
     budget.spent = spent;
-    return this.budgetRepository.save(budget);
+    const savedBudget = await this.budgetRepository.save(budget);
+
+    // Check and send budget alert if threshold exceeded
+    await this.checkAndSendBudgetAlert(savedBudget);
+
+    return savedBudget;
   }
 
   async updateAllBudgetSpending(userId: string) {
@@ -184,5 +198,56 @@ export class BudgetsService {
         isOverBudget: b.spent > b.amount,
       })),
     };
+  }
+
+  /**
+   * Check if budget threshold is exceeded and send real-time notification
+   * Only sends notification if:
+   * 1. Alerts are enabled for this budget
+   * 2. Spending percentage >= alert threshold
+   * 3. This percentage hasn't been alerted before (to avoid spam)
+   */
+  private async checkAndSendBudgetAlert(budget: Budget) {
+    if (!budget.alertEnabled) {
+      return;
+    }
+
+    const percentage = (budget.spent / budget.amount) * 100;
+    const roundedPercentage = Math.floor(percentage);
+
+    // Check if we've already alerted at this percentage level
+    const lastAlertedPercentage = this.alertedBudgets.get(budget.id) || 0;
+
+    if (
+      roundedPercentage >= budget.alertThreshold &&
+      roundedPercentage > lastAlertedPercentage
+    ) {
+      // Update tracking
+      this.alertedBudgets.set(budget.id, roundedPercentage);
+
+      // Determine alert message based on severity
+      let message: string;
+      if (percentage >= 100) {
+        message = `You have exceeded your "${budget.name}" budget by $${(budget.spent - budget.amount).toFixed(2)}`;
+      } else {
+        message = `You have reached ${roundedPercentage}% of your "${budget.name}" budget ($${budget.spent.toFixed(2)} of $${budget.amount.toFixed(2)})`;
+      }
+
+      // Send real-time notification
+      await this.notificationsGateway.broadcastNotification(budget.userId, {
+        title: percentage >= 100 ? 'Budget Exceeded!' : 'Budget Alert',
+        message,
+        type: NotificationType.BUDGET_ALERT,
+        data: {
+          budgetId: budget.id,
+          budgetName: budget.name,
+          percentage: roundedPercentage,
+          spent: budget.spent,
+          amount: budget.amount,
+          exceeded: percentage >= 100,
+        },
+        link: `/budgets/${budget.id}`,
+      });
+    }
   }
 }
