@@ -78,6 +78,154 @@ export const transactionsApi = {
   delete: (id: string) => api.delete(`/transactions/${id}`),
   getStats: (startDate: string, endDate: string) =>
     api.get('/transactions/stats', { params: { startDate, endDate } }),
+  bulkCreate: (data: any) => api.post('/transactions/bulk', data),
+  bulkDelete: (ids: string[]) => api.post('/transactions/bulk-delete', { ids }),
+};
+
+export const categoriesApi = {
+  getAll: () => api.get('/categories'),
+  getTree: () => api.get('/categories/tree'),
+  getOne: (id: string) => api.get(`/categories/${id}`),
+  create: (data: any) => api.post('/categories', data),
+  update: (id: string, data: any) => api.patch(`/categories/${id}`, data),
+  delete: (id: string) => api.delete(`/categories/${id}`),
+  reorder: (data: any) => api.patch('/categories/reorder', data),
+};
+
+export const tagsApi = {
+  getAll: () => api.get('/tags'),
+  getOne: (id: string) => api.get(`/tags/${id}`),
+  create: (data: any) => api.post('/tags', data),
+  update: (id: string, data: any) => api.patch(`/tags/${id}`, data),
+  delete: (id: string) => api.delete(`/tags/${id}`),
+};
+
+export const budgetsApi = {
+  getAll: (params?: any) => api.get('/budgets', { params }),
+  getOne: (id: string) => api.get(`/budgets/${id}`),
+  create: (data: any) => api.post('/budgets', data),
+  update: (id: string, data: any) => api.patch(`/budgets/${id}`, data),
+  delete: (id: string) => api.delete(`/budgets/${id}`),
+  getProgress: (id: string) => api.get(`/budgets/${id}/progress`),
+  checkAlerts: () => api.get('/budgets/alerts'),
+};
+
+export const groupsApi = {
+  getAll: () => api.get('/groups'),
+  getOne: (id: string) => api.get(`/groups/${id}`),
+  create: (data: any) => api.post('/groups', data),
+  update: (id: string, data: any) => api.patch(`/groups/${id}`, data),
+  delete: (id: string) => api.delete(`/groups/${id}`),
+  addMember: (id: string, data: any) => api.post(`/groups/${id}/members`, data),
+  removeMember: (id: string, memberId: string) => api.delete(`/groups/${id}/members/${memberId}`),
+  updateMemberRole: (id: string, memberId: string, data: any) =>
+    api.patch(`/groups/${id}/members/${memberId}`, data),
+  getExpenses: (id: string) => api.get(`/groups/${id}/expenses`),
+  createExpense: (id: string, data: any) => api.post(`/groups/${id}/expenses`, data),
+  getBalances: (id: string) => api.get(`/groups/${id}/balances`),
+  getSettlements: (id: string) => api.get(`/groups/${id}/settlements`),
+  settleUp: (id: string, data: any) => api.post(`/groups/${id}/settle`, data),
+};
+
+export const investmentsApi = {
+  getAll: () => api.get('/investments'),
+  getOne: (id: string) => api.get(`/investments/${id}`),
+  create: (data: any) => api.post('/investments', data),
+  update: (id: string, data: any) => api.patch(`/investments/${id}`, data),
+  delete: (id: string) => api.delete(`/investments/${id}`),
+  getPortfolio: () => api.get('/investments/portfolio'),
+  getPerformance: (id: string) => api.get(`/investments/${id}/performance`),
+};
+
+export const lendBorrowApi = {
+  getAll: (params?: any) => api.get('/lend-borrow', { params }),
+  getOne: (id: string) => api.get(`/lend-borrow/${id}`),
+  create: (data: any) => api.post('/lend-borrow', data),
+  update: (id: string, data: any) => api.patch(`/lend-borrow/${id}`, data),
+  delete: (id: string) => api.delete(`/lend-borrow/${id}`),
+  recordPayment: (id: string, data: any) => api.post(`/lend-borrow/${id}/payments`, data),
+  getPayments: (id: string) => api.get(`/lend-borrow/${id}/payments`),
+  getSummary: () => api.get('/lend-borrow/summary'),
+};
+
+export const notificationsApi = {
+  getAll: (params?: any) => api.get('/notifications', { params }),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/mark-all-read'),
+  delete: (id: string) => api.delete(`/notifications/${id}`),
+  getPreferences: () => api.get('/notifications/preferences'),
+  updatePreferences: (data: any) => api.patch('/notifications/preferences', data),
+};
+
+export const remindersApi = {
+  getAll: (params?: any) => api.get('/reminders', { params }),
+  getOne: (id: string) => api.get(`/reminders/${id}`),
+  create: (data: any) => api.post('/reminders', data),
+  update: (id: string, data: any) => api.patch(`/reminders/${id}`, data),
+  delete: (id: string) => api.delete(`/reminders/${id}`),
+  snooze: (id: string, data: any) => api.post(`/reminders/${id}/snooze`, data),
+  dismiss: (id: string) => api.post(`/reminders/${id}/dismiss`),
+};
+
+export const analyticsApi = {
+  getOverview: (params: any) => api.get('/analytics/overview', { params }),
+  getCategoryBreakdown: (params: any) => api.get('/analytics/category-breakdown', { params }),
+  getTrends: (params: any) => api.get('/analytics/trends', { params }),
+  getComparison: (params: any) => api.get('/analytics/comparison', { params }),
+  getAccountHistory: (accountId: string, params: any) =>
+    api.get(`/analytics/account-history/${accountId}`, { params }),
+  getNetWorth: () => api.get('/analytics/net-worth'),
+};
+
+export const aiApi = {
+  categorize: (data: any) => api.post('/ai/categorize', data),
+  categorizeTransactions: (transactionIds: string[]) =>
+    api.post('/ai/categorize-transactions', { transactionIds }),
+  parseReceipt: (data: FormData) => api.post('/ai/parse-receipt', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  getInsights: (params: any) => api.get('/ai/insights', { params }),
+  detectDuplicates: (params: any) => api.get('/ai/detect-duplicates', { params }),
+};
+
+export const importApi = {
+  uploadFile: (data: FormData) => api.post('/import/upload', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  preview: (sessionId: string) => api.get(`/import/preview/${sessionId}`),
+  mapColumns: (sessionId: string, data: any) =>
+    api.post(`/import/map/${sessionId}`, data),
+  confirm: (sessionId: string) => api.post(`/import/confirm/${sessionId}`),
+  cancel: (sessionId: string) => api.post(`/import/cancel/${sessionId}`),
+  getHistory: () => api.get('/import/history'),
+};
+
+export const emailApi = {
+  getConnections: () => api.get('/email/connections'),
+  connect: (data: any) => api.post('/email/connect', data),
+  disconnect: (id: string) => api.post(`/email/disconnect/${id}`),
+  sync: (id: string) => api.post(`/email/sync/${id}`),
+  getPreferences: () => api.get('/email/preferences'),
+  updatePreferences: (data: any) => api.patch('/email/preferences', data),
+};
+
+export const chatApi = {
+  sendMessage: (data: any) => api.post('/chat/message', data),
+  getHistory: (conversationId: string) => api.get(`/chat/history/${conversationId}`),
+  clearHistory: (conversationId: string) => api.delete(`/chat/history/${conversationId}`),
+  executeCommand: (data: any) => api.post('/chat/command', data),
+  getSuggestions: () => api.get('/chat/suggestions'),
+};
+
+export const adminApi = {
+  getUsers: (params?: any) => api.get('/admin/users', { params }),
+  getUser: (id: string) => api.get(`/admin/users/${id}`),
+  updateUser: (id: string, data: any) => api.patch(`/admin/users/${id}`, data),
+  suspendUser: (id: string) => api.post(`/admin/users/${id}/suspend`),
+  getSystemStats: (days?: number) => api.get('/admin/stats', { params: { days } }),
+  getActivityLogs: (params?: any) => api.get('/admin/activity-logs', { params }),
+  getPerformanceMetrics: () => api.get('/admin/performance'),
 };
 
 export default api;
