@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { budgetsApi, categoriesApi } from '@services/api';
 import { Plus, Edit, Trash2, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -9,10 +9,17 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { getBudgetProgressColor, getBudgetProgressTextColor, formatBudgetPeriod } from '../config/budgets.config';
 
 export default function BudgetsPage() {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedBudget, setSelectedBudget] = useState<any>(null);
+
+  // Detect modal state from URL path
+  const isNewModal = location.pathname === '/budgets/new';
+  const isEditModal = location.pathname.startsWith('/budgets/edit/');
+  const modalMode = isNewModal ? 'new' : isEditModal ? 'edit' : null;
+  const budgetId = id;
 
   const { data: budgets, isLoading } = useQuery({
     queryKey: ['budgets'],
@@ -24,6 +31,13 @@ export default function BudgetsPage() {
     queryFn: categoriesApi.getAll,
   });
 
+  // Fetch selected budget for edit mode
+  const { data: selectedBudgetData } = useQuery({
+    queryKey: ['budget', budgetId],
+    queryFn: () => budgetsApi.getById(budgetId!),
+    enabled: !!budgetId && modalMode === 'edit',
+  });
+
   const deleteMutation = useMutation({
     mutationFn: budgetsApi.delete,
     onSuccess: () => {
@@ -32,8 +46,11 @@ export default function BudgetsPage() {
   });
 
   const handleEdit = (budget: any) => {
-    setSelectedBudget(budget);
-    setIsModalOpen(true);
+    navigate(`/budgets/edit/${budget.id}`);
+  };
+
+  const handleCloseModal = () => {
+    navigate('/budgets');
   };
 
   const handleDelete = async (id: string) => {
@@ -64,10 +81,7 @@ export default function BudgetsPage() {
           </p>
         </div>
         <button
-          onClick={() => {
-            setSelectedBudget(null);
-            setIsModalOpen(true);
-          }}
+          onClick={() => navigate('/budgets/new')}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
@@ -88,10 +102,7 @@ export default function BudgetsPage() {
             Create your first budget to start tracking spending
           </p>
           <button
-            onClick={() => {
-              setSelectedBudget(null);
-              setIsModalOpen(true);
-            }}
+            onClick={() => navigate('/budgets/new')}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Create Your First Budget
@@ -194,12 +205,9 @@ export default function BudgetsPage() {
 
       {/* Modal */}
       <BudgetModal
-        budget={selectedBudget}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedBudget(null);
-        }}
+        isOpen={!!modalMode}
+        budget={modalMode === 'edit' ? selectedBudgetData?.data : null}
+        onClose={handleCloseModal}
       />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />

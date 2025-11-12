@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { investmentsApi } from '@services/api';
 import { Plus } from 'lucide-react';
 import InvestmentModal from '../components/InvestmentModal';
@@ -9,10 +9,17 @@ import { PortfolioSummary } from '../components/PortfolioSummary';
 import { InvestmentsTable } from '../components/InvestmentsTable';
 
 export default function InvestmentsPage() {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedInvestment, setSelectedInvestment] = useState<any>(null);
+
+  // Detect modal state from URL path
+  const isNewModal = location.pathname === '/investments/new';
+  const isEditModal = location.pathname.startsWith('/investments/edit/');
+  const modalMode = isNewModal ? 'new' : isEditModal ? 'edit' : null;
+  const investmentId = id;
 
   const { data: investments, isLoading } = useQuery({
     queryKey: ['investments'],
@@ -24,6 +31,13 @@ export default function InvestmentsPage() {
     queryFn: investmentsApi.getPortfolio,
   });
 
+  // Fetch selected investment for edit mode
+  const { data: selectedInvestmentData } = useQuery({
+    queryKey: ['investment', investmentId],
+    queryFn: () => investmentsApi.getById(investmentId!),
+    enabled: !!investmentId && modalMode === 'edit',
+  });
+
   const deleteMutation = useMutation({
     mutationFn: investmentsApi.delete,
     onSuccess: () => {
@@ -33,8 +47,11 @@ export default function InvestmentsPage() {
   });
 
   const handleEdit = (investment: any) => {
-    setSelectedInvestment(investment);
-    setIsModalOpen(true);
+    navigate(`/investments/edit/${investment.id}`);
+  };
+
+  const handleCloseModal = () => {
+    navigate('/investments');
   };
 
   const handleDelete = async (id: string) => {
@@ -67,10 +84,7 @@ export default function InvestmentsPage() {
           </p>
         </div>
         <button
-          onClick={() => {
-            setSelectedInvestment(null);
-            setIsModalOpen(true);
-          }}
+          onClick={() => navigate('/investments/new')}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
@@ -87,20 +101,14 @@ export default function InvestmentsPage() {
         isLoading={isLoading}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onAddFirst={() => {
-          setSelectedInvestment(null);
-          setIsModalOpen(true);
-        }}
+        onAddFirst={() => navigate('/investments/new')}
       />
 
       {/* Modal */}
       <InvestmentModal
-        isOpen={isModalOpen}
-        investment={selectedInvestment}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedInvestment(null);
-        }}
+        isOpen={!!modalMode}
+        investment={modalMode === 'edit' ? selectedInvestmentData?.data : null}
+        onClose={handleCloseModal}
       />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />

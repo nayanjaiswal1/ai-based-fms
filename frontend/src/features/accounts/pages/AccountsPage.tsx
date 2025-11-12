@@ -1,23 +1,42 @@
-import { useState } from 'react';
 import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote } from 'lucide-react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import AccountModal from '../components/AccountModal';
 import { useAccounts } from '../hooks/useAccounts';
 import { ConfirmDialog } from '@components/ui/ConfirmDialog';
 import { useConfirm } from '@hooks/useConfirm';
+import { useQuery } from '@tanstack/react-query';
+import { accountsApi } from '@services/api';
 
 export default function AccountsPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+
+  // Detect modal state from URL path
+  const isNewModal = location.pathname === '/accounts/new';
+  const isEditModal = location.pathname.startsWith('/accounts/edit/');
+  const modalMode = isNewModal ? 'new' : isEditModal ? 'edit' : null;
+  const accountId = id;
 
   // Use the clean hook - all API logic is abstracted away
   const { data: accounts, isLoading, delete: deleteAccount, isDeleting } = useAccounts();
+
+  // Fetch selected account for edit mode
+  const { data: selectedAccountData } = useQuery({
+    queryKey: ['account', accountId],
+    queryFn: () => accountsApi.getById(accountId!),
+    enabled: !!accountId && modalMode === 'edit',
+  });
 
   // Confirmation dialog hook
   const { confirmState, confirm, closeConfirm } = useConfirm();
 
   const handleEdit = (account: any) => {
-    setSelectedAccount(account);
-    setIsModalOpen(true);
+    navigate(`/accounts/edit/${account.id}`);
+  };
+
+  const handleCloseModal = () => {
+    navigate('/accounts');
   };
 
   const handleDelete = (id: string, accountName: string) => {
@@ -75,10 +94,7 @@ export default function AccountsPage() {
           </p>
         </div>
         <button
-          onClick={() => {
-            setSelectedAccount(null);
-            setIsModalOpen(true);
-          }}
+          onClick={() => navigate('/accounts/new')}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
@@ -108,10 +124,7 @@ export default function AccountsPage() {
             Get started by creating your first account
           </p>
           <button
-            onClick={() => {
-              setSelectedAccount(null);
-              setIsModalOpen(true);
-            }}
+            onClick={() => navigate('/accounts/new')}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Add Your First Account
@@ -178,12 +191,9 @@ export default function AccountsPage() {
 
       {/* Modal */}
       <AccountModal
-        account={selectedAccount}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedAccount(null);
-        }}
+        account={modalMode === 'edit' ? selectedAccountData?.data : null}
+        isOpen={!!modalMode}
+        onClose={handleCloseModal}
       />
 
       {/* Confirmation Dialog */}

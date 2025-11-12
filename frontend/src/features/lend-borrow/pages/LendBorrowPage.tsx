@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { lendBorrowApi } from '@services/api';
 import { Plus, DollarSign } from 'lucide-react';
 import LendBorrowModal from '../components/LendBorrowModal';
@@ -12,12 +13,20 @@ import { getLendBorrowColumns } from '../config/lendBorrowTable.config';
 import { getLendBorrowFilters } from '../config/lendBorrowFilters.config';
 
 export default function LendBorrowPage() {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
-  const [isLendBorrowModalOpen, setIsLendBorrowModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [filters, setFilters] = useState<Record<string, any>>({});
+
+  // Detect modal state from URL path
+  const isNewModal = location.pathname === '/lend-borrow/new';
+  const isEditModal = location.pathname.startsWith('/lend-borrow/edit/');
+  const modalMode = isNewModal ? 'new' : isEditModal ? 'edit' : null;
+  const recordId = id;
 
   const { data: records, isLoading } = useQuery({
     queryKey: ['lend-borrow', filters],
@@ -29,6 +38,13 @@ export default function LendBorrowPage() {
     queryFn: lendBorrowApi.getSummary,
   });
 
+  // Fetch selected record for edit mode
+  const { data: selectedRecordData } = useQuery({
+    queryKey: ['lend-borrow-record', recordId],
+    queryFn: () => lendBorrowApi.getById(recordId!),
+    enabled: !!recordId && modalMode === 'edit',
+  });
+
   const deleteMutation = useMutation({
     mutationFn: lendBorrowApi.delete,
     onSuccess: () => {
@@ -38,8 +54,11 @@ export default function LendBorrowPage() {
   });
 
   const handleEdit = (record: any) => {
-    setSelectedRecord(record);
-    setIsLendBorrowModalOpen(true);
+    navigate(`/lend-borrow/edit/${record.id}`);
+  };
+
+  const handleCloseModal = () => {
+    navigate('/lend-borrow');
   };
 
   const handleDelete = async (id: string) => {
@@ -88,10 +107,7 @@ export default function LendBorrowPage() {
           </p>
         </div>
         <button
-          onClick={() => {
-            setSelectedRecord(null);
-            setIsLendBorrowModalOpen(true);
-          }}
+          onClick={() => navigate('/lend-borrow/new')}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
@@ -184,10 +200,7 @@ export default function LendBorrowPage() {
               Start tracking money you've lent or borrowed
             </p>
             <button
-              onClick={() => {
-                setSelectedRecord(null);
-                setIsLendBorrowModalOpen(true);
-              }}
+              onClick={() => navigate('/lend-borrow/new')}
               className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
               Add Your First Record
@@ -198,12 +211,9 @@ export default function LendBorrowPage() {
 
       {/* Modals */}
       <LendBorrowModal
-        isOpen={isLendBorrowModalOpen}
-        record={selectedRecord}
-        onClose={() => {
-          setIsLendBorrowModalOpen(false);
-          setSelectedRecord(null);
-        }}
+        isOpen={!!modalMode}
+        record={modalMode === 'edit' ? selectedRecordData?.data : null}
+        onClose={handleCloseModal}
       />
 
       <PaymentModal
