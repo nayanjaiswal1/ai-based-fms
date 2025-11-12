@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '@services/api';
 import { TrendingUp, TrendingDown, DollarSign, PieChart, Calendar } from 'lucide-react';
-import { format, subDays, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { DATE_PRESETS, getDateRangeFromPreset, type DatePreset } from '../config/analytics.config';
 
 export default function AnalyticsPage() {
-  const [dateRange, setDateRange] = useState('thisMonth');
+  const [dateRange, setDateRange] = useState<DatePreset>('thisMonth');
   const [startDate, setStartDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
 
@@ -29,37 +30,9 @@ export default function AnalyticsPage() {
     queryFn: analyticsApi.getNetWorth,
   });
 
-  const handleDatePreset = (preset: string) => {
+  const handleDatePreset = (preset: DatePreset) => {
     setDateRange(preset);
-    const today = new Date();
-    let start, end;
-
-    switch (preset) {
-      case 'last7days':
-        start = format(subDays(today, 7), 'yyyy-MM-dd');
-        end = format(today, 'yyyy-MM-dd');
-        break;
-      case 'last30days':
-        start = format(subDays(today, 30), 'yyyy-MM-dd');
-        end = format(today, 'yyyy-MM-dd');
-        break;
-      case 'thisMonth':
-        start = format(startOfMonth(today), 'yyyy-MM-dd');
-        end = format(endOfMonth(today), 'yyyy-MM-dd');
-        break;
-      case 'lastMonth':
-        const lastMonth = subDays(startOfMonth(today), 1);
-        start = format(startOfMonth(lastMonth), 'yyyy-MM-dd');
-        end = format(endOfMonth(lastMonth), 'yyyy-MM-dd');
-        break;
-      case 'thisYear':
-        start = format(startOfYear(today), 'yyyy-MM-dd');
-        end = format(today, 'yyyy-MM-dd');
-        break;
-      default:
-        return;
-    }
-
+    const { start, end } = getDateRangeFromPreset(preset);
     setStartDate(start);
     setEndDate(end);
   };

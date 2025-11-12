@@ -1,36 +1,20 @@
 import { useState, useCallback } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { importApi } from '@services/api';
 import { Upload, FileText, CheckCircle, X, ChevronRight } from 'lucide-react';
+import { useImportSession } from '../hooks/useImportSession';
 
 export default function ImportPage() {
-  const queryClient = useQueryClient();
   const [dragActive, setDragActive] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [step, setStep] = useState<'upload' | 'preview' | 'mapping' | 'confirm'>('upload');
-
-  const { data: preview } = useQuery({
-    queryKey: ['import-preview', sessionId],
-    queryFn: () => importApi.preview(sessionId!),
-    enabled: !!sessionId && step === 'preview',
-  });
-
-  const uploadMutation = useMutation({
-    mutationFn: (formData: FormData) => importApi.uploadFile(formData),
-    onSuccess: (response) => {
-      setSessionId(response.data.sessionId);
-      setStep('preview');
-    },
-  });
-
-  const confirmMutation = useMutation({
-    mutationFn: (sessionId: string) => importApi.confirm(sessionId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      setStep('upload');
-      setSessionId(null);
-    },
-  });
+  const {
+    sessionId,
+    step,
+    preview,
+    uploadMutation,
+    confirmMutation,
+    cancelMutation,
+    handleUpload,
+    handleConfirm,
+    handleCancel,
+  } = useImportSession();
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -59,24 +43,7 @@ export default function ImportPage() {
   };
 
   const handleFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    await uploadMutation.mutateAsync(formData);
-  };
-
-  const handleConfirm = async () => {
-    if (sessionId) {
-      await confirmMutation.mutateAsync(sessionId);
-    }
-  };
-
-  const handleCancel = async () => {
-    if (sessionId) {
-      await importApi.cancel(sessionId);
-      setStep('upload');
-      setSessionId(null);
-    }
+    await handleUpload(file);
   };
 
   return (

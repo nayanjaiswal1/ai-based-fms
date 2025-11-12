@@ -6,6 +6,7 @@ import { format, parseISO } from 'date-fns';
 import BudgetModal from '../components/BudgetModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { getBudgetProgressColor, getBudgetProgressTextColor, formatBudgetPeriod } from '../config/budgets.config';
 
 export default function BudgetsPage() {
   const queryClient = useQueryClient();
@@ -50,23 +51,6 @@ export default function BudgetsPage() {
   const getCategoryName = (categoryId: string) => {
     const category = categories?.data?.find((c: any) => c.id === categoryId);
     return category?.name || 'All Categories';
-  };
-
-  const getProgressColor = (percentage: number) => {
-    if (percentage >= 90) return 'bg-red-500';
-    if (percentage >= 75) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
-
-  const getProgressTextColor = (percentage: number) => {
-    if (percentage >= 90) return 'text-red-600';
-    if (percentage >= 75) return 'text-yellow-600';
-    return 'text-green-600';
-  };
-
-  const formatPeriod = (period: string) => {
-    const words = period.split('_');
-    return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   };
 
   return (
@@ -152,7 +136,7 @@ export default function BudgetsPage() {
                 {/* Period */}
                 <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatPeriod(budget.period)}</span>
+                  <span>{formatBudgetPeriod(budget.period)}</span>
                   {budget.startDate && (
                     <span>
                       ({format(parseISO(budget.startDate), 'MMM dd')} -{' '}
@@ -164,16 +148,16 @@ export default function BudgetsPage() {
                 {/* Progress Bar */}
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className={`font-medium ${getProgressTextColor(percentage)}`}>
+                    <span className={`font-medium ${getBudgetProgressTextColor(percentage)}`}>
                       ${budget.spent.toFixed(2)} of ${budget.amount.toFixed(2)}
                     </span>
-                    <span className={`font-semibold ${getProgressTextColor(percentage)}`}>
+                    <span className={`font-semibold ${getBudgetProgressTextColor(percentage)}`}>
                       {percentage.toFixed(0)}%
                     </span>
                   </div>
                   <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200">
                     <div
-                      className={`h-full transition-all ${getProgressColor(percentage)}`}
+                      className={`h-full transition-all ${getBudgetProgressColor(percentage)}`}
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>
