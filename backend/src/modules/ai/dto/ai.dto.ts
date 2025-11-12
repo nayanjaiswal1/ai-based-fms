@@ -28,9 +28,19 @@ export class ParseReceiptDto {
 }
 
 export class DetectDuplicatesDto {
-  @ApiProperty({ example: 'uuid' })
-  @IsString()
-  transactionId: string;
+  @ApiPropertyOptional({ example: 60, description: 'Minimum confidence threshold (0-100)' })
+  @IsOptional()
+  @IsNumber()
+  threshold?: number;
+
+  @ApiPropertyOptional({ example: 3, description: 'Time window in days' })
+  @IsOptional()
+  @IsNumber()
+  timeWindow?: number;
+
+  @ApiPropertyOptional({ example: true, description: 'Include category matching' })
+  @IsOptional()
+  includeCategories?: boolean;
 }
 
 export class GenerateInsightsDto {

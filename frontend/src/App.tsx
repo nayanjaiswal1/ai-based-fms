@@ -8,6 +8,7 @@ import ResetPasswordPage from '@features/auth/pages/ResetPasswordPage';
 import GoogleCallbackPage from '@features/auth/pages/GoogleCallbackPage';
 import DashboardPage from '@features/dashboard/pages/DashboardPage';
 import TransactionsPage from '@features/transactions/pages/TransactionsPage';
+import DuplicatesPage from '@features/transactions/pages/DuplicatesPage';
 import AccountsPage from '@features/accounts/pages/AccountsPage';
 import BudgetsPage from '@features/budgets/pages/BudgetsPage';
 import GroupsPage from '@features/groups/pages/GroupsPage';
@@ -19,6 +20,7 @@ import ImportPage from '@features/import/pages/ImportPage';
 import EmailPage from '@features/email/pages/EmailPage';
 import NotificationsPage from '@features/notifications/pages/NotificationsPage';
 import SettingsPage from '@features/settings/pages/SettingsPage';
+import ActivityLogPage from '@features/audit/pages/ActivityLogPage';
 import GoodbyePage from '@pages/GoodbyePage';
 
 function App() {
@@ -40,6 +42,7 @@ function App() {
         <Route path="/transactions" element={<TransactionsPage />} />
         <Route path="/transactions/new" element={<TransactionsPage />} />
         <Route path="/transactions/edit/:id" element={<TransactionsPage />} />
+        <Route path="/transactions/duplicates" element={<DuplicatesPage />} />
         <Route path="/accounts" element={<AccountsPage />} />
         <Route path="/accounts/new" element={<AccountsPage />} />
         <Route path="/accounts/edit/:id" element={<AccountsPage />} />
@@ -60,6 +63,7 @@ function App() {
         <Route path="/import" element={<ImportPage />} />
         <Route path="/email" element={<EmailPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/activity-log" element={<ActivityLogPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
 

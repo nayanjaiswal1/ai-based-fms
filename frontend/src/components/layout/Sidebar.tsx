@@ -12,6 +12,7 @@ import {
   Upload,
   Mail,
   Bell,
+  Activity,
   Settings,
 } from 'lucide-react';
 
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Import', href: '/import', icon: Upload },
   { name: 'Email', href: '/email', icon: Mail },
   { name: 'Notifications', href: '/notifications', icon: Bell },
+  { name: 'Activity Log', href: '/activity-log', icon: Activity },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

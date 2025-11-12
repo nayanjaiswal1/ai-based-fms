@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsApi, accountsApi, categoriesApi, tagsApi, exportApi } from '@services/api';
-import { Plus, Search, Filter, Download, Upload, Trash2, X } from 'lucide-react';
+import { Plus, Search, Filter, Download, Upload, Trash2, X, Copy } from 'lucide-react';
 import TransactionModal from '../components/TransactionModal';
+import TransactionHistoryModal from '../components/TransactionHistoryModal';
 import FilterModal from '../components/FilterModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -20,6 +21,7 @@ export default function TransactionsPage() {
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [historyTransaction, setHistoryTransaction] = useState<any>(null);
 
   // Use the new useUrlParams hook for query parameters
   const { getParam, getParams, setParam, setParams, removeParam, removeParams } = useUrlParams();
@@ -46,6 +48,13 @@ export default function TransactionsPage() {
         ...filters,
         search: searchTerm || undefined,
       }),
+  });
+
+  // Get duplicate count
+  const { data: duplicatesData } = useQuery({
+    queryKey: ['duplicates-count'],
+    queryFn: () => transactionsApi.getAll({ isMerged: false }),
+    staleTime: 60000, // Cache for 1 minute
   });
 
   const { data: accounts } = useQuery({
@@ -84,6 +93,19 @@ export default function TransactionsPage() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       setSelectedIds([]);
+    },
+  });
+
+  const unmergeMutation = useMutation({
+    mutationFn: transactionsApi.unmergeTransaction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['duplicates'] });
+      toast.success('Transaction unmerged successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to unmerge transaction');
     },
   });
 
@@ -151,6 +173,26 @@ export default function TransactionsPage() {
         await bulkDeleteMutation.mutateAsync(selectedIds);
       },
     });
+  };
+
+  const handleUnmerge = async (id: string) => {
+    confirm({
+      title: 'Unmerge Transaction',
+      message: 'Are you sure you want to unmerge this transaction? It will be restored to your transaction list.',
+      variant: 'warning',
+      confirmLabel: 'Unmerge',
+      onConfirm: async () => {
+        await unmergeMutation.mutateAsync(id);
+      },
+    });
+  };
+
+  const handleHistory = (transaction: any) => {
+    setHistoryTransaction(transaction);
+  };
+
+  const handleCloseHistory = () => {
+    setHistoryTransaction(null);
   };
 
   const handleSelectAll = () => {
@@ -229,7 +271,9 @@ export default function TransactionsPage() {
     getCategoryName,
     getAccountName,
     handleEdit,
-    handleDelete
+    handleDelete,
+    handleHistory,
+    handleUnmerge
   );
 
   return (
@@ -238,6 +282,13 @@ export default function TransactionsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/transactions/duplicates')}
+            className="relative flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <Copy className="h-4 w-4" />
+            Find Duplicates
+          </button>
           <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
             <Upload className="h-4 w-4" />
             Import
@@ -365,6 +416,14 @@ export default function TransactionsPage() {
         onApply={handleApplyFilters}
         onClose={handleCloseFilterModal}
       />
+
+      {historyTransaction && (
+        <TransactionHistoryModal
+          transaction={historyTransaction}
+          isOpen={!!historyTransaction}
+          onClose={handleCloseHistory}
+        />
+      )}
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>

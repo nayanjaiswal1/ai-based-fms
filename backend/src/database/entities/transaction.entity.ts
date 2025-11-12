@@ -88,6 +88,19 @@ export class Transaction {
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, any>;
 
+  // Merge/duplicate detection fields
+  @Column({ nullable: true })
+  mergedIntoId: string;
+
+  @Column({ default: false })
+  isMerged: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  mergedAt: Date;
+
+  @Column({ type: 'simple-array', nullable: true })
+  duplicateExclusions: string[];
+
   @Column()
   userId: string;
 

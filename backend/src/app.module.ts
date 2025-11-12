@@ -37,6 +37,7 @@ import { AdminModule } from '@modules/admin/admin.module';
 import { SessionsModule } from '@modules/sessions/sessions.module';
 import { GdprModule } from '@modules/gdpr/gdpr.module';
 import { ExportModule } from '@modules/export/export.module';
+import { AuditModule } from '@modules/audit/audit.module';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { ExportModule } from '@modules/export/export.module';
     SessionsModule,
     GdprModule,
     ExportModule,
+    AuditModule,
   ],
   providers: [
     {

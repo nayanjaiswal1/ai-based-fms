@@ -85,6 +85,7 @@ export const accountsApi = {
 export const transactionsApi = {
   getAll: (params?: any) => api.get('/transactions', { params }),
   getOne: (id: string) => api.get(`/transactions/${id}`),
+  getById: (id: string) => api.get(`/transactions/${id}`),
   create: (data: any) => api.post('/transactions', data),
   update: (id: string, data: any) => api.patch(`/transactions/${id}`, data),
   delete: (id: string) => api.delete(`/transactions/${id}`),
@@ -92,6 +93,12 @@ export const transactionsApi = {
     api.get('/transactions/stats', { params: { startDate, endDate } }),
   bulkCreate: (data: any) => api.post('/transactions/bulk', data),
   bulkDelete: (ids: string[]) => api.post('/transactions/bulk-delete', { ids }),
+  mergeTransactions: (primaryId: string, duplicateIds: string[]) =>
+    api.post(`/transactions/${primaryId}/merge`, { duplicateIds }),
+  unmergeTransaction: (id: string) => api.post(`/transactions/${id}/unmerge`),
+  markNotDuplicate: (id: string, comparedWithId: string) =>
+    api.post(`/transactions/${id}/mark-not-duplicate`, { comparedWithId }),
+  getMergedTransactions: (id: string) => api.get(`/transactions/${id}/merged`),
 };
 
 export const categoriesApi = {
@@ -198,7 +205,8 @@ export const aiApi = {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   getInsights: (params: any) => api.get('/ai/insights', { params }),
-  detectDuplicates: (params: any) => api.get('/ai/detect-duplicates', { params }),
+  detectDuplicates: (params?: { threshold?: number; timeWindow?: number; includeCategories?: boolean }) =>
+    api.get('/ai/detect-duplicates', { params }),
 };
 
 export const importApi = {
@@ -274,6 +282,16 @@ export const exportApi = {
     api.post('/export/accounts/csv', {}, { responseType: 'blob' }),
   exportAccountsPDF: () =>
     api.post('/export/accounts/pdf', {}, { responseType: 'blob' }),
+};
+
+export const auditApi = {
+  getAll: (filters?: any) => api.get('/audit', { params: filters }),
+  getEntityLogs: (entity: string, entityId: string) =>
+    api.get(`/audit/entity/${entity}/${entityId}`),
+  getTransactionHistory: (transactionId: string) =>
+    api.get(`/audit/transaction/${transactionId}/history`),
+  getUserActivity: (dateRange?: { startDate?: string; endDate?: string }) =>
+    api.get('/audit/activity', { params: dateRange }),
 };
 
 export default api;
