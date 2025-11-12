@@ -1,35 +1,35 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { accountsApi } from '@services/api';
 import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote } from 'lucide-react';
 import AccountModal from '../components/AccountModal';
+import { useAccounts } from '../hooks/useAccounts';
+import { ConfirmDialog } from '@components/ui/ConfirmDialog';
+import { useConfirm } from '@hooks/useConfirm';
 
 export default function AccountsPage() {
-  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
 
-  const { data: accounts, isLoading } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: accountsApi.getAll,
-  });
+  // Use the clean hook - all API logic is abstracted away
+  const { data: accounts, isLoading, delete: deleteAccount, isDeleting } = useAccounts();
 
-  const deleteMutation = useMutation({
-    mutationFn: accountsApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });
-    },
-  });
+  // Confirmation dialog hook
+  const { confirmState, confirm, closeConfirm } = useConfirm();
 
   const handleEdit = (account: any) => {
     setSelectedAccount(account);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
-      await deleteMutation.mutateAsync(id);
-    }
+  const handleDelete = (id: string, accountName: string) => {
+    confirm({
+      title: 'Delete Account',
+      message: `Are you sure you want to delete "${accountName}"? This action cannot be undone.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        await deleteAccount(id);
+      },
+    });
   };
 
   const getAccountIcon = (type: string) => {
@@ -62,7 +62,7 @@ export default function AccountsPage() {
     }
   };
 
-  const totalBalance = accounts?.data?.reduce((sum: number, acc: any) => sum + Number(acc.balance), 0) || 0;
+  const totalBalance = accounts?.reduce((sum: number, acc: any) => sum + Number(acc.balance), 0) || 0;
 
   return (
     <div className="space-y-6">
@@ -91,7 +91,7 @@ export default function AccountsPage() {
         <p className="text-sm font-medium opacity-90">Total Balance</p>
         <p className="mt-2 text-4xl font-bold">${totalBalance.toFixed(2)}</p>
         <p className="mt-2 text-sm opacity-75">
-          Across {accounts?.data?.length || 0} account(s)
+          Across {accounts?.length || 0} account(s)
         </p>
       </div>
 
@@ -100,7 +100,7 @@ export default function AccountsPage() {
         <div className="rounded-lg bg-white p-12 text-center shadow">
           <p className="text-gray-500">Loading accounts...</p>
         </div>
-      ) : accounts?.data?.length === 0 ? (
+      ) : accounts?.length === 0 ? (
         <div className="rounded-lg bg-white p-12 text-center shadow">
           <Wallet className="mx-auto h-12 w-12 text-gray-400" />
           <p className="mt-4 text-lg font-medium text-gray-900">No accounts yet</p>
@@ -119,7 +119,7 @@ export default function AccountsPage() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {accounts?.data?.map((account: any) => {
+          {accounts?.map((account: any) => {
             const Icon = getAccountIcon(account.type);
             const colorClass = getAccountTypeColor(account.type);
 
@@ -146,7 +146,7 @@ export default function AccountsPage() {
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(account.id)}
+                      onClick={() => handleDelete(account.id, account.name)}
                       className="text-gray-400 hover:text-red-600"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -177,15 +177,21 @@ export default function AccountsPage() {
       )}
 
       {/* Modal */}
-      {isModalOpen && (
-        <AccountModal
-          account={selectedAccount}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedAccount(null);
-          }}
-        />
-      )}
+      <AccountModal
+        account={selectedAccount}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedAccount(null);
+        }}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        {...confirmState}
+        onClose={closeConfirm}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

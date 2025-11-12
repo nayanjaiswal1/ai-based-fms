@@ -142,15 +142,14 @@ export default function GroupsPage() {
       )}
 
       {/* Modal */}
-      {isModalOpen && (
-        <GroupModal
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={(groupId) => {
-            setIsModalOpen(false);
-            navigate(`/groups/${groupId}`);
-          }}
-        />
-      )}
+      <GroupModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={(groupId) => {
+          setIsModalOpen(false);
+          navigate(`/groups/${groupId}`);
+        }}
+      />
     </div>
   );
 }

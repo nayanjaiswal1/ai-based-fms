@@ -327,26 +327,24 @@ export default function TransactionsPage() {
       </div>
 
       {/* Modals */}
-      {isModalOpen && (
-        <TransactionModal
-          transaction={selectedTransaction}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedTransaction(null);
-          }}
-        />
-      )}
+      <TransactionModal
+        transaction={selectedTransaction}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedTransaction(null);
+        }}
+      />
 
-      {isFilterOpen && (
-        <FilterModal
-          filters={filters}
-          onApply={(newFilters) => {
-            setFilters(newFilters);
-            setIsFilterOpen(false);
-          }}
-          onClose={() => setIsFilterOpen(false)}
-        />
-      )}
+      <FilterModal
+        filters={filters}
+        isOpen={isFilterOpen}
+        onApply={(newFilters) => {
+          setFilters(newFilters);
+          setIsFilterOpen(false);
+        }}
+        onClose={() => setIsFilterOpen(false)}
+      />
     </div>
   );
 }
