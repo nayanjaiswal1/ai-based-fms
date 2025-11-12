@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { accountsApi, categoriesApi, tagsApi } from '@services/api';
-import { X } from 'lucide-react';
+import { ModernModal } from '@components/ui/ModernModal';
 import { format, subDays, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 interface FilterModalProps {
   filters: any;
+  isOpen: boolean;
   onApply: (filters: any) => void;
   onClose: () => void;
 }
 
-export default function FilterModal({ filters, onApply, onClose }: FilterModalProps) {
+export default function FilterModal({ filters, isOpen, onApply, onClose }: FilterModalProps) {
   const [localFilters, setLocalFilters] = useState(filters);
 
   const { data: accounts } = useQuery({
@@ -87,75 +88,76 @@ export default function FilterModal({ filters, onApply, onClose }: FilterModalPr
     onApply(localFilters);
   };
 
+  const datePresets = [
+    { value: 'today', label: 'Today' },
+    { value: 'yesterday', label: 'Yesterday' },
+    { value: 'last7days', label: 'Last 7 days' },
+    { value: 'last30days', label: 'Last 30 days' },
+    { value: 'thisMonth', label: 'This month' },
+    { value: 'lastMonth', label: 'Last month' },
+    { value: 'thisYear', label: 'This year' },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Filter Transactions</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="h-6 w-6" />
-          </button>
+    <ModernModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Filter Transactions"
+      description="Apply filters to find specific transactions"
+      size="xl"
+    >
+      <div className="space-y-6">
+        {/* Date Range Presets */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">Quick Date Range</label>
+          <div className="grid grid-cols-4 gap-2">
+            {datePresets.map((preset) => (
+              <button
+                key={preset.value}
+                type="button"
+                onClick={() => handleDatePreset(preset.value)}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-blue-500 transition-colors"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="space-y-4">
-          {/* Date Range Presets */}
+        {/* Custom Date Range */}
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Date Range</label>
-            <div className="mt-2 grid grid-cols-4 gap-2">
-              {['today', 'yesterday', 'last7days', 'last30days', 'thisMonth', 'lastMonth', 'thisYear'].map(
-                (preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => handleDatePreset(preset)}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    {preset === 'today' && 'Today'}
-                    {preset === 'yesterday' && 'Yesterday'}
-                    {preset === 'last7days' && 'Last 7 days'}
-                    {preset === 'last30days' && 'Last 30 days'}
-                    {preset === 'thisMonth' && 'This month'}
-                    {preset === 'lastMonth' && 'Last month'}
-                    {preset === 'thisYear' && 'This year'}
-                  </button>
-                ),
-              )}
-            </div>
+            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1.5">
+              Start Date
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={localFilters.startDate || ''}
+              onChange={handleChange}
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
           </div>
-
-          {/* Custom Date Range */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-                Start Date
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={localFilters.startDate || ''}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
-                End Date
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={localFilters.endDate || ''}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Type */}
           <div>
-            <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1.5">
+              End Date
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              name="endDate"
+              value={localFilters.endDate || ''}
+              onChange={handleChange}
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+        </div>
+
+        {/* Type, Account, Category, Tag */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1.5">
               Type
             </label>
             <select
@@ -163,17 +165,15 @@ export default function FilterModal({ filters, onApply, onClose }: FilterModalPr
               name="type"
               value={localFilters.type || ''}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">All</option>
               <option value="income">Income</option>
               <option value="expense">Expense</option>
             </select>
           </div>
-
-          {/* Account */}
           <div>
-            <label htmlFor="accountId" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="accountId" className="block text-sm font-medium text-gray-700 mb-1.5">
               Account
             </label>
             <select
@@ -181,7 +181,7 @@ export default function FilterModal({ filters, onApply, onClose }: FilterModalPr
               name="accountId"
               value={localFilters.accountId || ''}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">All Accounts</option>
               {accounts?.data?.map((account: any) => (
@@ -191,10 +191,8 @@ export default function FilterModal({ filters, onApply, onClose }: FilterModalPr
               ))}
             </select>
           </div>
-
-          {/* Category */}
           <div>
-            <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 mb-1.5">
               Category
             </label>
             <select
@@ -202,7 +200,7 @@ export default function FilterModal({ filters, onApply, onClose }: FilterModalPr
               name="categoryId"
               value={localFilters.categoryId || ''}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">All Categories</option>
               {categories?.data?.map((category: any) => (
@@ -212,10 +210,8 @@ export default function FilterModal({ filters, onApply, onClose }: FilterModalPr
               ))}
             </select>
           </div>
-
-          {/* Tag */}
           <div>
-            <label htmlFor="tagId" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="tagId" className="block text-sm font-medium text-gray-700 mb-1.5">
               Tag
             </label>
             <select
@@ -223,7 +219,7 @@ export default function FilterModal({ filters, onApply, onClose }: FilterModalPr
               name="tagId"
               value={localFilters.tagId || ''}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">All Tags</option>
               {tags?.data?.map((tag: any) => (
@@ -233,65 +229,67 @@ export default function FilterModal({ filters, onApply, onClose }: FilterModalPr
               ))}
             </select>
           </div>
+        </div>
 
-          {/* Amount Range */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="minAmount" className="block text-sm font-medium text-gray-700">
-                Min Amount
-              </label>
-              <input
-                type="number"
-                id="minAmount"
-                name="minAmount"
-                value={localFilters.minAmount || ''}
-                onChange={handleChange}
-                step="0.01"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="maxAmount" className="block text-sm font-medium text-gray-700">
-                Max Amount
-              </label>
-              <input
-                type="number"
-                id="maxAmount"
-                name="maxAmount"
-                value={localFilters.maxAmount || ''}
-                onChange={handleChange}
-                step="0.01"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
+        {/* Amount Range */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="minAmount" className="block text-sm font-medium text-gray-700 mb-1.5">
+              Min Amount
+            </label>
+            <input
+              type="number"
+              id="minAmount"
+              name="minAmount"
+              value={localFilters.minAmount || ''}
+              onChange={handleChange}
+              step="0.01"
+              placeholder="0.00"
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+          <div>
+            <label htmlFor="maxAmount" className="block text-sm font-medium text-gray-700 mb-1.5">
+              Max Amount
+            </label>
+            <input
+              type="number"
+              id="maxAmount"
+              name="maxAmount"
+              value={localFilters.maxAmount || ''}
+              onChange={handleChange}
+              step="0.01"
+              placeholder="0.00"
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
           </div>
         </div>
 
         {/* Actions */}
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <button
             type="button"
             onClick={handleClear}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             Clear All
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
           >
             Apply Filters
           </button>
         </div>
       </div>
-    </div>
+    </ModernModal>
   );
 }
