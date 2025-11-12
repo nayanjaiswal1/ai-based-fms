@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '@services/api';
-import { TrendingUp, TrendingDown, DollarSign, PieChart, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { DATE_PRESETS, getDateRangeFromPreset, type DatePreset } from '../config/analytics.config';
+import { SummaryCards } from '@components/cards';
+import { getAnalyticsSummaryCards } from '../config/analyticsSummary.config';
 
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState<DatePreset>('thisMonth');
@@ -44,10 +46,7 @@ export default function AnalyticsPage() {
     transactionCount: 0,
   };
 
-  const savingsRate =
-    overviewData.totalIncome > 0
-      ? (overviewData.netSavings / overviewData.totalIncome) * 100
-      : 0;
+  const summaryCards = getAnalyticsSummaryCards(overviewData);
 
   return (
     <div className="space-y-6">
@@ -109,73 +108,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Income</p>
-              <p className="text-2xl font-bold text-green-600">
-                ${overviewData.totalIncome.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
-              <TrendingDown className="h-5 w-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Expenses</p>
-              <p className="text-2xl font-bold text-red-600">
-                ${overviewData.totalExpense.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                overviewData.netSavings >= 0 ? 'bg-blue-100' : 'bg-yellow-100'
-              }`}
-            >
-              <DollarSign
-                className={`h-5 w-5 ${
-                  overviewData.netSavings >= 0 ? 'text-blue-600' : 'text-yellow-600'
-                }`}
-              />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Net Savings</p>
-              <p
-                className={`text-2xl font-bold ${
-                  overviewData.netSavings >= 0 ? 'text-blue-600' : 'text-yellow-600'
-                }`}
-              >
-                ${overviewData.netSavings.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-              <PieChart className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Savings Rate</p>
-              <p className="text-2xl font-bold text-purple-600">{savingsRate.toFixed(1)}%</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SummaryCards cards={summaryCards} />
 
       {/* Net Worth Card */}
       {netWorth?.data && (

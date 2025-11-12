@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { lendBorrowApi } from '@services/api';
-import { Plus, Edit, Trash2, DollarSign, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { format } from 'date-fns';
+import { Plus, DollarSign } from 'lucide-react';
 import LendBorrowModal from '../components/LendBorrowModal';
 import PaymentModal from '../components/PaymentModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DataTable } from '@components/table';
+import { getLendBorrowColumns } from '../config/lendBorrowTable.config';
 
 export default function LendBorrowPage() {
   const queryClient = useQueryClient();
@@ -67,31 +68,7 @@ export default function LendBorrowPage() {
     totalOwing: 0,
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
-      case 'partial':
-        return <Clock className="h-5 w-5 text-yellow-600" />;
-      case 'pending':
-        return <AlertCircle className="h-5 w-5 text-red-600" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return 'text-green-600';
-      case 'partial':
-        return 'text-yellow-600';
-      case 'pending':
-        return 'text-red-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
+  const columns = getLendBorrowColumns(handleEdit, handleDelete, handleRecordPayment);
 
   return (
     <div className="space-y-6">
@@ -204,130 +181,30 @@ export default function LendBorrowPage() {
       </div>
 
       {/* Records Table */}
-      {isLoading ? (
-        <div className="rounded-lg bg-white p-12 text-center shadow">
-          <p className="text-gray-500">Loading records...</p>
-        </div>
-      ) : records?.data?.length === 0 ? (
-        <div className="rounded-lg bg-white p-12 text-center shadow">
-          <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
-          <p className="mt-4 text-lg font-medium text-gray-900">No records yet</p>
-          <p className="mt-2 text-sm text-gray-500">
-            Start tracking money you've lent or borrowed
-          </p>
-          <button
-            onClick={() => {
-              setSelectedRecord(null);
-              setIsLendBorrowModalOpen(true);
-            }}
-            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Add Your First Record
-          </button>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-lg bg-white shadow">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Person
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Paid
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Remaining
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Due Date
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {records?.data?.map((record: any) => {
-                const remaining = record.amount - record.paidAmount;
-
-                return (
-                  <tr key={record.id} className="hover:bg-gray-50">
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                          record.type === 'lent'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {record.type}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">{record.personName}</div>
-                      {record.description && (
-                        <div className="text-sm text-gray-500">{record.description}</div>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      ${Number(record.amount).toFixed(2)}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      ${Number(record.paidAmount).toFixed(2)}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-900">
-                      ${remaining.toFixed(2)}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(record.status)}
-                        <span className={`text-sm font-medium capitalize ${getStatusColor(record.status)}`}>
-                          {record.status}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                      {record.dueDate ? format(new Date(record.dueDate), 'MMM dd, yyyy') : 'No due date'}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      {record.status !== 'paid' && (
-                        <button
-                          onClick={() => handleRecordPayment(record)}
-                          className="mr-3 text-green-600 hover:text-green-900"
-                        >
-                          Record Payment
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleEdit(record)}
-                        className="mr-3 text-blue-600 hover:text-blue-900"
-                      >
-                        <Edit className="inline h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(record.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="inline h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        columns={columns}
+        data={records?.data || []}
+        keyExtractor={(row) => row.id}
+        loading={isLoading}
+        emptyMessage={
+          <div className="py-12 text-center">
+            <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
+            <p className="mt-4 text-lg font-medium text-gray-900">No records yet</p>
+            <p className="mt-2 text-sm text-gray-500">
+              Start tracking money you've lent or borrowed
+            </p>
+            <button
+              onClick={() => {
+                setSelectedRecord(null);
+                setIsLendBorrowModalOpen(true);
+              }}
+              className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Add Your First Record
+            </button>
+          </div>
+        }
+      />
 
       {/* Modals */}
       <LendBorrowModal

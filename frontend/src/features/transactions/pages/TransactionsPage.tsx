@@ -1,22 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsApi, accountsApi, categoriesApi, tagsApi } from '@services/api';
-import {
-  Plus,
-  Search,
-  Filter,
-  Download,
-  Upload,
-  Trash2,
-  Edit,
-  ChevronDown,
-  X,
-} from 'lucide-react';
-import { format } from 'date-fns';
+import { Plus, Search, Filter, Download, Upload, Trash2, X } from 'lucide-react';
 import TransactionModal from '../components/TransactionModal';
 import FilterModal from '../components/FilterModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DataTable } from '@components/table';
+import { getTransactionColumns } from '../config/transactionTable.config';
 
 export default function TransactionsPage() {
   const queryClient = useQueryClient();
@@ -126,6 +117,13 @@ export default function TransactionsPage() {
     (key) => filters[key] !== undefined && filters[key] !== ''
   ).length;
 
+  const columns = getTransactionColumns(
+    getCategoryName,
+    getAccountName,
+    handleEdit,
+    handleDelete
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -234,112 +232,17 @@ export default function TransactionsPage() {
       )}
 
       {/* Transactions Table */}
-      <div className="overflow-hidden rounded-lg bg-white shadow">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left">
-                <input
-                  type="checkbox"
-                  checked={
-                    transactions?.data?.length > 0 &&
-                    selectedIds.length === transactions?.data?.length
-                  }
-                  onChange={handleSelectAll}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Description
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Category
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Account
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Amount
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {isLoading ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                  Loading transactions...
-                </td>
-              </tr>
-            ) : transactions?.data?.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                  No transactions found. Add your first transaction to get started.
-                </td>
-              </tr>
-            ) : (
-              transactions?.data?.map((transaction: any) => (
-                <tr key={transaction.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(transaction.id)}
-                      onChange={() => handleSelectOne(transaction.id)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {format(new Date(transaction.date), 'MMM dd, yyyy')}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {transaction.description}
-                    </div>
-                    {transaction.notes && (
-                      <div className="text-sm text-gray-500">{transaction.notes}</div>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {getCategoryName(transaction.categoryId)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {getAccountName(transaction.accountId)}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span
-                      className={`text-sm font-semibold ${
-                        transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {transaction.type === 'income' ? '+' : '-'}$
-                      {Number(transaction.amount).toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                    <button
-                      onClick={() => handleEdit(transaction)}
-                      className="mr-3 text-blue-600 hover:text-blue-900"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(transaction.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={transactions?.data || []}
+        keyExtractor={(row) => row.id}
+        loading={isLoading}
+        emptyMessage="No transactions found. Add your first transaction to get started."
+        selectable
+        selectedIds={selectedIds}
+        onSelectAll={handleSelectAll}
+        onSelectOne={handleSelectOne}
+      />
 
       {/* Modals */}
       <TransactionModal
