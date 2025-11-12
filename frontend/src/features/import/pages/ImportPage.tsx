@@ -1,36 +1,24 @@
 import { useState, useCallback } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { Upload, FileText, CheckCircle, ChevronRight } from 'lucide-react';
+import { useImportSession } from '../hooks/useImportSession';
 import { importApi } from '@services/api';
-import { Upload, FileText, CheckCircle, X, ChevronRight } from 'lucide-react';
+import { DataTable } from '@components/table';
+import { getImportPreviewColumns } from '../config/importTable.config';
 
 export default function ImportPage() {
-  const queryClient = useQueryClient();
   const [dragActive, setDragActive] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [step, setStep] = useState<'upload' | 'preview' | 'mapping' | 'confirm'>('upload');
-
-  const { data: preview } = useQuery({
-    queryKey: ['import-preview', sessionId],
-    queryFn: () => importApi.preview(sessionId!),
-    enabled: !!sessionId && step === 'preview',
-  });
-
-  const uploadMutation = useMutation({
-    mutationFn: (formData: FormData) => importApi.uploadFile(formData),
-    onSuccess: (response) => {
-      setSessionId(response.data.sessionId);
-      setStep('preview');
-    },
-  });
-
-  const confirmMutation = useMutation({
-    mutationFn: (sessionId: string) => importApi.confirm(sessionId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      setStep('upload');
-      setSessionId(null);
-    },
-  });
+  const {
+    sessionId,
+    preview,
+    uploadMutation,
+    confirmMutation,
+    cancelMutation,
+    handleUpload,
+    handleConfirm,
+    handleCancel,
+  } = useImportSession();
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -59,25 +47,13 @@ export default function ImportPage() {
   };
 
   const handleFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    await uploadMutation.mutateAsync(formData);
-  };
-
-  const handleConfirm = async () => {
-    if (sessionId) {
-      await confirmMutation.mutateAsync(sessionId);
+    const result = await handleUpload(file);
+    if (result) {
+      setStep('preview');
     }
   };
 
-  const handleCancel = async () => {
-    if (sessionId) {
-      await importApi.cancel(sessionId);
-      setStep('upload');
-      setSessionId(null);
-    }
-  };
+  const previewColumns = getImportPreviewColumns();
 
   return (
     <div className="space-y-6">
@@ -177,57 +153,18 @@ export default function ImportPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Type
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {preview.data.transactions?.slice(0, 10).map((transaction: any, index: number) => (
-                  <tr key={index}>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      {transaction.date}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {transaction.description}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      ${Number(transaction.amount).toFixed(2)}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                          transaction.type === 'income'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {transaction.type}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {preview.data.transactions?.length > 10 && (
-              <p className="mt-4 text-center text-sm text-gray-500">
-                ... and {preview.data.transactions.length - 10} more transactions
-              </p>
-            )}
-          </div>
+          <DataTable
+            columns={previewColumns}
+            data={preview.data.transactions?.slice(0, 10) || []}
+            keyExtractor={(_, index) => `preview-${index}`}
+            loading={false}
+            emptyMessage="No transactions found in preview"
+          />
+          {preview.data.transactions?.length > 10 && (
+            <p className="mt-4 text-center text-sm text-gray-500">
+              ... and {preview.data.transactions.length - 10} more transactions
+            </p>
+          )}
         </div>
       )}
 

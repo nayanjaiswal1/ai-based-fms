@@ -1,14 +1,25 @@
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { budgetsApi, categoriesApi } from '@services/api';
 import { Plus, Edit, Trash2, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import BudgetModal from '../components/BudgetModal';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { getBudgetProgressColor, getBudgetProgressTextColor, formatBudgetPeriod } from '../config/budgets.config';
 
 export default function BudgetsPage() {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const queryClient = useQueryClient();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedBudget, setSelectedBudget] = useState<any>(null);
+  const { confirmState, confirm, closeConfirm } = useConfirm();
+
+  // Detect modal state from URL path
+  const isNewModal = location.pathname === '/budgets/new';
+  const isEditModal = location.pathname.startsWith('/budgets/edit/');
+  const modalMode = isNewModal ? 'new' : isEditModal ? 'edit' : null;
+  const budgetId = id;
 
   const { data: budgets, isLoading } = useQuery({
     queryKey: ['budgets'],
@@ -20,6 +31,13 @@ export default function BudgetsPage() {
     queryFn: categoriesApi.getAll,
   });
 
+  // Fetch selected budget for edit mode
+  const { data: selectedBudgetData } = useQuery({
+    queryKey: ['budget', budgetId],
+    queryFn: () => budgetsApi.getById(budgetId!),
+    enabled: !!budgetId && modalMode === 'edit',
+  });
+
   const deleteMutation = useMutation({
     mutationFn: budgetsApi.delete,
     onSuccess: () => {
@@ -28,36 +46,28 @@ export default function BudgetsPage() {
   });
 
   const handleEdit = (budget: any) => {
-    setSelectedBudget(budget);
-    setIsModalOpen(true);
+    navigate(`/budgets/edit/${budget.id}`);
+  };
+
+  const handleCloseModal = () => {
+    navigate('/budgets');
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this budget?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Delete Budget',
+      message: 'Are you sure you want to delete this budget? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(id);
+      },
+    });
   };
 
   const getCategoryName = (categoryId: string) => {
     const category = categories?.data?.find((c: any) => c.id === categoryId);
     return category?.name || 'All Categories';
-  };
-
-  const getProgressColor = (percentage: number) => {
-    if (percentage >= 90) return 'bg-red-500';
-    if (percentage >= 75) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
-
-  const getProgressTextColor = (percentage: number) => {
-    if (percentage >= 90) return 'text-red-600';
-    if (percentage >= 75) return 'text-yellow-600';
-    return 'text-green-600';
-  };
-
-  const formatPeriod = (period: string) => {
-    const words = period.split('_');
-    return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   };
 
   return (
@@ -71,10 +81,7 @@ export default function BudgetsPage() {
           </p>
         </div>
         <button
-          onClick={() => {
-            setSelectedBudget(null);
-            setIsModalOpen(true);
-          }}
+          onClick={() => navigate('/budgets/new')}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
@@ -95,10 +102,7 @@ export default function BudgetsPage() {
             Create your first budget to start tracking spending
           </p>
           <button
-            onClick={() => {
-              setSelectedBudget(null);
-              setIsModalOpen(true);
-            }}
+            onClick={() => navigate('/budgets/new')}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Create Your First Budget
@@ -143,7 +147,7 @@ export default function BudgetsPage() {
                 {/* Period */}
                 <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatPeriod(budget.period)}</span>
+                  <span>{formatBudgetPeriod(budget.period)}</span>
                   {budget.startDate && (
                     <span>
                       ({format(parseISO(budget.startDate), 'MMM dd')} -{' '}
@@ -155,16 +159,16 @@ export default function BudgetsPage() {
                 {/* Progress Bar */}
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className={`font-medium ${getProgressTextColor(percentage)}`}>
+                    <span className={`font-medium ${getBudgetProgressTextColor(percentage)}`}>
                       ${budget.spent.toFixed(2)} of ${budget.amount.toFixed(2)}
                     </span>
-                    <span className={`font-semibold ${getProgressTextColor(percentage)}`}>
+                    <span className={`font-semibold ${getBudgetProgressTextColor(percentage)}`}>
                       {percentage.toFixed(0)}%
                     </span>
                   </div>
                   <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200">
                     <div
-                      className={`h-full transition-all ${getProgressColor(percentage)}`}
+                      className={`h-full transition-all ${getBudgetProgressColor(percentage)}`}
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>
@@ -201,13 +205,12 @@ export default function BudgetsPage() {
 
       {/* Modal */}
       <BudgetModal
-        budget={selectedBudget}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedBudget(null);
-        }}
+        isOpen={!!modalMode}
+        budget={modalMode === 'edit' ? selectedBudgetData?.data : null}
+        onClose={handleCloseModal}
       />
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }

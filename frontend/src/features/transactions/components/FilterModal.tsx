@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { accountsApi, categoriesApi, tagsApi } from '@services/api';
 import { ModernModal } from '@components/ui/ModernModal';
-import { format, subDays, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { DateFilters } from './filters/DateFilters';
+import { AmountFilters } from './filters/AmountFilters';
 
 interface FilterModalProps {
   filters: any;
@@ -37,46 +38,19 @@ export default function FilterModal({ filters, isOpen, onApply, onClose }: Filte
     }));
   };
 
-  const handleDatePreset = (preset: string) => {
-    const today = new Date();
-    let startDate, endDate;
-
-    switch (preset) {
-      case 'today':
-        startDate = endDate = format(today, 'yyyy-MM-dd');
-        break;
-      case 'yesterday':
-        startDate = endDate = format(subDays(today, 1), 'yyyy-MM-dd');
-        break;
-      case 'last7days':
-        startDate = format(subDays(today, 7), 'yyyy-MM-dd');
-        endDate = format(today, 'yyyy-MM-dd');
-        break;
-      case 'last30days':
-        startDate = format(subDays(today, 30), 'yyyy-MM-dd');
-        endDate = format(today, 'yyyy-MM-dd');
-        break;
-      case 'thisMonth':
-        startDate = format(startOfMonth(today), 'yyyy-MM-dd');
-        endDate = format(endOfMonth(today), 'yyyy-MM-dd');
-        break;
-      case 'lastMonth':
-        const lastMonth = subDays(startOfMonth(today), 1);
-        startDate = format(startOfMonth(lastMonth), 'yyyy-MM-dd');
-        endDate = format(endOfMonth(lastMonth), 'yyyy-MM-dd');
-        break;
-      case 'thisYear':
-        startDate = format(startOfYear(today), 'yyyy-MM-dd');
-        endDate = format(endOfYear(today), 'yyyy-MM-dd');
-        break;
-      default:
-        return;
-    }
-
+  const handleDateChange = (startDate?: string, endDate?: string) => {
     setLocalFilters((prev: any) => ({
       ...prev,
       startDate,
       endDate,
+    }));
+  };
+
+  const handleAmountChange = (minAmount?: string, maxAmount?: string) => {
+    setLocalFilters((prev: any) => ({
+      ...prev,
+      minAmount,
+      maxAmount,
     }));
   };
 
@@ -88,16 +62,6 @@ export default function FilterModal({ filters, isOpen, onApply, onClose }: Filte
     onApply(localFilters);
   };
 
-  const datePresets = [
-    { value: 'today', label: 'Today' },
-    { value: 'yesterday', label: 'Yesterday' },
-    { value: 'last7days', label: 'Last 7 days' },
-    { value: 'last30days', label: 'Last 30 days' },
-    { value: 'thisMonth', label: 'This month' },
-    { value: 'lastMonth', label: 'Last month' },
-    { value: 'thisYear', label: 'This year' },
-  ];
-
   return (
     <ModernModal
       isOpen={isOpen}
@@ -107,52 +71,12 @@ export default function FilterModal({ filters, isOpen, onApply, onClose }: Filte
       size="xl"
     >
       <div className="space-y-6">
-        {/* Date Range Presets */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">Quick Date Range</label>
-          <div className="grid grid-cols-4 gap-2">
-            {datePresets.map((preset) => (
-              <button
-                key={preset.value}
-                type="button"
-                onClick={() => handleDatePreset(preset.value)}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-blue-500 transition-colors"
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Custom Date Range */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={localFilters.startDate || ''}
-              onChange={handleChange}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
-          <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1.5">
-              End Date
-            </label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={localFilters.endDate || ''}
-              onChange={handleChange}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
-        </div>
+        {/* Date Filters */}
+        <DateFilters
+          startDate={localFilters.startDate}
+          endDate={localFilters.endDate}
+          onDateChange={handleDateChange}
+        />
 
         {/* Type, Account, Category, Tag */}
         <div className="grid grid-cols-2 gap-4">
@@ -231,39 +155,12 @@ export default function FilterModal({ filters, isOpen, onApply, onClose }: Filte
           </div>
         </div>
 
-        {/* Amount Range */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="minAmount" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Min Amount
-            </label>
-            <input
-              type="number"
-              id="minAmount"
-              name="minAmount"
-              value={localFilters.minAmount || ''}
-              onChange={handleChange}
-              step="0.01"
-              placeholder="0.00"
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
-          <div>
-            <label htmlFor="maxAmount" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Max Amount
-            </label>
-            <input
-              type="number"
-              id="maxAmount"
-              name="maxAmount"
-              value={localFilters.maxAmount || ''}
-              onChange={handleChange}
-              step="0.01"
-              placeholder="0.00"
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
-        </div>
+        {/* Amount Filters */}
+        <AmountFilters
+          minAmount={localFilters.minAmount}
+          maxAmount={localFilters.maxAmount}
+          onAmountChange={handleAmountChange}
+        />
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

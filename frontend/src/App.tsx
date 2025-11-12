@@ -32,11 +32,23 @@ function App() {
       <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/transactions" element={<TransactionsPage />} />
+        <Route path="/transactions/new" element={<TransactionsPage />} />
+        <Route path="/transactions/edit/:id" element={<TransactionsPage />} />
         <Route path="/accounts" element={<AccountsPage />} />
+        <Route path="/accounts/new" element={<AccountsPage />} />
+        <Route path="/accounts/edit/:id" element={<AccountsPage />} />
         <Route path="/budgets" element={<BudgetsPage />} />
+        <Route path="/budgets/new" element={<BudgetsPage />} />
+        <Route path="/budgets/edit/:id" element={<BudgetsPage />} />
         <Route path="/groups" element={<GroupsPage />} />
+        <Route path="/groups/new" element={<GroupsPage />} />
+        <Route path="/groups/edit/:id" element={<GroupsPage />} />
         <Route path="/investments" element={<InvestmentsPage />} />
+        <Route path="/investments/new" element={<InvestmentsPage />} />
+        <Route path="/investments/edit/:id" element={<InvestmentsPage />} />
         <Route path="/lend-borrow" element={<LendBorrowPage />} />
+        <Route path="/lend-borrow/new" element={<LendBorrowPage />} />
+        <Route path="/lend-borrow/edit/:id" element={<LendBorrowPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/ai" element={<AIPage />} />
         <Route path="/import" element={<ImportPage />} />

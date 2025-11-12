@@ -1,14 +1,17 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { groupsApi } from '@services/api';
 import { Plus, Users, DollarSign, TrendingUp, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import GroupModal from '../components/GroupModal';
 
 export default function GroupsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const location = useLocation();
+
+  // Detect modal state from URL path
+  const isNewModal = location.pathname === '/groups/new';
+  const modalMode = isNewModal ? 'new' : null;
 
   const { data: groups, isLoading } = useQuery({
     queryKey: ['groups'],
@@ -17,6 +20,10 @@ export default function GroupsPage() {
 
   const handleGroupClick = (groupId: string) => {
     navigate(`/groups/${groupId}`);
+  };
+
+  const handleCloseModal = () => {
+    navigate('/groups');
   };
 
   return (
@@ -30,7 +37,7 @@ export default function GroupsPage() {
           </p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => navigate('/groups/new')}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
@@ -51,7 +58,7 @@ export default function GroupsPage() {
             Create a group to start sharing expenses with others
           </p>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => navigate('/groups/new')}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Create Your First Group
@@ -143,10 +150,9 @@ export default function GroupsPage() {
 
       {/* Modal */}
       <GroupModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={!!modalMode}
+        onClose={handleCloseModal}
         onSuccess={(groupId) => {
-          setIsModalOpen(false);
           navigate(`/groups/${groupId}`);
         }}
       />

@@ -1,13 +1,19 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '@services/api';
-import { TrendingUp, TrendingDown, DollarSign, PieChart, Calendar } from 'lucide-react';
-import { format, subDays, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
+import { Calendar } from 'lucide-react';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { DATE_PRESETS, getDateRangeFromPreset, type DatePreset } from '../config/analytics.config';
+import { SummaryCards } from '@components/cards';
+import { getAnalyticsSummaryCards } from '../config/analyticsSummary.config';
+import { useUrlParams } from '@/hooks/useUrlParams';
 
 export default function AnalyticsPage() {
-  const [dateRange, setDateRange] = useState('thisMonth');
-  const [startDate, setStartDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
-  const [endDate, setEndDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+  const { getParam, setParams } = useUrlParams();
+
+  // Get date range from URL, default to 'thisMonth'
+  const dateRange = (getParam('range') as DatePreset) || 'thisMonth';
+  const startDate = getParam('startDate') || format(startOfMonth(new Date()), 'yyyy-MM-dd');
+  const endDate = getParam('endDate') || format(endOfMonth(new Date()), 'yyyy-MM-dd');
 
   const { data: overview } = useQuery({
     queryKey: ['analytics-overview', startDate, endDate],
@@ -29,39 +35,27 @@ export default function AnalyticsPage() {
     queryFn: analyticsApi.getNetWorth,
   });
 
-  const handleDatePreset = (preset: string) => {
-    setDateRange(preset);
-    const today = new Date();
-    let start, end;
+  const handleDatePreset = (preset: DatePreset) => {
+    const { start, end } = getDateRangeFromPreset(preset);
+    setParams({
+      range: preset,
+      startDate: start,
+      endDate: end,
+    });
+  };
 
-    switch (preset) {
-      case 'last7days':
-        start = format(subDays(today, 7), 'yyyy-MM-dd');
-        end = format(today, 'yyyy-MM-dd');
-        break;
-      case 'last30days':
-        start = format(subDays(today, 30), 'yyyy-MM-dd');
-        end = format(today, 'yyyy-MM-dd');
-        break;
-      case 'thisMonth':
-        start = format(startOfMonth(today), 'yyyy-MM-dd');
-        end = format(endOfMonth(today), 'yyyy-MM-dd');
-        break;
-      case 'lastMonth':
-        const lastMonth = subDays(startOfMonth(today), 1);
-        start = format(startOfMonth(lastMonth), 'yyyy-MM-dd');
-        end = format(endOfMonth(lastMonth), 'yyyy-MM-dd');
-        break;
-      case 'thisYear':
-        start = format(startOfYear(today), 'yyyy-MM-dd');
-        end = format(today, 'yyyy-MM-dd');
-        break;
-      default:
-        return;
-    }
+  const handleStartDateChange = (value: string) => {
+    setParams({
+      range: 'custom',
+      startDate: value,
+    });
+  };
 
-    setStartDate(start);
-    setEndDate(end);
+  const handleEndDateChange = (value: string) => {
+    setParams({
+      range: 'custom',
+      endDate: value,
+    });
   };
 
   const overviewData = overview?.data || {
@@ -71,10 +65,7 @@ export default function AnalyticsPage() {
     transactionCount: 0,
   };
 
-  const savingsRate =
-    overviewData.totalIncome > 0
-      ? (overviewData.netSavings / overviewData.totalIncome) * 100
-      : 0;
+  const summaryCards = getAnalyticsSummaryCards(overviewData);
 
   return (
     <div className="space-y-6">
@@ -115,20 +106,14 @@ export default function AnalyticsPage() {
             <input
               type="date"
               value={startDate}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                setDateRange('custom');
-              }}
+              onChange={(e) => handleStartDateChange(e.target.value)}
               className="rounded-md border border-gray-300 px-3 py-1 text-sm"
             />
             <span className="flex items-center text-gray-500">to</span>
             <input
               type="date"
               value={endDate}
-              onChange={(e) => {
-                setEndDate(e.target.value);
-                setDateRange('custom');
-              }}
+              onChange={(e) => handleEndDateChange(e.target.value)}
               className="rounded-md border border-gray-300 px-3 py-1 text-sm"
             />
           </div>
@@ -136,73 +121,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Income</p>
-              <p className="text-2xl font-bold text-green-600">
-                ${overviewData.totalIncome.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
-              <TrendingDown className="h-5 w-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Expenses</p>
-              <p className="text-2xl font-bold text-red-600">
-                ${overviewData.totalExpense.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                overviewData.netSavings >= 0 ? 'bg-blue-100' : 'bg-yellow-100'
-              }`}
-            >
-              <DollarSign
-                className={`h-5 w-5 ${
-                  overviewData.netSavings >= 0 ? 'text-blue-600' : 'text-yellow-600'
-                }`}
-              />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Net Savings</p>
-              <p
-                className={`text-2xl font-bold ${
-                  overviewData.netSavings >= 0 ? 'text-blue-600' : 'text-yellow-600'
-                }`}
-              >
-                ${overviewData.netSavings.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
-              <PieChart className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Savings Rate</p>
-              <p className="text-2xl font-bold text-purple-600">{savingsRate.toFixed(1)}%</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SummaryCards cards={summaryCards} />
 
       {/* Net Worth Card */}
       {netWorth?.data && (
@@ -257,7 +176,7 @@ export default function AnalyticsPage() {
       <div className="rounded-lg bg-white p-6 shadow">
         <h2 className="text-lg font-semibold text-gray-900">Monthly Trends</h2>
         <div className="mt-4">
-          {trends?.data?.length > 0 ? (
+          {trends?.data && trends.data.length > 0 ? (
             <div className="space-y-3">
               {trends.data.map((month: any) => (
                 <div

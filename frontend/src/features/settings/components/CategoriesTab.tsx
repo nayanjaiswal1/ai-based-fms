@@ -3,9 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoriesApi } from '@services/api';
 import { Plus, Edit, Trash2, ChevronRight } from 'lucide-react';
 import CategoryModal from './CategoryModal';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function CategoriesTab() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
 
@@ -27,9 +30,15 @@ export default function CategoriesTab() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete the category "${name}"? This cannot be undone.`)) {
-      await deleteMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Delete Category',
+      message: `Are you sure you want to delete the category "${name}"? This action cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(id);
+      },
+    });
   };
 
   const renderCategories = (parentId: string | null = null, level: number = 0) => {
@@ -102,15 +111,16 @@ export default function CategoriesTab() {
         <div className="mt-4">{renderCategories()}</div>
       )}
 
-      {isModalOpen && (
-        <CategoryModal
-          category={selectedCategory}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedCategory(null);
-          }}
-        />
-      )}
+      <CategoryModal
+        isOpen={isModalOpen}
+        category={selectedCategory}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedCategory(null);
+        }}
+      />
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }
