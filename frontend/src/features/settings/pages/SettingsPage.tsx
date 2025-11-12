@@ -1,15 +1,22 @@
-import { useState } from 'react';
 import CategoriesTab from '../components/CategoriesTab';
 import TagsTab from '../components/TagsTab';
 import RemindersTab from '../components/RemindersTab';
 import OAuthTab from '../components/OAuthTab';
 import { Tabs } from '@components/tabs';
 import { getSettingsTabs, type SettingsTab } from '../config/settings.config';
+import { useUrlParams } from '@/hooks/useUrlParams';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('categories');
+  const { getParam, setParam } = useUrlParams();
+
+  // Get active tab from URL, default to 'categories'
+  const activeTab = (getParam('tab') as SettingsTab) || 'categories';
 
   const tabs = getSettingsTabs();
+
+  const handleTabChange = (tabId: string) => {
+    setParam('tab', tabId);
+  };
 
   return (
     <div className="space-y-6">
@@ -25,7 +32,7 @@ export default function SettingsPage() {
       <Tabs
         tabs={tabs}
         activeTab={activeTab}
-        onTabChange={(tabId) => setActiveTab(tabId as SettingsTab)}
+        onTabChange={handleTabChange}
         variant="underline"
       />
 

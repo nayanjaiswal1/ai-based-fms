@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsApi, accountsApi, categoriesApi, tagsApi } from '@services/api';
 import { Plus, Search, Filter, Download, Upload, Trash2, X } from 'lucide-react';
@@ -8,16 +9,33 @@ import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@components/table';
 import { getTransactionColumns } from '../config/transactionTable.config';
+import { useUrlParams } from '@/hooks/useUrlParams';
 
 export default function TransactionsPage() {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState<any>({});
+
+  // Use the new useUrlParams hook for query parameters
+  const { getParam, getParams, setParam, setParams, removeParam, removeParams } = useUrlParams();
+
+  // Detect modal state from URL path
+  const isNewModal = location.pathname === '/transactions/new';
+  const isEditModal = location.pathname.startsWith('/transactions/edit/');
+  const modalMode = isNewModal ? 'new' : isEditModal ? 'edit' : null;
+  const transactionId = id;
+
+  const filterMode = getParam('filter'); // 'open' to show filters
+  const searchTerm = getParam('search');
+
+  // Parse filters from URL using the hook
+  const filters = useMemo(() => {
+    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount'];
+    return getParams(filterKeys);
+  }, [getParams]);
 
   const { data: transactions, isLoading } = useQuery({
     queryKey: ['transactions', filters, searchTerm],
@@ -43,6 +61,13 @@ export default function TransactionsPage() {
     queryFn: tagsApi.getAll,
   });
 
+  // Fetch selected transaction for edit mode
+  const { data: selectedTransactionData } = useQuery({
+    queryKey: ['transaction', transactionId],
+    queryFn: () => transactionsApi.getById(transactionId!),
+    enabled: !!transactionId && modalMode === 'edit',
+  });
+
   const deleteMutation = useMutation({
     mutationFn: transactionsApi.delete,
     onSuccess: () => {
@@ -61,8 +86,45 @@ export default function TransactionsPage() {
   });
 
   const handleEdit = (transaction: any) => {
-    setSelectedTransaction(transaction);
-    setIsModalOpen(true);
+    navigate(`/transactions/edit/${transaction.id}`);
+  };
+
+  const handleCloseModal = () => {
+    navigate('/transactions' + (location.search || ''));
+  };
+
+  const handleOpenFilterModal = () => {
+    setParam('filter', 'open');
+  };
+
+  const handleCloseFilterModal = () => {
+    removeParam('filter');
+  };
+
+  const handleApplyFilters = (newFilters: any) => {
+    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount'];
+
+    // Convert filters to the right format
+    const cleanedFilters: Record<string, string | null> = {};
+    Object.entries(newFilters).forEach(([key, value]) => {
+      cleanedFilters[key] = value ? String(value) : null;
+    });
+
+    // Set all new filters and remove 'filter' modal param and old filter keys in one operation
+    setParams(cleanedFilters, { removeKeys: ['filter', ...filterKeys] });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setParam('search', value || null);
+  };
+
+  const handleRemoveFilter = (key: string) => {
+    removeParam(key);
+  };
+
+  const handleClearAllFilters = () => {
+    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount'];
+    removeParams(filterKeys);
   };
 
   const handleDelete = async (id: string) => {
@@ -139,10 +201,7 @@ export default function TransactionsPage() {
             Export
           </button>
           <button
-            onClick={() => {
-              setSelectedTransaction(null);
-              setIsModalOpen(true);
-            }}
+            onClick={() => navigate('/transactions/new')}
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
@@ -159,12 +218,12 @@ export default function TransactionsPage() {
             type="text"
             placeholder="Search transactions..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <button
-          onClick={() => setIsFilterOpen(true)}
+          onClick={handleOpenFilterModal}
           className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           <Filter className="h-4 w-4" />
@@ -190,7 +249,7 @@ export default function TransactionsPage() {
               >
                 {key}: {typeof value === 'object' ? JSON.stringify(value) : value}
                 <button
-                  onClick={() => setFilters({ ...filters, [key]: undefined })}
+                  onClick={() => handleRemoveFilter(key)}
                   className="hover:text-blue-900"
                 >
                   <X className="h-3 w-3" />
@@ -199,7 +258,7 @@ export default function TransactionsPage() {
             );
           })}
           <button
-            onClick={() => setFilters({})}
+            onClick={handleClearAllFilters}
             className="text-sm text-blue-600 hover:text-blue-700"
           >
             Clear all
@@ -246,22 +305,16 @@ export default function TransactionsPage() {
 
       {/* Modals */}
       <TransactionModal
-        transaction={selectedTransaction}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedTransaction(null);
-        }}
+        transaction={modalMode === 'edit' ? selectedTransactionData?.data : null}
+        isOpen={!!modalMode}
+        onClose={handleCloseModal}
       />
 
       <FilterModal
         filters={filters}
-        isOpen={isFilterOpen}
-        onApply={(newFilters) => {
-          setFilters(newFilters);
-          setIsFilterOpen(false);
-        }}
-        onClose={() => setIsFilterOpen(false)}
+        isOpen={filterMode === 'open'}
+        onApply={handleApplyFilters}
+        onClose={handleCloseFilterModal}
       />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />

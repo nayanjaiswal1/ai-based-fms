@@ -32,6 +32,8 @@ function App() {
       <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/transactions" element={<TransactionsPage />} />
+        <Route path="/transactions/new" element={<TransactionsPage />} />
+        <Route path="/transactions/edit/:id" element={<TransactionsPage />} />
         <Route path="/accounts" element={<AccountsPage />} />
         <Route path="/budgets" element={<BudgetsPage />} />
         <Route path="/groups" element={<GroupsPage />} />

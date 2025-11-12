@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '@services/api';
 import { Calendar } from 'lucide-react';
@@ -6,11 +5,15 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { DATE_PRESETS, getDateRangeFromPreset, type DatePreset } from '../config/analytics.config';
 import { SummaryCards } from '@components/cards';
 import { getAnalyticsSummaryCards } from '../config/analyticsSummary.config';
+import { useUrlParams } from '@/hooks/useUrlParams';
 
 export default function AnalyticsPage() {
-  const [dateRange, setDateRange] = useState<DatePreset>('thisMonth');
-  const [startDate, setStartDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
-  const [endDate, setEndDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+  const { getParam, setParams } = useUrlParams();
+
+  // Get date range from URL, default to 'thisMonth'
+  const dateRange = (getParam('range') as DatePreset) || 'thisMonth';
+  const startDate = getParam('startDate') || format(startOfMonth(new Date()), 'yyyy-MM-dd');
+  const endDate = getParam('endDate') || format(endOfMonth(new Date()), 'yyyy-MM-dd');
 
   const { data: overview } = useQuery({
     queryKey: ['analytics-overview', startDate, endDate],
@@ -33,10 +36,26 @@ export default function AnalyticsPage() {
   });
 
   const handleDatePreset = (preset: DatePreset) => {
-    setDateRange(preset);
     const { start, end } = getDateRangeFromPreset(preset);
-    setStartDate(start);
-    setEndDate(end);
+    setParams({
+      range: preset,
+      startDate: start,
+      endDate: end,
+    });
+  };
+
+  const handleStartDateChange = (value: string) => {
+    setParams({
+      range: 'custom',
+      startDate: value,
+    });
+  };
+
+  const handleEndDateChange = (value: string) => {
+    setParams({
+      range: 'custom',
+      endDate: value,
+    });
   };
 
   const overviewData = overview?.data || {
@@ -87,20 +106,14 @@ export default function AnalyticsPage() {
             <input
               type="date"
               value={startDate}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                setDateRange('custom');
-              }}
+              onChange={(e) => handleStartDateChange(e.target.value)}
               className="rounded-md border border-gray-300 px-3 py-1 text-sm"
             />
             <span className="flex items-center text-gray-500">to</span>
             <input
               type="date"
               value={endDate}
-              onChange={(e) => {
-                setEndDate(e.target.value);
-                setDateRange('custom');
-              }}
+              onChange={(e) => handleEndDateChange(e.target.value)}
               className="rounded-md border border-gray-300 px-3 py-1 text-sm"
             />
           </div>
