@@ -3,9 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tagsApi } from '@services/api';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import TagModal from './TagModal';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function TagsTab() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<any>(null);
 
@@ -27,9 +30,15 @@ export default function TagsTab() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete the tag "${name}"?`)) {
-      await deleteMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Delete Tag',
+      message: `Are you sure you want to delete the tag "${name}"? This action cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(id);
+      },
+    });
   };
 
   return (
@@ -92,6 +101,8 @@ export default function TagsTab() {
           }}
         />
       )}
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }

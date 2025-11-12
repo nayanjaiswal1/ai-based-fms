@@ -3,9 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { emailApi } from '@services/api';
 import { Plus, Mail, RefreshCw, Trash2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import EmailModal from '../components/EmailModal';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function EmailPage() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: connections, isLoading } = useQuery({
@@ -29,9 +32,15 @@ export default function EmailPage() {
   });
 
   const handleDisconnect = async (id: string) => {
-    if (confirm('Are you sure you want to disconnect this email account?')) {
-      await disconnectMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Disconnect Email',
+      message: 'Are you sure you want to disconnect this email account? You can reconnect it later.',
+      variant: 'warning',
+      confirmLabel: 'Disconnect',
+      onConfirm: async () => {
+        await disconnectMutation.mutateAsync(id);
+      },
+    });
   };
 
   const handleSync = async (id: string) => {
@@ -183,6 +192,8 @@ export default function EmailPage() {
 
       {/* Modal */}
       {isModalOpen && <EmailModal onClose={() => setIsModalOpen(false)} />}
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }

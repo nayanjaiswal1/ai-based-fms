@@ -2,9 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@services/api';
 import { Bell, CheckCircle, AlertCircle, Info, Trash2, Check, X } from 'lucide-react';
 import { useState } from 'react';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
   const { data: notifications, isLoading } = useQuery({
@@ -49,15 +52,27 @@ export default function NotificationsPage() {
   };
 
   const handleMarkAllRead = async () => {
-    if (confirm('Mark all notifications as read?')) {
-      await markAllReadMutation.mutateAsync();
-    }
+    confirm({
+      title: 'Mark All as Read',
+      message: 'Mark all notifications as read?',
+      variant: 'info',
+      confirmLabel: 'Mark All Read',
+      onConfirm: async () => {
+        await markAllReadMutation.mutateAsync();
+      },
+    });
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Delete this notification?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Delete Notification',
+      message: 'Delete this notification?',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(id);
+      },
+    });
   };
 
   const getNotificationIcon = (type: string) => {
@@ -277,6 +292,8 @@ export default function NotificationsPage() {
           />
         </div>
       </div>
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }

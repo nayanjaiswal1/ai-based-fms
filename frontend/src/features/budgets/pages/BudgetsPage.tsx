@@ -4,9 +4,12 @@ import { budgetsApi, categoriesApi } from '@services/api';
 import { Plus, Edit, Trash2, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import BudgetModal from '../components/BudgetModal';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function BudgetsPage() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<any>(null);
 
@@ -33,9 +36,15 @@ export default function BudgetsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this budget?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Delete Budget',
+      message: 'Are you sure you want to delete this budget? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(id);
+      },
+    });
   };
 
   const getCategoryName = (categoryId: string) => {
@@ -208,6 +217,8 @@ export default function BudgetsPage() {
           setSelectedBudget(null);
         }}
       />
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }

@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_CONFIG } from '@config/api.config';
 import { Chrome, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function OAuthTab() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isConnecting, setIsConnecting] = useState(false);
 
   // Mock query for OAuth connections - replace with actual API call
@@ -80,11 +83,17 @@ export default function OAuthTab() {
   };
 
   const handleDisconnect = async (provider: string) => {
-    if (confirm(`Disconnect ${provider}?`)) {
-      // Implement disconnect logic
-      // await api.delete(`/oauth/${provider}`);
-      queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
-    }
+    confirm({
+      title: 'Disconnect Account',
+      message: `Are you sure you want to disconnect your ${provider} account? You can reconnect it later.`,
+      variant: 'warning',
+      confirmLabel: 'Disconnect',
+      onConfirm: async () => {
+        // Implement disconnect logic
+        // await api.delete(`/oauth/${provider}`);
+        queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
+      },
+    });
   };
 
   const isGoogleConfigured = Boolean(API_CONFIG.oauth.google.clientId);
@@ -191,6 +200,8 @@ export default function OAuthTab() {
           </li>
         </ul>
       </div>
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }

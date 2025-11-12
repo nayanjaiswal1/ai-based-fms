@@ -15,9 +15,12 @@ import {
 import { format } from 'date-fns';
 import TransactionModal from '../components/TransactionModal';
 import FilterModal from '../components/FilterModal';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function TransactionsPage() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
@@ -72,15 +75,27 @@ export default function TransactionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this transaction?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Delete Transaction',
+      message: 'Are you sure you want to delete this transaction? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(id);
+      },
+    });
   };
 
   const handleBulkDelete = async () => {
-    if (confirm(`Are you sure you want to delete ${selectedIds.length} transactions?`)) {
-      await bulkDeleteMutation.mutateAsync(selectedIds);
-    }
+    confirm({
+      title: 'Delete Transactions',
+      message: `Are you sure you want to delete ${selectedIds.length} transactions? This action cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await bulkDeleteMutation.mutateAsync(selectedIds);
+      },
+    });
   };
 
   const handleSelectAll = () => {
@@ -345,6 +360,8 @@ export default function TransactionsPage() {
         }}
         onClose={() => setIsFilterOpen(false)}
       />
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }

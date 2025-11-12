@@ -5,9 +5,12 @@ import { Plus, Edit, Trash2, DollarSign, AlertCircle, CheckCircle, Clock } from 
 import { format } from 'date-fns';
 import LendBorrowModal from '../components/LendBorrowModal';
 import PaymentModal from '../components/PaymentModal';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function LendBorrowPage() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isLendBorrowModalOpen, setIsLendBorrowModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
@@ -41,9 +44,15 @@ export default function LendBorrowPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this record?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Delete Record',
+      message: 'Are you sure you want to delete this record? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(id);
+      },
+    });
   };
 
   const handleRecordPayment = (record: any) => {
@@ -340,6 +349,8 @@ export default function LendBorrowPage() {
           }}
         />
       )}
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }

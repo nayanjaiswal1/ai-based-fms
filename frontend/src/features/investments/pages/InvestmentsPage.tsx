@@ -4,9 +4,12 @@ import { investmentsApi } from '@services/api';
 import { Plus, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, Percent } from 'lucide-react';
 import { format } from 'date-fns';
 import InvestmentModal from '../components/InvestmentModal';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function InvestmentsPage() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvestment, setSelectedInvestment] = useState<any>(null);
 
@@ -34,9 +37,15 @@ export default function InvestmentsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this investment?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Delete Investment',
+      message: 'Are you sure you want to delete this investment? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(id);
+      },
+    });
   };
 
   const portfolioStats = portfolio?.data || {
@@ -282,6 +291,8 @@ export default function InvestmentsPage() {
           }}
         />
       )}
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }

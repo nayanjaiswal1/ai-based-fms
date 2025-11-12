@@ -4,9 +4,12 @@ import { remindersApi } from '@services/api';
 import { Plus, Edit, Trash2, Bell, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import ReminderModal from './ReminderModal';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function RemindersTab() {
   const queryClient = useQueryClient();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedReminder, setSelectedReminder] = useState<any>(null);
 
@@ -35,9 +38,15 @@ export default function RemindersTab() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this reminder?')) {
-      await deleteMutation.mutateAsync(id);
-    }
+    confirm({
+      title: 'Delete Reminder',
+      message: 'Are you sure you want to delete this reminder? This action cannot be undone.',
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteMutation.mutateAsync(id);
+      },
+    });
   };
 
   const handleDismiss = async (id: string) => {
@@ -133,6 +142,8 @@ export default function RemindersTab() {
           }}
         />
       )}
+
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 }
