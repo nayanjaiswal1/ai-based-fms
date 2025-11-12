@@ -1,7 +1,7 @@
-import { Folder, Tag, Bell, Key } from 'lucide-react';
+import { Folder, Tag, Bell, Key, Shield } from 'lucide-react';
 import { TabConfig } from '@components/tabs';
 
-export type SettingsTab = 'categories' | 'tags' | 'reminders' | 'oauth';
+export type SettingsTab = 'categories' | 'tags' | 'reminders' | 'oauth' | 'security';
 
 export const getSettingsTabs = (): TabConfig[] => [
   {
@@ -23,5 +23,10 @@ export const getSettingsTabs = (): TabConfig[] => [
     id: 'oauth',
     label: 'OAuth',
     icon: <Key className="h-5 w-5" />,
+  },
+  {
+    id: 'security',
+    label: 'Security',
+    icon: <Shield className="h-5 w-5" />,
   },
 ];

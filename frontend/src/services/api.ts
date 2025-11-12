@@ -59,7 +59,13 @@ api.interceptors.response.use(
 export const authApi = {
   register: (data: any) => api.post('/auth/register', data),
   login: (data: any) => api.post('/auth/login', data),
+  login2FA: (data: any) => api.post('/auth/login/2fa', data),
   refresh: (refreshToken: string) => api.post('/auth/refresh', { refreshToken }),
+  enable2FA: () => api.post('/auth/2fa/enable'),
+  verify2FASetup: (code: string) => api.post('/auth/2fa/verify-setup', { code }),
+  disable2FA: (code: string) => api.post('/auth/2fa/disable', { code }),
+  requestPasswordReset: (email: string) => api.post('/auth/password/reset-request', { email }),
+  resetPassword: (token: string, newPassword: string) => api.post('/auth/password/reset', { token, newPassword }),
 };
 
 export const accountsApi = {

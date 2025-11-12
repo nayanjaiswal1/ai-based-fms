@@ -8,6 +8,7 @@ interface User {
   lastName: string;
   role: string;
   subscriptionTier: string;
+  twoFactorEnabled?: boolean;
 }
 
 interface AuthState {

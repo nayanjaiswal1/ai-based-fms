@@ -2,6 +2,7 @@ import CategoriesTab from '../components/CategoriesTab';
 import TagsTab from '../components/TagsTab';
 import RemindersTab from '../components/RemindersTab';
 import OAuthTab from '../components/OAuthTab';
+import SecurityTab from '../components/SecurityTab';
 import { Tabs } from '@components/tabs';
 import { getSettingsTabs, type SettingsTab } from '../config/settings.config';
 import { useUrlParams } from '@/hooks/useUrlParams';
@@ -24,7 +25,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Manage your categories, tags, reminders, and OAuth connections
+          Manage your categories, tags, reminders, security, and OAuth connections
         </p>
       </div>
 
@@ -42,6 +43,7 @@ export default function SettingsPage() {
         {activeTab === 'tags' && <TagsTab />}
         {activeTab === 'reminders' && <RemindersTab />}
         {activeTab === 'oauth' && <OAuthTab />}
+        {activeTab === 'security' && <SecurityTab />}
       </div>
     </div>
   );

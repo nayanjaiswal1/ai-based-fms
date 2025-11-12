@@ -3,17 +3,25 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as speakeasy from 'speakeasy';
+import * as QRCode from 'qrcode';
 import { User } from '@database/entities';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { Login2FADto } from './dto/login-2fa.dto';
+import { Verify2FADto } from './dto/verify-2fa.dto';
+import { PasswordResetRequestDto } from './dto/password-reset-request.dto';
+import { PasswordResetDto } from './dto/password-reset.dto';
 import axios from 'axios';
 import { Response } from 'express';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -69,6 +77,14 @@ export class AuthService {
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Check if 2FA is enabled
+    if (user.twoFactorEnabled) {
+      return {
+        requires2FA: true,
+        message: 'Please provide your 2FA code',
+      };
     }
 
     user.lastLoginAt = new Date();
@@ -225,5 +241,238 @@ export class AuthService {
   private sanitizeUser(user: User) {
     const { password, refreshToken, ...sanitized } = user;
     return sanitized;
+  }
+
+  // ==================== 2FA Methods ====================
+
+  async enable2FA(userId: string) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.twoFactorEnabled) {
+      throw new BadRequestException('2FA is already enabled');
+    }
+
+    // Generate secret
+    const secret = speakeasy.generateSecret({
+      name: `FMS (${user.email})`,
+      length: 32,
+    });
+
+    // Save secret temporarily (will be confirmed after verification)
+    user.twoFactorSecret = secret.base32;
+    await this.userRepository.save(user);
+
+    // Generate QR code
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
+
+    return {
+      secret: secret.base32,
+      qrCode: qrCodeUrl,
+      message: 'Scan this QR code with your authenticator app and verify with a code',
+    };
+  }
+
+  async verify2FASetup(userId: string, verify2FADto: Verify2FADto) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.twoFactorSecret) {
+      throw new BadRequestException('2FA setup not initiated');
+    }
+
+    // Verify the code
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: verify2FADto.code,
+      window: 2, // Allow 2 time steps before and after
+    });
+
+    if (!verified) {
+      throw new UnauthorizedException('Invalid 2FA code');
+    }
+
+    // Enable 2FA
+    user.twoFactorEnabled = true;
+    await this.userRepository.save(user);
+
+    // Generate backup codes
+    const backupCodes = this.generateBackupCodes();
+
+    return {
+      message: '2FA successfully enabled',
+      backupCodes,
+    };
+  }
+
+  async disable2FA(userId: string, verify2FADto: Verify2FADto) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.twoFactorEnabled) {
+      throw new BadRequestException('2FA is not enabled');
+    }
+
+    // Verify the code
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: verify2FADto.code,
+      window: 2,
+    });
+
+    if (!verified) {
+      throw new UnauthorizedException('Invalid 2FA code');
+    }
+
+    // Disable 2FA
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = null;
+    await this.userRepository.save(user);
+
+    return {
+      message: '2FA successfully disabled',
+    };
+  }
+
+  async login2FA(login2FADto: Login2FADto) {
+    const user = await this.userRepository.findOne({
+      where: { email: login2FADto.email },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Account is inactive');
+    }
+
+    const isPasswordValid = await bcrypt.compare(login2FADto.password, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.twoFactorEnabled) {
+      throw new BadRequestException('2FA is not enabled for this account');
+    }
+
+    // Verify 2FA code
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: login2FADto.twoFactorCode,
+      window: 2,
+    });
+
+    if (!verified) {
+      throw new UnauthorizedException('Invalid 2FA code');
+    }
+
+    user.lastLoginAt = new Date();
+    await this.userRepository.save(user);
+
+    const tokens = await this.generateTokens(user);
+
+    return {
+      user: this.sanitizeUser(user),
+      ...tokens,
+    };
+  }
+
+  private generateBackupCodes(): string[] {
+    const codes = [];
+    for (let i = 0; i < 10; i++) {
+      codes.push(randomBytes(4).toString('hex').toUpperCase());
+    }
+    return codes;
+  }
+
+  // ==================== Password Reset Methods ====================
+
+  async requestPasswordReset(passwordResetRequestDto: PasswordResetRequestDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: passwordResetRequestDto.email },
+    });
+
+    // Don't reveal if email exists or not (security best practice)
+    if (!user) {
+      return {
+        message: 'If an account with that email exists, a password reset link has been sent',
+      };
+    }
+
+    // Generate reset token
+    const resetToken = randomBytes(32).toString('hex');
+    const hashedToken = await bcrypt.hash(resetToken, 10);
+
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+    await this.userRepository.save(user);
+
+    // TODO: Send email with reset link
+    // For now, we'll return the token (in production, this should be sent via email)
+    const resetUrl = `${this.configService.get<string>('FRONTEND_URL')}/reset-password?token=${resetToken}`;
+
+    console.log(`Password reset link: ${resetUrl}`);
+
+    return {
+      message: 'If an account with that email exists, a password reset link has been sent',
+      // TODO: Remove this in production
+      resetToken, // Only for development/testing
+      resetUrl, // Only for development/testing
+    };
+  }
+
+  async resetPassword(passwordResetDto: PasswordResetDto) {
+    // Find users with non-expired reset tokens
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.passwordResetExpiry > :now', { now: new Date() })
+      .andWhere('user.passwordResetToken IS NOT NULL')
+      .getMany();
+
+    let matchedUser: User | null = null;
+
+    // Check if token matches any user
+    for (const user of users) {
+      const isTokenValid = await bcrypt.compare(
+        passwordResetDto.token,
+        user.passwordResetToken,
+      );
+
+      if (isTokenValid) {
+        matchedUser = user;
+        break;
+      }
+    }
+
+    if (!matchedUser) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(passwordResetDto.newPassword, 10);
+
+    // Update password and clear reset token
+    matchedUser.password = hashedPassword;
+    matchedUser.passwordResetToken = null;
+    matchedUser.passwordResetExpiry = null;
+    await this.userRepository.save(matchedUser);
+
+    return {
+      message: 'Password successfully reset',
+    };
   }
 }
