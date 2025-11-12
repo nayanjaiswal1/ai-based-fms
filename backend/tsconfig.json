@@ -38,6 +38,8 @@
     "src/modules/email/**/*",
     "src/modules/export/**/*",
     "src/modules/gdpr/**/*",
+    "src/modules/job-monitor/**/*",
+    "src/modules/reconciliation/**/*",
     "src/common/examples/**/*",
     "src/database/migrations/**/*"
   ]

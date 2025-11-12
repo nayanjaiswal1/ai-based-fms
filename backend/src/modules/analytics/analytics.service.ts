@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import {
   Transaction,
+  TransactionType,
   Budget,
   Account,
   Category,
@@ -61,11 +62,11 @@ export class AnalyticsService {
 
     // Calculate totals
     const income = transactions
-      .filter(t => t.type === 'income')
+      .filter(t => t.type === TransactionType.INCOME)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const expenses = transactions
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === TransactionType.EXPENSE)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0);
@@ -273,9 +274,9 @@ export class AnalyticsService {
       }
 
       const month = monthlyData.get(monthKey);
-      if (transaction.type === 'income') {
+      if (transaction.type === TransactionType.INCOME) {
         month.income += Number(transaction.amount);
-      } else if (transaction.type === 'expense') {
+      } else if (transaction.type === TransactionType.EXPENSE) {
         month.expenses += Number(transaction.amount);
       }
     }
@@ -313,7 +314,7 @@ export class AnalyticsService {
         userId,
         categoryId,
         date: Between(startDate, endDate),
-        type: 'expense',
+        type: TransactionType.EXPENSE,
         isDeleted: false,
       },
       order: { date: 'ASC' },
@@ -395,9 +396,9 @@ export class AnalyticsService {
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
       // Reverse the transaction effect to get historical balance
-      if (transaction.type === 'income' || transaction.type === 'transfer_in') {
+      if (transaction.type === TransactionType.INCOME || transaction.type === TransactionType.TRANSFER) {
         runningBalance -= Number(transaction.amount);
-      } else if (transaction.type === 'expense' || transaction.type === 'transfer_out') {
+      } else if (transaction.type === TransactionType.EXPENSE) {
         runningBalance += Number(transaction.amount);
       }
 
@@ -418,9 +419,9 @@ export class AnalyticsService {
       });
 
       for (const t of monthTransactions) {
-        if (t.type === 'income' || t.type === 'transfer_in') {
+        if (t.type === TransactionType.INCOME || t.type === TransactionType.TRANSFER) {
           balance += Number(t.amount);
-        } else if (t.type === 'expense' || t.type === 'transfer_out') {
+        } else if (t.type === TransactionType.EXPENSE) {
           balance -= Number(t.amount);
         }
       }
@@ -478,19 +479,19 @@ export class AnalyticsService {
     ]);
 
     const currentIncome = currentTransactions
-      .filter(t => t.type === 'income')
+      .filter(t => t.type === TransactionType.INCOME)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const currentExpenses = currentTransactions
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === TransactionType.EXPENSE)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const previousIncome = previousTransactions
-      .filter(t => t.type === 'income')
+      .filter(t => t.type === TransactionType.INCOME)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const previousExpenses = previousTransactions
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === TransactionType.EXPENSE)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     return {

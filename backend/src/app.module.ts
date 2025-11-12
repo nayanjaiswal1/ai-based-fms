@@ -28,7 +28,7 @@ import { GroupsModule } from '@modules/groups/groups.module';
 import { InvestmentsModule } from '@modules/investments/investments.module';
 import { LendBorrowModule } from '@modules/lend-borrow/lend-borrow.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
-// import { AnalyticsModule } from '@modules/analytics/analytics.module';
+import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { AiModule } from '@modules/ai/ai.module';
 import { ImportModule } from '@modules/import/import.module';
 // import { EmailModule } from '@modules/email/email.module';
@@ -97,7 +97,7 @@ import { AuditModule } from '@modules/audit/audit.module';
     InvestmentsModule,
     LendBorrowModule,
     NotificationsModule,
-    // AnalyticsModule,
+    AnalyticsModule,
     AiModule,
     // InsightsModule,
     ImportModule,
