@@ -22,8 +22,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   @ApiResponse({ status: 409, description: 'Email already registered' })
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  async register(@Body() registerDto: RegisterDto, @Req() req: any) {
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+    return this.authService.register(registerDto, userAgent, ipAddress);
   }
 
   @Public()
@@ -32,8 +34,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Req() req: any) {
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+    return this.authService.login(loginDto, userAgent, ipAddress);
   }
 
   @Public()
@@ -61,8 +65,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Google OAuth login/register' })
   @ApiResponse({ status: 200, description: 'User authenticated via Google' })
   @ApiResponse({ status: 400, description: 'Invalid OAuth code' })
-  async googleOAuthPost(@Body('code') code: string) {
-    return this.authService.googleOAuth(code);
+  async googleOAuthPost(@Body('code') code: string, @Req() req: any) {
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+    return this.authService.googleOAuth(code, userAgent, ipAddress);
   }
 
   // ==================== 2FA Endpoints ====================
@@ -115,8 +121,10 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   @ApiResponse({ status: 400, description: '2FA not enabled for account' })
   @ApiResponse({ status: 401, description: 'Invalid credentials or 2FA code' })
-  async login2FA(@Body() login2FADto: Login2FADto) {
-    return this.authService.login2FA(login2FADto);
+  async login2FA(@Body() login2FADto: Login2FADto, @Req() req: any) {
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+    return this.authService.login2FA(login2FADto, userAgent, ipAddress);
   }
 
   // ==================== Password Reset Endpoints ====================

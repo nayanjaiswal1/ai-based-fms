@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
 export const uploadConfig = registerAs('upload', () => ({
-  maxFileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 10485760, // 10MB
+  maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760', 10), // 10MB
   uploadPath: process.env.UPLOAD_PATH || './uploads',
   allowedMimeTypes: [
     'application/pdf',

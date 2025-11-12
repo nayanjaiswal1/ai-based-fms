@@ -68,6 +68,12 @@ export const authApi = {
   resetPassword: (token: string, newPassword: string) => api.post('/auth/password/reset', { token, newPassword }),
 };
 
+export const sessionsApi = {
+  getAll: () => api.get('/sessions'),
+  revoke: (sessionId: string) => api.delete(`/sessions/${sessionId}`),
+  revokeAll: () => api.delete('/sessions'),
+};
+
 export const accountsApi = {
   getAll: () => api.get('/accounts'),
   getOne: (id: string) => api.get(`/accounts/${id}`),

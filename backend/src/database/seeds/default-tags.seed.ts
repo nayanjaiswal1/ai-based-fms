@@ -35,7 +35,7 @@ export async function seedDefaultTags(dataSource: DataSource) {
     const tag = tagRepository.create({
       ...tagData,
       isDefault: true,
-      userId: null,
+      userId: undefined,
     });
     await tagRepository.save(tag);
   }

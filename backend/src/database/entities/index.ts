@@ -14,3 +14,5 @@ export { Reminder, ReminderType, ReminderFrequency, ReminderStatus } from './rem
 export { EmailConnection, EmailProvider } from './email-connection.entity';
 export { ImportLog, ImportStatus, ImportType } from './import-log.entity';
 export { AuditLog, AuditAction } from './audit-log.entity';
+export { Session } from './session.entity';
+export type { DeviceInfo } from './session.entity';

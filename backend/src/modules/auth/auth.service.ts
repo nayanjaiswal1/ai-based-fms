@@ -22,6 +22,7 @@ import { PasswordResetDto } from './dto/password-reset.dto';
 import axios from 'axios';
 import { Response } from 'express';
 import { randomBytes } from 'crypto';
+import { SessionsService } from '@modules/sessions/sessions.service';
 
 @Injectable()
 export class AuthService {
@@ -30,9 +31,10 @@ export class AuthService {
     private userRepository: Repository<User>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private sessionsService: SessionsService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto, userAgent?: string, ipAddress?: string) {
     const existingUser = await this.userRepository.findOne({
       where: { email: registerDto.email },
     });
@@ -52,7 +54,7 @@ export class AuthService {
 
     await this.userRepository.save(user);
 
-    const tokens = await this.generateTokens(user);
+    const tokens = await this.generateTokens(user, userAgent, ipAddress);
 
     return {
       user: this.sanitizeUser(user),
@@ -60,7 +62,7 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, userAgent?: string, ipAddress?: string) {
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });
@@ -90,7 +92,7 @@ export class AuthService {
     user.lastLoginAt = new Date();
     await this.userRepository.save(user);
 
-    const tokens = await this.generateTokens(user);
+    const tokens = await this.generateTokens(user, userAgent, ipAddress);
 
     return {
       user: this.sanitizeUser(user),
@@ -130,7 +132,7 @@ export class AuthService {
     return user;
   }
 
-  async googleOAuth(code: string) {
+  async googleOAuth(code: string, userAgent?: string, ipAddress?: string) {
     try {
       // Exchange code for access token
       const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
@@ -177,7 +179,7 @@ export class AuthService {
         await this.userRepository.save(user);
       }
 
-      const tokens = await this.generateTokens(user);
+      const tokens = await this.generateTokens(user, userAgent, ipAddress);
 
       return {
         user: this.sanitizeUser(user),
@@ -216,25 +218,50 @@ export class AuthService {
     }
   }
 
-  private async generateTokens(user: User) {
-    const payload = { sub: user.id, email: user.email };
-
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.secret'),
-      expiresIn: this.configService.get<string>('jwt.expiresIn'),
-    });
-
-    const refreshToken = this.jwtService.sign(payload, {
+  private async generateTokens(
+    user: User,
+    userAgent?: string,
+    ipAddress?: string,
+  ) {
+    // Generate refresh token first
+    const refreshTokenPayload = { sub: user.id, email: user.email };
+    const refreshToken = this.jwtService.sign(refreshTokenPayload, {
       secret: this.configService.get<string>('jwt.refreshSecret'),
       expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
     });
 
+    // Create session if userAgent and ipAddress are provided
+    let sessionId: string | undefined;
+    if (userAgent && ipAddress) {
+      const session = await this.sessionsService.createSession(
+        user.id,
+        userAgent,
+        ipAddress,
+        refreshToken,
+      );
+      sessionId = session.id;
+    }
+
+    // Include sessionId in access token payload
+    const accessTokenPayload = {
+      sub: user.id,
+      email: user.email,
+      ...(sessionId && { sessionId }),
+    };
+
+    const accessToken = this.jwtService.sign(accessTokenPayload, {
+      secret: this.configService.get<string>('jwt.secret'),
+      expiresIn: this.configService.get<string>('jwt.expiresIn'),
+    });
+
+    // Store refresh token on user (for backward compatibility)
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
 
     return {
       accessToken,
       refreshToken,
+      ...(sessionId && { sessionId }),
     };
   }
 
@@ -345,7 +372,7 @@ export class AuthService {
     };
   }
 
-  async login2FA(login2FADto: Login2FADto) {
+  async login2FA(login2FADto: Login2FADto, userAgent?: string, ipAddress?: string) {
     const user = await this.userRepository.findOne({
       where: { email: login2FADto.email },
     });
@@ -383,7 +410,7 @@ export class AuthService {
     user.lastLoginAt = new Date();
     await this.userRepository.save(user);
 
-    const tokens = await this.generateTokens(user);
+    const tokens = await this.generateTokens(user, userAgent, ipAddress);
 
     return {
       user: this.sanitizeUser(user),

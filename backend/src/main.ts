@@ -17,7 +17,7 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // Global prefix
-  const apiPrefix = configService.get<string>('app.apiPrefix');
+  const apiPrefix = configService.get<string>('app.apiPrefix') || 'api';
   app.setGlobalPrefix(apiPrefix);
 
   // Security

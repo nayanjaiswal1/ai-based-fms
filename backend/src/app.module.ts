@@ -34,6 +34,7 @@ import { ImportModule } from '@modules/import/import.module';
 import { EmailModule } from '@modules/email/email.module';
 import { ChatModule } from '@modules/chat/chat.module';
 import { AdminModule } from '@modules/admin/admin.module';
+import { SessionsModule } from '@modules/sessions/sessions.module';
 
 @Module({
   imports: [
@@ -46,7 +47,7 @@ import { AdminModule } from '@modules/admin/admin.module';
     // Database
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => configService.get('database'),
+      useFactory: (configService: ConfigService) => configService.get('database')!,
       inject: [ConfigService],
     }),
 
@@ -94,6 +95,7 @@ import { AdminModule } from '@modules/admin/admin.module';
     EmailModule,
     ChatModule,
     AdminModule,
+    SessionsModule,
   ],
   providers: [
     {
