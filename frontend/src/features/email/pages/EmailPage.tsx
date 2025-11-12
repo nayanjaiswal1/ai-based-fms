@@ -191,7 +191,7 @@ export default function EmailPage() {
       )}
 
       {/* Modal */}
-      {isModalOpen && <EmailModal onClose={() => setIsModalOpen(false)} />}
+      <EmailModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>

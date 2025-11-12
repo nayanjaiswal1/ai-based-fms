@@ -257,7 +257,7 @@ export default function AnalyticsPage() {
       <div className="rounded-lg bg-white p-6 shadow">
         <h2 className="text-lg font-semibold text-gray-900">Monthly Trends</h2>
         <div className="mt-4">
-          {trends?.data?.length > 0 ? (
+          {trends?.data && trends.data.length > 0 ? (
             <div className="space-y-3">
               {trends.data.map((month: any) => (
                 <div

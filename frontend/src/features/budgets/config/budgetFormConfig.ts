@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { FormConfig } from '../../../lib/form/types';
-import { format, addDays, endOfMonth, endOfYear, addMonths, addYears } from 'date-fns';
+import { format, addDays, endOfMonth, endOfYear, addMonths } from 'date-fns';
 
 export const budgetSchema = z.object({
   name: z.string().min(1, 'Budget name is required').max(100),

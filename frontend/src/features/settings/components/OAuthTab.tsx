@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_CONFIG } from '@config/api.config';
-import { Chrome, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import { Chrome, CheckCircle, ExternalLink } from 'lucide-react';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 

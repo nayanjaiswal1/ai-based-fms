@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@services/api';
-import { Bell, CheckCircle, AlertCircle, Info, Trash2, Check, X } from 'lucide-react';
+import { Bell, CheckCircle, AlertCircle, Info, Trash2, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -24,7 +24,7 @@ export default function NotificationsPage() {
   });
 
   const markReadMutation = useMutation({
-    mutationFn: notificationsApi.markRead,
+    mutationFn: notificationsApi.markAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
@@ -32,7 +32,7 @@ export default function NotificationsPage() {
   });
 
   const markAllReadMutation = useMutation({
-    mutationFn: notificationsApi.markAllRead,
+    mutationFn: notificationsApi.markAllAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
@@ -111,7 +111,7 @@ export default function NotificationsPage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-            {unreadCount?.data > 0 && (
+            {unreadCount?.data && unreadCount.data > 0 && (
               <span className="inline-flex items-center justify-center rounded-full bg-red-600 px-2.5 py-0.5 text-xs font-medium text-white">
                 {unreadCount.data}
               </span>
@@ -121,7 +121,7 @@ export default function NotificationsPage() {
             Stay updated with your financial activities
           </p>
         </div>
-        {unreadCount?.data > 0 && (
+        {unreadCount?.data && unreadCount.data > 0 && (
           <button
             onClick={handleMarkAllRead}
             disabled={markAllReadMutation.isPending}
@@ -154,7 +154,7 @@ export default function NotificationsPage() {
           }`}
         >
           Unread
-          {unreadCount?.data > 0 && (
+          {unreadCount?.data && unreadCount.data > 0 && (
             <span
               className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-medium ${
                 filter === 'unread' ? 'bg-blue-500 text-white' : 'bg-red-600 text-white'

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { accountsApi, transactionsApi, budgetsApi, investmentsApi, groupsApi, analyticsApi } from '@services/api';
-import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, AlertTriangle, Users, DollarSign, Target, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, AlertTriangle, Users, ArrowRight } from 'lucide-react';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 

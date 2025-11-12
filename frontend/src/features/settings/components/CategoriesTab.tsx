@@ -111,15 +111,14 @@ export default function CategoriesTab() {
         <div className="mt-4">{renderCategories()}</div>
       )}
 
-      {isModalOpen && (
-        <CategoryModal
-          category={selectedCategory}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedCategory(null);
-          }}
-        />
-      )}
+      <CategoryModal
+        isOpen={isModalOpen}
+        category={selectedCategory}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedCategory(null);
+        }}
+      />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>

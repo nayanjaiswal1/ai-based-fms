@@ -133,15 +133,14 @@ export default function RemindersTab() {
         </div>
       )}
 
-      {isModalOpen && (
-        <ReminderModal
-          reminder={selectedReminder}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedReminder(null);
-          }}
-        />
-      )}
+      <ReminderModal
+        isOpen={isModalOpen}
+        reminder={selectedReminder}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedReminder(null);
+        }}
+      />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>

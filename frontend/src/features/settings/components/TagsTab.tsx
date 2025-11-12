@@ -92,15 +92,14 @@ export default function TagsTab() {
         </div>
       )}
 
-      {isModalOpen && (
-        <TagModal
-          tag={selectedTag}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedTag(null);
-          }}
-        />
-      )}
+      <TagModal
+        isOpen={isModalOpen}
+        tag={selectedTag}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedTag(null);
+        }}
+      />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>

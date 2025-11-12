@@ -330,25 +330,23 @@ export default function LendBorrowPage() {
       )}
 
       {/* Modals */}
-      {isLendBorrowModalOpen && (
-        <LendBorrowModal
-          record={selectedRecord}
-          onClose={() => {
-            setIsLendBorrowModalOpen(false);
-            setSelectedRecord(null);
-          }}
-        />
-      )}
+      <LendBorrowModal
+        isOpen={isLendBorrowModalOpen}
+        record={selectedRecord}
+        onClose={() => {
+          setIsLendBorrowModalOpen(false);
+          setSelectedRecord(null);
+        }}
+      />
 
-      {isPaymentModalOpen && (
-        <PaymentModal
-          record={selectedRecord}
-          onClose={() => {
-            setIsPaymentModalOpen(false);
-            setSelectedRecord(null);
-          }}
-        />
-      )}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        record={selectedRecord}
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          setSelectedRecord(null);
+        }}
+      />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>

@@ -282,15 +282,14 @@ export default function InvestmentsPage() {
       )}
 
       {/* Modal */}
-      {isModalOpen && (
-        <InvestmentModal
-          investment={selectedInvestment}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedInvestment(null);
-          }}
-        />
-      )}
+      <InvestmentModal
+        isOpen={isModalOpen}
+        investment={selectedInvestment}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedInvestment(null);
+        }}
+      />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
