@@ -23,7 +23,13 @@ export class AiCategorizationFeedbackService {
   async submitFeedback(userId: string, dto: SubmitFeedbackDto) {
     const feedback = this.feedbackRepository.create({
       userId,
-      ...dto,
+      transactionId: dto.transactionId,
+      transactionDescription: dto.transactionDescription,
+      suggestedCategoryId: dto.suggestedCategoryId || undefined,
+      correctCategoryId: dto.correctCategoryId,
+      feedbackType: dto.feedbackType,
+      originalConfidence: dto.originalConfidence,
+      alternativeSuggestions: dto.alternativeSuggestions,
     });
 
     return this.feedbackRepository.save(feedback);

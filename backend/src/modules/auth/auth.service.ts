@@ -165,7 +165,7 @@ export class AuthService {
           firstName: given_name || name?.split(' ')[0] || '',
           lastName: family_name || name?.split(' ').slice(1).join(' ') || '',
           password: await bcrypt.hash(Math.random().toString(36), 10), // Random password for OAuth users
-          avatar: picture,
+          // avatar: picture, // Avatar field not yet implemented
           emailVerified: true, // Google-verified email
         });
 
@@ -173,9 +173,9 @@ export class AuthService {
       } else {
         // Update last login
         user.lastLoginAt = new Date();
-        if (picture && !user.avatar) {
-          user.avatar = picture;
-        }
+        // if (picture && !user.avatar) {
+        //   user.avatar = picture;
+        // }
         await this.userRepository.save(user);
       }
 

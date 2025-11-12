@@ -15,12 +15,12 @@ export class TransactionsService {
     private auditService: AuditService,
   ) {}
 
-  async create(userId: string, createDto: any) {
+  async create(userId: string, createDto: any): Promise<Transaction> {
     const transaction = this.transactionRepository.create({
       ...createDto,
       userId,
       createdBy: userId,
-    });
+    } as unknown as Transaction);
 
     const saved = await this.transactionRepository.save(transaction);
 
@@ -253,8 +253,8 @@ export class TransactionsService {
 
     // Restore transaction
     transaction.isMerged = false;
-    transaction.mergedIntoId = null;
-    transaction.mergedAt = null;
+    transaction.mergedIntoId = undefined;
+    transaction.mergedAt = undefined;
 
     // Restore balance
     const balanceChange = transaction.type === 'expense' ? -transaction.amount : transaction.amount;
@@ -357,7 +357,6 @@ export class TransactionsService {
       })) || [],
       notes: transaction.notes,
       location: transaction.location,
-      receipt: transaction.receipt,
     };
   }
 }

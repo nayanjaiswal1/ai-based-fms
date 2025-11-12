@@ -69,7 +69,7 @@ export class DashboardService {
   /**
    * Calculate dashboard statistics from database
    */
-  private async calculateDashboardStats(userId: string) {
+  async calculateDashboardStats(userId: string) {
     const currentMonth = new Date();
     currentMonth.setDate(1);
     currentMonth.setHours(0, 0, 0, 0);
@@ -126,6 +126,7 @@ export class DashboardService {
 import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { Cache } from '../decorators/cache.decorator';
 import { CacheInterceptor } from '../interceptors/cache.interceptor';
+import { CurrentUser } from '../decorators/current-user.decorator';
 
 @Controller('dashboard')
 @UseInterceptors(CacheInterceptor)

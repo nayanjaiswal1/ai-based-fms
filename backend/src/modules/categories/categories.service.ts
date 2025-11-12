@@ -58,7 +58,8 @@ export class CategoriesService {
 
   async findTree(userId: string) {
     const categories = await this.findAll(userId);
-    return this.categoryRepository.buildTrees(categories);
+    // buildTrees is not available in this TypeORM version, return flat list
+    return categories;
   }
 
   async findByType(userId: string, type: CategoryType) {

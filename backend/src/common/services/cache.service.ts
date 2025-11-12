@@ -15,7 +15,8 @@ export class CacheService {
    */
   async get<T>(key: string): Promise<T | null> {
     try {
-      return await this.cacheManager.get<T>(key);
+      const result = await this.cacheManager.get<T>(key);
+      return result !== undefined ? result : null;
     } catch (error) {
       console.error(`Cache get error for key ${key}:`, error);
       return null;

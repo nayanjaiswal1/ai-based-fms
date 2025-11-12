@@ -152,7 +152,7 @@ export class AnalyticsService {
         });
       }
 
-      const category = categoryMap.get(categoryId);
+      const category = categoryMap.get(categoryId)!;
       category.amount += Number(transaction.amount);
       category.count += 1;
     }
@@ -214,7 +214,7 @@ export class AnalyticsService {
         });
       }
 
-      const category = categoryMap.get(categoryId);
+      const category = categoryMap.get(categoryId)!;
       category.amount += Number(transaction.amount);
       category.count += 1;
     }
