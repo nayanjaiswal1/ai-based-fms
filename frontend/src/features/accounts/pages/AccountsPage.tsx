@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote } from 'lucide-react';
 import AccountModal from '../components/AccountModal';
 import { useAccounts } from '../hooks/useAccounts';
+import { ConfirmDialog } from '@components/ui/ConfirmDialog';
+import { useConfirm } from '@hooks/useConfirm';
 
 export default function AccountsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -10,15 +12,24 @@ export default function AccountsPage() {
   // Use the clean hook - all API logic is abstracted away
   const { data: accounts, isLoading, delete: deleteAccount, isDeleting } = useAccounts();
 
+  // Confirmation dialog hook
+  const { confirmState, confirm, closeConfirm } = useConfirm();
+
   const handleEdit = (account: any) => {
     setSelectedAccount(account);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
-      await deleteAccount(id);
-    }
+  const handleDelete = (id: string, accountName: string) => {
+    confirm({
+      title: 'Delete Account',
+      message: `Are you sure you want to delete "${accountName}"? This action cannot be undone.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        await deleteAccount(id);
+      },
+    });
   };
 
   const getAccountIcon = (type: string) => {
@@ -135,7 +146,7 @@ export default function AccountsPage() {
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(account.id)}
+                      onClick={() => handleDelete(account.id, account.name)}
                       className="text-gray-400 hover:text-red-600"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -173,6 +184,13 @@ export default function AccountsPage() {
           setIsModalOpen(false);
           setSelectedAccount(null);
         }}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        {...confirmState}
+        onClose={closeConfirm}
+        isLoading={isDeleting}
       />
     </div>
   );
