@@ -130,61 +130,177 @@ If a field cannot be determined, use null.`;
   }
 
   /**
-   * Detect duplicate transactions
+   * Detect duplicate transactions with enhanced multi-factor matching
    */
   async detectDuplicates(userId: string, dto: DetectDuplicatesDto) {
-    const transaction = await this.transactionRepository.findOne({
-      where: { id: dto.transactionId, userId },
+    const threshold = dto.threshold || 60;
+    const timeWindow = dto.timeWindow || 3;
+    const includeCategories = dto.includeCategories !== false;
+
+    // Get all user transactions that are not merged
+    const allTransactions = await this.transactionRepository.find({
+      where: { userId, isDeleted: false, isMerged: false },
+      relations: ['account', 'category'],
+      order: { date: 'DESC' },
     });
 
-    if (!transaction) {
-      throw new BadRequestException('Transaction not found');
+    // Group potential duplicates
+    const duplicateGroups: Array<{
+      transactions: Array<{
+        id: string;
+        description: string;
+        amount: number;
+        date: Date;
+        accountId: string;
+        accountName: string;
+        categoryId: string;
+        categoryName: string;
+        confidence: number;
+      }>;
+      confidence: number;
+    }> = [];
+
+    const processedIds = new Set<string>();
+
+    for (let i = 0; i < allTransactions.length; i++) {
+      const transaction = allTransactions[i];
+
+      if (processedIds.has(transaction.id)) continue;
+
+      const duplicates = [];
+
+      // Check against remaining transactions
+      for (let j = i + 1; j < allTransactions.length; j++) {
+        const candidate = allTransactions[j];
+
+        if (processedIds.has(candidate.id)) continue;
+
+        // Check if this pair is in exclusion list
+        if (
+          transaction.duplicateExclusions?.includes(candidate.id) ||
+          candidate.duplicateExclusions?.includes(transaction.id)
+        ) {
+          continue;
+        }
+
+        // Calculate multi-factor confidence score
+        const confidence = this.calculateDuplicateConfidence(
+          transaction,
+          candidate,
+          timeWindow,
+          includeCategories,
+        );
+
+        if (confidence >= threshold) {
+          duplicates.push({
+            id: candidate.id,
+            description: candidate.description,
+            amount: Number(candidate.amount),
+            date: candidate.date,
+            accountId: candidate.accountId,
+            accountName: candidate.account?.name || 'Unknown',
+            categoryId: candidate.categoryId,
+            categoryName: candidate.category?.name || 'Uncategorized',
+            confidence: Math.round(confidence),
+          });
+          processedIds.add(candidate.id);
+        }
+      }
+
+      // If we found duplicates, create a group
+      if (duplicates.length > 0) {
+        const groupConfidence =
+          duplicates.reduce((sum, d) => sum + d.confidence, 0) / duplicates.length;
+
+        duplicateGroups.push({
+          transactions: [
+            {
+              id: transaction.id,
+              description: transaction.description,
+              amount: Number(transaction.amount),
+              date: transaction.date,
+              accountId: transaction.accountId,
+              accountName: transaction.account?.name || 'Unknown',
+              categoryId: transaction.categoryId,
+              categoryName: transaction.category?.name || 'Uncategorized',
+              confidence: 100, // Primary transaction
+            },
+            ...duplicates,
+          ],
+          confidence: Math.round(groupConfidence),
+        });
+
+        processedIds.add(transaction.id);
+      }
     }
 
-    // Look for potential duplicates within 3 days window
-    const startDate = new Date(transaction.date);
-    startDate.setDate(startDate.getDate() - 3);
-    const endDate = new Date(transaction.date);
-    endDate.setDate(endDate.getDate() + 3);
-
-    const potentialDuplicates = await this.transactionRepository.find({
-      where: {
-        userId,
-        date: Between(startDate, endDate),
-        isDeleted: false,
-      },
-    });
-
-    const duplicates = potentialDuplicates.filter(t => {
-      if (t.id === transaction.id) return false;
-
-      // Check amount match (exact or within 1%)
-      const amountDiff = Math.abs(Number(t.amount) - Number(transaction.amount));
-      const amountMatch = amountDiff < Number(transaction.amount) * 0.01;
-
-      // Check description similarity (simple string matching)
-      const descSimilarity = this.calculateStringSimilarity(
-        t.description.toLowerCase(),
-        transaction.description.toLowerCase(),
-      );
-
-      return amountMatch && descSimilarity > 0.7;
-    });
+    // Sort by confidence (highest first)
+    duplicateGroups.sort((a, b) => b.confidence - a.confidence);
 
     return {
-      hasDuplicates: duplicates.length > 0,
-      duplicateCount: duplicates.length,
-      duplicates: duplicates.map(d => ({
-        id: d.id,
-        description: d.description,
-        amount: d.amount,
-        date: d.date,
-        similarity: this.calculateStringSimilarity(
-          d.description.toLowerCase(),
-          transaction.description.toLowerCase(),
-        ),
-      })),
+      totalGroups: duplicateGroups.length,
+      groups: duplicateGroups,
     };
+  }
+
+  /**
+   * Calculate duplicate confidence score using multi-factor matching
+   */
+  private calculateDuplicateConfidence(
+    t1: any,
+    t2: any,
+    timeWindow: number,
+    includeCategories: boolean,
+  ): number {
+    // Amount matching (40 points)
+    const amount1 = Number(t1.amount);
+    const amount2 = Number(t2.amount);
+    const amountDiff = Math.abs(amount1 - amount2);
+    const amountMatch = amountDiff < amount1 * 0.01 ? 100 : 0;
+    const amountScore = (amountMatch / 100) * 40;
+
+    // Date matching (30 points)
+    const date1 = new Date(t1.date);
+    const date2 = new Date(t2.date);
+    const daysDiff = Math.abs(
+      (date1.getTime() - date2.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    let dateMatch = 0;
+    if (daysDiff === 0) dateMatch = 100;
+    else if (daysDiff === 1) dateMatch = 66;
+    else if (daysDiff === 2) dateMatch = 33;
+    else if (daysDiff <= timeWindow) dateMatch = 10;
+    const dateScore = (dateMatch / 100) * 30;
+
+    // Description matching (20 points)
+    const desc1 = this.normalizeDescription(t1.description);
+    const desc2 = this.normalizeDescription(t2.description);
+    const descSimilarity = this.calculateStringSimilarity(desc1, desc2);
+    const descScore = descSimilarity * 20;
+
+    // Account matching (5 points)
+    const accountMatch = t1.accountId === t2.accountId ? 100 : 0;
+    const accountScore = (accountMatch / 100) * 5;
+
+    // Category matching (5 points)
+    let categoryScore = 0;
+    if (includeCategories && t1.categoryId && t2.categoryId) {
+      const categoryMatch = t1.categoryId === t2.categoryId ? 100 : 0;
+      categoryScore = (categoryMatch / 100) * 5;
+    }
+
+    return amountScore + dateScore + descScore + accountScore + categoryScore;
+  }
+
+  /**
+   * Normalize transaction description for better matching
+   */
+  private normalizeDescription(desc: string): string {
+    return desc
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '') // Remove special characters
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
   }
 
   /**

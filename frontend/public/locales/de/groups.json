@@ -1,0 +1,89 @@
+{
+  "title": "Groups",
+  "add": "Create Group",
+  "edit": "Edit Group",
+  "delete": "Delete Group",
+  "view": "View Group",
+  "list": "Group List",
+  "details": "Group Details",
+  "fields": {
+    "name": "Group Name",
+    "description": "Description",
+    "type": "Group Type",
+    "currency": "Currency",
+    "members": "Members",
+    "createdBy": "Created By",
+    "createdAt": "Created On"
+  },
+  "types": {
+    "trip": "Trip",
+    "household": "Household",
+    "event": "Event",
+    "project": "Project",
+    "other": "Other"
+  },
+  "members": {
+    "title": "Members",
+    "add": "Add Member",
+    "remove": "Remove Member",
+    "role": "Role",
+    "share": "Share",
+    "admin": "Admin",
+    "member": "Member",
+    "pending": "Pending",
+    "invited": "Invited",
+    "inviteEmail": "Email Address",
+    "sendInvite": "Send Invite",
+    "inviteSent": "Invitation sent successfully",
+    "removeConfirm": "Are you sure you want to remove this member?"
+  },
+  "expenses": {
+    "title": "Group Expenses",
+    "add": "Add Expense",
+    "split": "Split Expense",
+    "splitEqually": "Split Equally",
+    "splitByAmount": "Split by Amount",
+    "splitByPercentage": "Split by Percentage",
+    "paidBy": "Paid By",
+    "splitBetween": "Split Between",
+    "yourShare": "Your Share",
+    "owes": "{{name}} owes",
+    "owed": "{{name}} is owed"
+  },
+  "settlements": {
+    "title": "Settlements",
+    "settle": "Settle Up",
+    "settleWith": "Settle with {{name}}",
+    "amount": "Settlement Amount",
+    "method": "Payment Method",
+    "record": "Record Settlement",
+    "recorded": "Settlement recorded successfully",
+    "pending": "Pending Settlements",
+    "completed": "Completed Settlements"
+  },
+  "balance": {
+    "title": "Balance Summary",
+    "totalSpent": "Total Spent",
+    "yourShare": "Your Share",
+    "youOwe": "You Owe",
+    "youAreOwed": "You Are Owed",
+    "settled": "All Settled Up"
+  },
+  "actions": {
+    "create": "Create Group",
+    "update": "Update Group",
+    "delete": "Delete Group",
+    "leave": "Leave Group",
+    "archive": "Archive Group",
+    "export": "Export Group Data"
+  },
+  "messages": {
+    "created": "Group created successfully",
+    "updated": "Group updated successfully",
+    "deleted": "Group deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this group? All expenses and settlements will be lost.",
+    "left": "You have left the group",
+    "leaveConfirm": "Are you sure you want to leave this group?",
+    "noGroups": "No groups found"
+  }
+}

@@ -1,15 +1,21 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { transactionsApi, accountsApi, categoriesApi, tagsApi } from '@services/api';
-import { Plus, Search, Filter, Download, Upload, Trash2, X } from 'lucide-react';
+import { transactionsApi, accountsApi, categoriesApi, tagsApi, exportApi } from '@services/api';
+import { Plus, Search, Filter, Download, Upload, Trash2, X, Copy } from 'lucide-react';
 import TransactionModal from '../components/TransactionModal';
+import TransactionHistoryModal from '../components/TransactionHistoryModal';
+import TransactionCards from '../components/TransactionCards';
 import FilterModal from '../components/FilterModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@components/table';
+import { VirtualTable } from '@/components/virtual';
 import { getTransactionColumns } from '../config/transactionTable.config';
 import { useUrlParams } from '@/hooks/useUrlParams';
+import { ExportButton, ExportFormat } from '@/components/export';
+import { toast } from 'react-hot-toast';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
@@ -18,6 +24,8 @@ export default function TransactionsPage() {
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [historyTransaction, setHistoryTransaction] = useState<any>(null);
+  const isMobile = useIsMobile();
 
   // Use the new useUrlParams hook for query parameters
   const { getParam, getParams, setParam, setParams, removeParam, removeParams } = useUrlParams();
@@ -44,6 +52,13 @@ export default function TransactionsPage() {
         ...filters,
         search: searchTerm || undefined,
       }),
+  });
+
+  // Get duplicate count
+  const { data: duplicatesData } = useQuery({
+    queryKey: ['duplicates-count'],
+    queryFn: () => transactionsApi.getAll({ isMerged: false }),
+    staleTime: 60000, // Cache for 1 minute
   });
 
   const { data: accounts } = useQuery({
@@ -82,6 +97,19 @@ export default function TransactionsPage() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       setSelectedIds([]);
+    },
+  });
+
+  const unmergeMutation = useMutation({
+    mutationFn: transactionsApi.unmergeTransaction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['duplicates'] });
+      toast.success('Transaction unmerged successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to unmerge transaction');
     },
   });
 
@@ -151,6 +179,26 @@ export default function TransactionsPage() {
     });
   };
 
+  const handleUnmerge = async (id: string) => {
+    confirm({
+      title: 'Unmerge Transaction',
+      message: 'Are you sure you want to unmerge this transaction? It will be restored to your transaction list.',
+      variant: 'warning',
+      confirmLabel: 'Unmerge',
+      onConfirm: async () => {
+        await unmergeMutation.mutateAsync(id);
+      },
+    });
+  };
+
+  const handleHistory = (transaction: any) => {
+    setHistoryTransaction(transaction);
+  };
+
+  const handleCloseHistory = () => {
+    setHistoryTransaction(null);
+  };
+
   const handleSelectAll = () => {
     if (selectedIds.length === transactions?.data?.length) {
       setSelectedIds([]);
@@ -163,6 +211,50 @@ export default function TransactionsPage() {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
+  };
+
+  const handleExport = async (format: ExportFormat) => {
+    try {
+      const exportFilters = {
+        ...filters,
+        search: searchTerm || undefined,
+      };
+
+      let response;
+      if (format === 'csv') {
+        response = await exportApi.exportTransactionsCSV(exportFilters);
+      } else if (format === 'excel') {
+        response = await exportApi.exportTransactionsExcel(exportFilters);
+      } else if (format === 'pdf') {
+        response = await exportApi.exportTransactionsPDF(exportFilters);
+      }
+
+      // Download the file
+      if (response) {
+        const blob = new Blob([response as any], {
+          type:
+            format === 'csv'
+              ? 'text/csv'
+              : format === 'excel'
+              ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+              : 'application/pdf',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `transactions_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success(`Transactions exported as ${format.toUpperCase()} successfully!`);
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error(error.message || 'Failed to export transactions');
+    }
   };
 
   const getCategoryName = (categoryId: string) => {
@@ -183,74 +275,101 @@ export default function TransactionsPage() {
     getCategoryName,
     getAccountName,
     handleEdit,
-    handleDelete
+    handleDelete,
+    handleHistory,
+    handleUnmerge
   );
 
+  // Use virtual scrolling for large datasets (>100 items)
+  const useVirtualScrolling = (transactions?.data?.length || 0) > 100;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Transactions</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {/* Hide some buttons on small mobile */}
+          <button
+            onClick={() => navigate('/transactions/duplicates')}
+            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Find Duplicates</span>
+            <span className="xs:hidden">Duplicates</span>
+          </button>
+
+          {/* Hide Import on very small screens */}
+          <button className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
             <Upload className="h-4 w-4" />
             Import
           </button>
-          <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <Download className="h-4 w-4" />
-            Export
-          </button>
+
+          <ExportButton
+            entityType="transactions"
+            filters={filters}
+            onExport={handleExport}
+            variant="button"
+            label={isMobile ? undefined : 'Export'}
+          />
+
           <button
             onClick={() => navigate('/transactions/new')}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"
           >
-            <Plus className="h-4 w-4" />
-            Add Transaction
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Add Transaction</span>
+            <span className="xs:hidden">Add</span>
           </button>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex items-center gap-3">
+      {/* Search and Filters - Responsive */}
+      <div className="flex items-center gap-2 sm:gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search transactions..."
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-gray-300 py-2 pl-9 sm:pl-10 pr-3 sm:pr-4 text-sm sm:text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <button
           onClick={handleOpenFilterModal}
-          className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"
         >
-          <Filter className="h-4 w-4" />
-          Filters
+          <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="hidden xs:inline">Filters</span>
           {activeFiltersCount > 0 && (
-            <span className="ml-1 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
+            <span className="rounded-full bg-blue-600 px-1.5 sm:px-2 py-0.5 text-xs text-white">
               {activeFiltersCount}
             </span>
           )}
         </button>
       </div>
 
-      {/* Active Filters */}
+      {/* Active Filters - Responsive */}
       {activeFiltersCount > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-gray-600">Active filters:</span>
+          <span className="text-xs sm:text-sm text-gray-600">Active filters:</span>
           {Object.entries(filters).map(([key, value]: [string, any]) => {
             if (!value) return null;
             return (
               <span
                 key={key}
-                className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
+                className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm text-blue-800"
               >
-                {key}: {typeof value === 'object' ? JSON.stringify(value) : value}
+                <span className="truncate max-w-[120px] sm:max-w-none">
+                  {key}: {typeof value === 'object' ? JSON.stringify(value) : value}
+                </span>
                 <button
                   onClick={() => handleRemoveFilter(key)}
-                  className="hover:text-blue-900"
+                  className="hover:text-blue-900 flex-shrink-0"
+                  aria-label={`Remove ${key} filter`}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -259,30 +378,30 @@ export default function TransactionsPage() {
           })}
           <button
             onClick={handleClearAllFilters}
-            className="text-sm text-blue-600 hover:text-blue-700"
+            className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 whitespace-nowrap"
           >
             Clear all
           </button>
         </div>
       )}
 
-      {/* Bulk Actions */}
+      {/* Bulk Actions - Responsive */}
       {selectedIds.length > 0 && (
-        <div className="flex items-center justify-between rounded-lg bg-blue-50 px-4 py-3">
-          <span className="text-sm font-medium text-blue-900">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-lg bg-blue-50 px-3 sm:px-4 py-3">
+          <span className="text-xs sm:text-sm font-medium text-blue-900">
             {selectedIds.length} transaction(s) selected
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={handleBulkDelete}
-              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg bg-red-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-red-700"
             >
-              <Trash2 className="h-4 w-4" />
-              Delete Selected
+              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Delete Selected</span>
             </button>
             <button
               onClick={() => setSelectedIds([])}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="flex-1 sm:flex-none rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -290,18 +409,48 @@ export default function TransactionsPage() {
         </div>
       )}
 
-      {/* Transactions Table */}
-      <DataTable
-        columns={columns}
-        data={transactions?.data || []}
-        keyExtractor={(row) => row.id}
-        loading={isLoading}
-        emptyMessage="No transactions found. Add your first transaction to get started."
-        selectable
-        selectedIds={selectedIds}
-        onSelectAll={handleSelectAll}
-        onSelectOne={handleSelectOne}
-      />
+      {/* Transactions - Switch between Table (desktop) and Cards (mobile) */}
+      {isMobile ? (
+        <TransactionCards
+          transactions={transactions?.data || []}
+          getCategoryName={getCategoryName}
+          getAccountName={getAccountName}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onHistory={handleHistory}
+          onUnmerge={handleUnmerge}
+          selectable
+          selectedIds={selectedIds}
+          onSelectOne={handleSelectOne}
+        />
+      ) : useVirtualScrolling ? (
+        <VirtualTable
+          columns={columns}
+          data={transactions?.data || []}
+          keyExtractor={(row) => row.id}
+          loading={isLoading}
+          emptyMessage="No transactions found. Add your first transaction to get started."
+          selectable
+          selectedIds={selectedIds}
+          onSelectAll={handleSelectAll}
+          onSelectOne={handleSelectOne}
+          rowHeight={65}
+          height="calc(100vh - 400px)"
+          overscan={10}
+        />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={transactions?.data || []}
+          keyExtractor={(row) => row.id}
+          loading={isLoading}
+          emptyMessage="No transactions found. Add your first transaction to get started."
+          selectable
+          selectedIds={selectedIds}
+          onSelectAll={handleSelectAll}
+          onSelectOne={handleSelectOne}
+        />
+      )}
 
       {/* Modals */}
       <TransactionModal
@@ -316,6 +465,14 @@ export default function TransactionsPage() {
         onApply={handleApplyFilters}
         onClose={handleCloseFilterModal}
       />
+
+      {historyTransaction && (
+        <TransactionHistoryModal
+          transaction={historyTransaction}
+          isOpen={!!historyTransaction}
+          onClose={handleCloseHistory}
+        />
+      )}
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>

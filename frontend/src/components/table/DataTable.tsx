@@ -1,4 +1,5 @@
-import { ReactNode } from 'react';
+import { ReactNode, useId } from 'react';
+import { VirtualTable } from '@/components/virtual';
 
 export interface ColumnConfig<T = any> {
   key: string;
@@ -8,6 +9,10 @@ export interface ColumnConfig<T = any> {
   width?: string;
   align?: 'left' | 'center' | 'right';
   className?: string;
+  /**
+   * Description for screen readers
+   */
+  ariaLabel?: string;
 }
 
 export interface DataTableProps<T = any> {
@@ -23,6 +28,18 @@ export interface DataTableProps<T = any> {
   actions?: (row: T) => ReactNode;
   onRowClick?: (row: T) => void;
   className?: string;
+  /**
+   * Enable virtual scrolling for large datasets
+   */
+  enableVirtualScrolling?: boolean;
+  /**
+   * Row height for virtual scrolling (in pixels)
+   */
+  virtualRowHeight?: number;
+  /**
+   * Container height for virtual scrolling
+   */
+  virtualHeight?: string | number;
 }
 
 export function DataTable<T = any>({
@@ -38,74 +55,152 @@ export function DataTable<T = any>({
   actions,
   onRowClick,
   className = '',
+  enableVirtualScrolling = false,
+  virtualRowHeight = 65,
+  virtualHeight = '600px',
 }: DataTableProps<T>) {
   const isAllSelected = data.length > 0 && selectedIds.length === data.length;
+  const tableId = useId();
+  const captionId = useId();
+
+  // Use VirtualTable for large datasets or when explicitly enabled
+  const shouldUseVirtual = enableVirtualScrolling || data.length > 100;
+
+  // Convert ColumnConfig to VirtualTableColumn format
+  const virtualColumns = columns.map(col => ({
+    ...col,
+    render: col.render ? (value: any, row: T, _index: number) => col.render!(value, row) : undefined,
+  }));
+
+  if (shouldUseVirtual) {
+    return (
+      <VirtualTable
+        columns={virtualColumns}
+        data={data}
+        keyExtractor={(row, _index) => keyExtractor(row)}
+        loading={loading}
+        emptyMessage={emptyMessage}
+        selectable={selectable}
+        selectedIds={selectedIds}
+        onSelectAll={onSelectAll}
+        onSelectOne={onSelectOne}
+        actions={actions}
+        onRowClick={onRowClick ? (row, _index) => onRowClick(row) : undefined}
+        rowHeight={virtualRowHeight}
+        height={virtualHeight}
+        className={className}
+        overscan={10}
+      />
+    );
+  }
 
   return (
-    <div className={`overflow-hidden rounded-lg bg-white shadow ${className}`}>
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
+    <div
+      className={`overflow-hidden rounded-lg bg-card shadow transition-colors ${className}`}
+      role="region"
+      aria-labelledby={captionId}
+      tabIndex={0}
+    >
+      <table
+        id={tableId}
+        className="min-w-full divide-y divide-border"
+        role="table"
+        aria-busy={loading}
+        aria-live="polite"
+      >
+        <caption id={captionId} className="sr-only">
+          Data table with {data.length} rows
+        </caption>
+        <thead className="bg-muted" role="rowgroup">
+          <tr role="row">
             {selectable && onSelectAll && (
-              <th className="px-6 py-3 text-left">
+              <th scope="col" className="px-6 py-3 text-left" role="columnheader">
                 <input
                   type="checkbox"
                   checked={isAllSelected}
                   onChange={onSelectAll}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  aria-label={isAllSelected ? 'Deselect all rows' : 'Select all rows'}
                 />
               </th>
             )}
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-6 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 ${
+                scope="col"
+                role="columnheader"
+                className={`px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground ${
                   column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'
                 } ${column.className || ''}`}
                 style={{ width: column.width }}
+                aria-label={column.ariaLabel || column.label}
               >
                 {column.label}
               </th>
             ))}
             {actions && (
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th
+                scope="col"
+                role="columnheader"
+                className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground"
+              >
                 Actions
               </th>
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
+        <tbody className="divide-y divide-border bg-card" role="rowgroup">
           {loading ? (
-            <tr>
+            <tr role="row">
               <td
                 colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)}
-                className="px-6 py-12 text-center text-gray-500"
+                className="px-6 py-12 text-center text-muted-foreground"
+                role="cell"
               >
-                Loading...
+                <span role="status" aria-live="polite">
+                  Loading...
+                </span>
               </td>
             </tr>
           ) : data.length === 0 ? (
-            <tr>
+            <tr role="row">
               <td
                 colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)}
-                className="px-6 py-12 text-center text-gray-500"
+                className="px-6 py-12 text-center text-muted-foreground"
+                role="cell"
               >
                 {emptyMessage}
               </td>
             </tr>
           ) : (
-            data.map((row) => {
+            data.map((row, rowIndex) => {
               const id = keyExtractor(row);
               const isSelected = selectedIds.includes(id);
 
               return (
                 <tr
                   key={id}
-                  className={`hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
+                  role="row"
+                  aria-rowindex={rowIndex + 2}
+                  aria-selected={selectable ? isSelected : undefined}
+                  className={`transition-colors hover:bg-accent ${onRowClick ? 'cursor-pointer' : ''} ${
+                    isSelected ? 'bg-accent/50' : ''
+                  }`}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onKeyDown={
+                    onRowClick
+                      ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onRowClick(row);
+                          }
+                        }
+                      : undefined
+                  }
                 >
                   {selectable && onSelectOne && (
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4" role="cell">
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -114,7 +209,8 @@ export function DataTable<T = any>({
                           onSelectOne(id);
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        aria-label={`Select row ${rowIndex + 1}`}
                       />
                     </td>
                   )}
@@ -125,6 +221,7 @@ export function DataTable<T = any>({
                     return (
                       <td
                         key={column.key}
+                        role="cell"
                         className={`px-6 py-4 ${
                           column.align === 'right'
                             ? 'text-right'
@@ -138,8 +235,16 @@ export function DataTable<T = any>({
                     );
                   })}
                   {actions && (
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                    <td
+                      className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium"
+                      role="cell"
+                    >
+                      <div
+                        className="flex items-center justify-end gap-2"
+                        onClick={(e) => e.stopPropagation()}
+                        role="group"
+                        aria-label="Row actions"
+                      >
                         {actions(row)}
                       </div>
                     </td>

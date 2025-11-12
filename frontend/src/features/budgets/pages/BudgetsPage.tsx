@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { budgetsApi, categoriesApi } from '@services/api';
+import { budgetsApi, categoriesApi, exportApi } from '@services/api';
 import { Plus, Edit, Trash2, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import BudgetModal from '../components/BudgetModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { getBudgetProgressColor, getBudgetProgressTextColor, formatBudgetPeriod } from '../config/budgets.config';
+import { ExportButton, ExportFormat } from '@/components/export';
+import { toast } from 'react-hot-toast';
 
 export default function BudgetsPage() {
   const navigate = useNavigate();
@@ -65,28 +67,75 @@ export default function BudgetsPage() {
     });
   };
 
+  const handleExport = async (format: ExportFormat) => {
+    try {
+      let response;
+      if (format === 'csv') {
+        response = await exportApi.exportBudgetsCSV({});
+      } else if (format === 'excel') {
+        response = await exportApi.exportBudgetsExcel({});
+      } else if (format === 'pdf') {
+        response = await exportApi.exportBudgetsPDF({});
+      }
+
+      // Download the file
+      if (response) {
+        const blob = new Blob([response as any], {
+          type:
+            format === 'csv'
+              ? 'text/csv'
+              : format === 'excel'
+              ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+              : 'application/pdf',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `budgets_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success(`Budgets exported as ${format.toUpperCase()} successfully!`);
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error(error.message || 'Failed to export budgets');
+    }
+  };
+
   const getCategoryName = (categoryId: string) => {
     const category = categories?.data?.find((c: any) => c.id === categoryId);
     return category?.name || 'All Categories';
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Budgets</h1>
-          <p className="mt-1 text-sm text-gray-600">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Budgets</h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600">
             Set spending limits and track your progress
           </p>
         </div>
-        <button
-          onClick={() => navigate('/budgets/new')}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Create Budget
-        </button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ExportButton
+            entityType="budgets"
+            onExport={handleExport}
+            variant="button"
+            label="Export"
+          />
+          <button
+            onClick={() => navigate('/budgets/new')}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span>Create Budget</span>
+          </button>
+        </div>
       </div>
 
       {/* Loading/Empty States */}
@@ -109,7 +158,7 @@ export default function BudgetsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
           {budgets?.data?.map((budget: any) => {
             const percentage = (budget.spent / budget.amount) * 100;
             const remaining = budget.amount - budget.spent;
@@ -118,26 +167,30 @@ export default function BudgetsPage() {
             return (
               <div
                 key={budget.id}
-                className="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg"
+                className="rounded-lg bg-white p-4 sm:p-6 shadow-sm transition-shadow hover:shadow-md"
               >
                 {/* Header */}
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{budget.name}</h3>
-                    <p className="mt-1 text-sm text-gray-500">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                      {budget.name}
+                    </h3>
+                    <p className="mt-1 text-xs sm:text-sm text-gray-500 truncate">
                       {getCategoryName(budget.categoryId)}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                     <button
                       onClick={() => handleEdit(budget)}
-                      className="text-gray-400 hover:text-blue-600"
+                      className="rounded-lg p-2 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      aria-label="Edit budget"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(budget.id)}
-                      className="text-gray-400 hover:text-red-600"
+                      className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                      aria-label="Delete budget"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -145,41 +198,40 @@ export default function BudgetsPage() {
                 </div>
 
                 {/* Period */}
-                <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="h-4 w-4" />
-                  <span>{formatBudgetPeriod(budget.period)}</span>
-                  {budget.startDate && (
-                    <span>
-                      ({format(parseISO(budget.startDate), 'MMM dd')} -{' '}
-                      {format(parseISO(budget.endDate), 'MMM dd, yyyy')})
-                    </span>
-                  )}
+                <div className="mt-3 flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">{formatBudgetPeriod(budget.period)}</span>
                 </div>
+                {budget.startDate && budget.endDate && (
+                  <div className="mt-1 text-xs text-gray-500 pl-5 sm:pl-6">
+                    {format(parseISO(budget.startDate), 'MMM dd')} -{' '}
+                    {format(parseISO(budget.endDate), 'MMM dd, yyyy')}
+                  </div>
+                )}
 
                 {/* Progress Bar */}
                 <div className="mt-4">
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-xs sm:text-sm">
                     <span className={`font-medium ${getBudgetProgressTextColor(percentage)}`}>
-                      ${budget.spent.toFixed(2)} of ${budget.amount.toFixed(2)}
+                      ${budget.spent.toFixed(2)} / ${budget.amount.toFixed(2)}
                     </span>
                     <span className={`font-semibold ${getBudgetProgressTextColor(percentage)}`}>
                       {percentage.toFixed(0)}%
                     </span>
                   </div>
-                  <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div className="mt-2 h-2.5 sm:h-3 w-full overflow-hidden rounded-full bg-gray-200">
                     <div
                       className={`h-full transition-all ${getBudgetProgressColor(percentage)}`}
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>
-                  {isOverBudget && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span>Over budget by ${Math.abs(remaining).toFixed(2)}</span>
+                  {isOverBudget ? (
+                    <div className="mt-2 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-red-600">
+                      <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span>Over by ${Math.abs(remaining).toFixed(2)}</span>
                     </div>
-                  )}
-                  {!isOverBudget && (
-                    <p className="mt-2 text-sm text-gray-600">
+                  ) : (
+                    <p className="mt-2 text-xs sm:text-sm text-gray-600">
                       ${remaining.toFixed(2)} remaining
                     </p>
                   )}
@@ -187,12 +239,12 @@ export default function BudgetsPage() {
 
                 {/* Alert Threshold */}
                 {budget.alertThreshold && (
-                  <div className="mt-4 rounded-lg bg-gray-50 p-3">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span>
-                        Alert at {budget.alertThreshold}% (${' '}
-                        {((budget.amount * budget.alertThreshold) / 100).toFixed(2)})
+                  <div className="mt-3 sm:mt-4 rounded-lg bg-gray-50 p-2.5 sm:p-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                      <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span className="truncate">
+                        Alert at {budget.alertThreshold}% (
+                        ${((budget.amount * budget.alertThreshold) / 100).toFixed(2)})
                       </span>
                     </div>
                   </div>

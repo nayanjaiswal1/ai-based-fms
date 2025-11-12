@@ -1,0 +1,46 @@
+{
+  "title": "Notifications",
+  "markAllRead": "Mark All as Read",
+  "clearAll": "Clear All",
+  "filter": "Filter",
+  "filters": {
+    "all": "All",
+    "unread": "Unread",
+    "read": "Read",
+    "type": "Type"
+  },
+  "types": {
+    "all": "All Types",
+    "budget": "Budget",
+    "transaction": "Transaction",
+    "reminder": "Reminder",
+    "security": "Security",
+    "system": "System",
+    "investment": "Investment",
+    "group": "Group"
+  },
+  "empty": "No notifications",
+  "loading": "Loading notifications...",
+  "actions": {
+    "markRead": "Mark as Read",
+    "markUnread": "Mark as Unread",
+    "delete": "Delete",
+    "view": "View Details"
+  },
+  "messages": {
+    "markedRead": "Notification marked as read",
+    "markedUnread": "Notification marked as unread",
+    "deleted": "Notification deleted",
+    "clearedAll": "All notifications cleared"
+  },
+  "settings": {
+    "title": "Notification Settings",
+    "email": "Email Notifications",
+    "push": "Push Notifications",
+    "inApp": "In-App Notifications",
+    "frequency": "Notification Frequency",
+    "immediate": "Immediate",
+    "daily": "Daily Digest",
+    "weekly": "Weekly Digest"
+  }
+}

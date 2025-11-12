@@ -40,7 +40,7 @@ export function Filters({ filters, values, onChange, onClear, className = '' }: 
             value={value || ''}
             onChange={(e) => onChange(filter.key, e.target.value || undefined)}
             placeholder={filter.placeholder}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
         );
 
@@ -49,11 +49,11 @@ export function Filters({ filters, values, onChange, onClear, className = '' }: 
           <select
             value={value || ''}
             onChange={(e) => onChange(filter.key, e.target.value || undefined)}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
           >
-            <option value="">{filter.placeholder || 'All'}</option>
+            <option value="" className="bg-background text-foreground">{filter.placeholder || 'All'}</option>
             {filter.options?.map((option) => (
-              <option key={option.value} value={option.value}>
+              <option key={option.value} value={option.value} className="bg-background text-foreground">
                 {option.label}
               </option>
             ))}
@@ -66,7 +66,7 @@ export function Filters({ filters, values, onChange, onClear, className = '' }: 
             type="date"
             value={value || ''}
             onChange={(e) => onChange(filter.key, e.target.value || undefined)}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
         );
 
@@ -80,7 +80,7 @@ export function Filters({ filters, values, onChange, onClear, className = '' }: 
             min={filter.min}
             max={filter.max}
             step={filter.step}
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
         );
 
@@ -92,14 +92,14 @@ export function Filters({ filters, values, onChange, onClear, className = '' }: 
               value={value?.start || ''}
               onChange={(e) => onChange(filter.key, { ...value, start: e.target.value || undefined })}
               placeholder="Start date"
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
             />
             <input
               type="date"
               value={value?.end || ''}
               onChange={(e) => onChange(filter.key, { ...value, end: e.target.value || undefined })}
               placeholder="End date"
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
             />
           </div>
         );
@@ -113,7 +113,7 @@ export function Filters({ filters, values, onChange, onClear, className = '' }: 
               onChange={(e) => onChange(filter.key, { ...value, min: e.target.value || undefined })}
               placeholder="Min"
               step={filter.step}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
             />
             <input
               type="number"
@@ -121,7 +121,7 @@ export function Filters({ filters, values, onChange, onClear, className = '' }: 
               onChange={(e) => onChange(filter.key, { ...value, max: e.target.value || undefined })}
               placeholder="Max"
               step={filter.step}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
             />
           </div>
         );
@@ -135,7 +135,7 @@ export function Filters({ filters, values, onChange, onClear, className = '' }: 
     <div className={`space-y-4 ${className}`}>
       {filters.map((filter) => (
         <div key={filter.key} className={filter.className}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
             {filter.icon && <span className="mr-2">{filter.icon}</span>}
             {filter.label}
           </label>
@@ -146,7 +146,7 @@ export function Filters({ filters, values, onChange, onClear, className = '' }: 
         <button
           type="button"
           onClick={onClear}
-          className="text-sm text-blue-600 hover:text-blue-700"
+          className="text-sm text-primary hover:text-primary/80"
         >
           Clear all filters
         </button>

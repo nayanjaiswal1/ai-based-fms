@@ -20,6 +20,12 @@ export enum AccountType {
   OTHER = 'other',
 }
 
+export enum AccountReconciliationStatus {
+  NONE = 'none',
+  IN_PROGRESS = 'in_progress',
+  RECONCILED = 'reconciled',
+}
+
 @Entity('accounts')
 export class Account {
   @PrimaryGeneratedColumn('uuid')
@@ -57,6 +63,19 @@ export class Account {
 
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @Column({
+    type: 'enum',
+    enum: AccountReconciliationStatus,
+    default: AccountReconciliationStatus.NONE,
+  })
+  reconciliationStatus: AccountReconciliationStatus;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastReconciledAt: Date;
+
+  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true })
+  lastReconciledBalance: number;
 
   @Column()
   userId: string;

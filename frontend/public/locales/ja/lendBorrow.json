@@ -1,0 +1,71 @@
+{
+  "title": "Lend & Borrow",
+  "add": "Add Record",
+  "edit": "Edit Record",
+  "delete": "Delete Record",
+  "view": "View Record",
+  "list": "Lend & Borrow List",
+  "fields": {
+    "type": "Type",
+    "person": "Person",
+    "amount": "Amount",
+    "date": "Date",
+    "dueDate": "Due Date",
+    "status": "Status",
+    "description": "Description",
+    "interestRate": "Interest Rate",
+    "notes": "Notes"
+  },
+  "types": {
+    "lent": "Lent (I gave)",
+    "borrowed": "Borrowed (I received)"
+  },
+  "status": {
+    "pending": "Pending",
+    "partial": "Partially Paid",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "cancelled": "Cancelled"
+  },
+  "payment": {
+    "title": "Record Payment",
+    "amount": "Payment Amount",
+    "date": "Payment Date",
+    "notes": "Notes",
+    "record": "Record Payment",
+    "success": "Payment recorded successfully",
+    "history": "Payment History",
+    "noPayments": "No payments recorded yet"
+  },
+  "summary": {
+    "totalLent": "Total Lent",
+    "totalBorrowed": "Total Borrowed",
+    "outstandingLent": "Outstanding Lent",
+    "outstandingBorrowed": "Outstanding Borrowed",
+    "netPosition": "Net Position"
+  },
+  "actions": {
+    "create": "Add Record",
+    "update": "Update Record",
+    "delete": "Delete Record",
+    "recordPayment": "Record Payment",
+    "markPaid": "Mark as Paid",
+    "sendReminder": "Send Reminder"
+  },
+  "messages": {
+    "created": "Record created successfully",
+    "updated": "Record updated successfully",
+    "deleted": "Record deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this record?",
+    "noRecords": "No lend & borrow records found",
+    "markedPaid": "Record marked as paid",
+    "reminderSent": "Reminder sent successfully"
+  },
+  "reminders": {
+    "title": "Reminders",
+    "send": "Send Reminder",
+    "template": "Reminder Template",
+    "frequency": "Reminder Frequency",
+    "lastSent": "Last Sent"
+  }
+}

@@ -42,10 +42,10 @@ export class AiController {
     return this.aiService.parseReceipt(dto);
   }
 
-  @Post('detect-duplicates')
-  @ApiOperation({ summary: 'Detect duplicate transactions' })
-  @ApiResponse({ status: 200, description: 'Returns potential duplicates' })
-  detectDuplicates(@CurrentUser('id') userId: string, @Body() dto: DetectDuplicatesDto) {
+  @Get('detect-duplicates')
+  @ApiOperation({ summary: 'Detect duplicate transactions with multi-factor matching' })
+  @ApiResponse({ status: 200, description: 'Returns grouped potential duplicates with confidence scores' })
+  detectDuplicates(@CurrentUser('id') userId: string, @Query() dto: DetectDuplicatesDto) {
     return this.aiService.detectDuplicates(userId, dto);
   }
 

@@ -1,0 +1,80 @@
+{
+  "title": "Budgets",
+  "add": "Add Budget",
+  "edit": "Edit Budget",
+  "delete": "Delete Budget",
+  "view": "View Budget",
+  "list": "Budget List",
+  "details": "Budget Details",
+  "fields": {
+    "name": "Budget Name",
+    "amount": "Budget Amount",
+    "category": "Category",
+    "period": "Period",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "color": "Color",
+    "description": "Description",
+    "rollover": "Rollover Unused Amount",
+    "alert": "Alert Threshold",
+    "alertPercentage": "Alert at {{percentage}}%"
+  },
+  "periods": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "biweekly": "Bi-weekly",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly",
+    "custom": "Custom Period"
+  },
+  "status": {
+    "onTrack": "On Track",
+    "warning": "Warning",
+    "exceeded": "Exceeded",
+    "completed": "Completed"
+  },
+  "progress": {
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "over": "Over Budget",
+    "percentUsed": "{{percent}}% Used",
+    "daysRemaining": "{{days}} days remaining"
+  },
+  "actions": {
+    "create": "Create Budget",
+    "update": "Update Budget",
+    "delete": "Delete Budget",
+    "duplicate": "Duplicate Budget",
+    "reset": "Reset Budget",
+    "viewTransactions": "View Transactions"
+  },
+  "messages": {
+    "created": "Budget created successfully",
+    "updated": "Budget updated successfully",
+    "deleted": "Budget deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this budget?",
+    "noBudgets": "No budgets found",
+    "resetConfirm": "Are you sure you want to reset this budget?",
+    "resetSuccess": "Budget reset successfully"
+  },
+  "alerts": {
+    "approaching": "You're approaching your budget limit for {{name}}",
+    "exceeded": "You've exceeded your budget for {{name}}",
+    "warning": "Warning: {{percent}}% of budget used for {{name}}",
+    "success": "Great! You're staying within your budget for {{name}}"
+  },
+  "stats": {
+    "totalBudgeted": "Total Budgeted",
+    "totalSpent": "Total Spent",
+    "totalRemaining": "Total Remaining",
+    "activeBudgets": "Active Budgets",
+    "onTrack": "On Track",
+    "needsAttention": "Needs Attention"
+  },
+  "suggestions": {
+    "title": "Budget Suggestions",
+    "basedOn": "Based on your spending patterns",
+    "recommended": "Recommended Amount"
+  }
+}

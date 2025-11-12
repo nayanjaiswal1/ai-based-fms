@@ -1,0 +1,336 @@
+import { Injectable, Logger } from '@nestjs/common';
+import * as PDFDocument from 'pdfkit';
+import * as ExcelJS from 'exceljs';
+import * as fs from 'fs';
+import * as path from 'path';
+import { ReportFormat } from '@database/entities/generated-report.entity';
+import { Report } from '@database/entities/report.entity';
+
+interface ReportData {
+  summary: Record<string, any>;
+  details: any[];
+  charts?: any[];
+  metadata: {
+    generatedAt: Date;
+    dataRange: { start: Date; end: Date };
+    recordCount: number;
+  };
+}
+
+@Injectable()
+export class ReportExportService {
+  private readonly logger = new Logger(ReportExportService.name);
+  private readonly uploadDir = path.join(process.cwd(), 'uploads', 'reports');
+
+  constructor() {
+    // Ensure upload directory exists
+    if (!fs.existsSync(this.uploadDir)) {
+      fs.mkdirSync(this.uploadDir, { recursive: true });
+    }
+  }
+
+  async exportReport(
+    report: Report,
+    reportData: ReportData,
+    format: ReportFormat,
+  ): Promise<{ filePath: string; fileName: string; fileSize: number }> {
+    this.logger.log(`Exporting report ${report.id} in format: ${format}`);
+
+    let filePath: string;
+    let fileName: string;
+
+    switch (format) {
+      case ReportFormat.PDF:
+        const pdfResult = await this.exportToPDF(report, reportData);
+        filePath = pdfResult.filePath;
+        fileName = pdfResult.fileName;
+        break;
+      case ReportFormat.EXCEL:
+        const excelResult = await this.exportToExcel(report, reportData);
+        filePath = excelResult.filePath;
+        fileName = excelResult.fileName;
+        break;
+      case ReportFormat.CSV:
+        const csvResult = await this.exportToCSV(report, reportData);
+        filePath = csvResult.filePath;
+        fileName = csvResult.fileName;
+        break;
+      case ReportFormat.JSON:
+        const jsonResult = await this.exportToJSON(report, reportData);
+        filePath = jsonResult.filePath;
+        fileName = jsonResult.fileName;
+        break;
+      default:
+        throw new Error(`Unsupported format: ${format}`);
+    }
+
+    const stats = fs.statSync(filePath);
+    const fileSize = stats.size;
+
+    return { filePath, fileName, fileSize };
+  }
+
+  private async exportToPDF(
+    report: Report,
+    reportData: ReportData,
+  ): Promise<{ filePath: string; fileName: string }> {
+    const fileName = `${report.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+    const filePath = path.join(this.uploadDir, fileName);
+
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({ margin: 50 });
+        const stream = fs.createWriteStream(filePath);
+
+        doc.pipe(stream);
+
+        // Header
+        doc.fontSize(20).text(report.name, { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(12).text(`Generated: ${reportData.metadata.generatedAt.toLocaleString()}`, {
+          align: 'center',
+        });
+        doc.text(
+          `Period: ${reportData.metadata.dataRange.start.toLocaleDateString()} - ${reportData.metadata.dataRange.end.toLocaleDateString()}`,
+          { align: 'center' },
+        );
+        doc.moveDown(2);
+
+        // Summary Section
+        doc.fontSize(16).text('Summary', { underline: true });
+        doc.moveDown();
+        doc.fontSize(12);
+
+        Object.entries(reportData.summary).forEach(([key, value]) => {
+          const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+          const formattedValue = typeof value === 'number' ? this.formatNumber(value) : value;
+          doc.text(`${formattedKey}: ${formattedValue}`);
+        });
+
+        doc.moveDown(2);
+
+        // Details Section
+        if (reportData.details && reportData.details.length > 0) {
+          doc.fontSize(16).text('Details', { underline: true });
+          doc.moveDown();
+          doc.fontSize(10);
+
+          // Create table-like structure
+          const details = Array.isArray(reportData.details) ? reportData.details : [reportData.details];
+
+          details.slice(0, 20).forEach((item, index) => {
+            if (index > 0 && index % 5 === 0) {
+              doc.addPage();
+              doc.fontSize(10);
+            }
+
+            if (typeof item === 'object' && !Array.isArray(item)) {
+              Object.entries(item).forEach(([key, value]) => {
+                const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+                const formattedValue = typeof value === 'number' ? this.formatNumber(value) : value;
+                doc.text(`  ${formattedKey}: ${formattedValue}`);
+              });
+              doc.moveDown(0.5);
+            }
+          });
+
+          if (details.length > 20) {
+            doc.moveDown();
+            doc.text(`... and ${details.length - 20} more items`);
+          }
+        }
+
+        // Footer
+        doc.fontSize(8).text(
+          `Report generated by Finance Management System`,
+          50,
+          doc.page.height - 50,
+          { align: 'center' },
+        );
+
+        doc.end();
+
+        stream.on('finish', () => {
+          resolve({ filePath, fileName });
+        });
+
+        stream.on('error', (error) => {
+          reject(error);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  private async exportToExcel(
+    report: Report,
+    reportData: ReportData,
+  ): Promise<{ filePath: string; fileName: string }> {
+    const fileName = `${report.name.replace(/\s+/g, '_')}_${Date.now()}.xlsx`;
+    const filePath = path.join(this.uploadDir, fileName);
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Finance Management System';
+    workbook.created = new Date();
+
+    // Summary Sheet
+    const summarySheet = workbook.addWorksheet('Summary');
+
+    // Title
+    summarySheet.mergeCells('A1:B1');
+    const titleCell = summarySheet.getCell('A1');
+    titleCell.value = report.name;
+    titleCell.font = { size: 16, bold: true };
+    titleCell.alignment = { horizontal: 'center' };
+
+    // Metadata
+    summarySheet.getCell('A2').value = 'Generated:';
+    summarySheet.getCell('B2').value = reportData.metadata.generatedAt.toLocaleString();
+    summarySheet.getCell('A3').value = 'Period:';
+    summarySheet.getCell('B3').value = `${reportData.metadata.dataRange.start.toLocaleDateString()} - ${reportData.metadata.dataRange.end.toLocaleDateString()}`;
+    summarySheet.getCell('A4').value = 'Records:';
+    summarySheet.getCell('B4').value = reportData.metadata.recordCount;
+
+    // Summary Data
+    let row = 6;
+    summarySheet.getCell(`A${row}`).value = 'Summary';
+    summarySheet.getCell(`A${row}`).font = { bold: true, size: 14 };
+    row += 2;
+
+    Object.entries(reportData.summary).forEach(([key, value]) => {
+      const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+      summarySheet.getCell(`A${row}`).value = formattedKey;
+      summarySheet.getCell(`B${row}`).value = value;
+
+      if (typeof value === 'number') {
+        summarySheet.getCell(`B${row}`).numFmt = '#,##0.00';
+      }
+
+      row++;
+    });
+
+    // Auto-fit columns
+    summarySheet.columns = [
+      { width: 30 },
+      { width: 20 },
+    ];
+
+    // Details Sheet
+    if (reportData.details && reportData.details.length > 0) {
+      const detailsSheet = workbook.addWorksheet('Details');
+
+      const details = Array.isArray(reportData.details) ? reportData.details : [reportData.details];
+
+      if (details.length > 0 && typeof details[0] === 'object') {
+        // Get headers from first object
+        const headers = Object.keys(details[0]);
+
+        // Add header row
+        const headerRow = detailsSheet.addRow(
+          headers.map((h) => h.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())),
+        );
+        headerRow.font = { bold: true };
+        headerRow.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE0E0E0' },
+        };
+
+        // Add data rows
+        details.forEach((item) => {
+          const rowData = headers.map((header) => {
+            const value = item[header];
+            return value instanceof Date ? value.toLocaleDateString() : value;
+          });
+          detailsSheet.addRow(rowData);
+        });
+
+        // Auto-fit columns
+        detailsSheet.columns = headers.map(() => ({ width: 15 }));
+      }
+    }
+
+    await workbook.xlsx.writeFile(filePath);
+
+    return { filePath, fileName };
+  }
+
+  private async exportToCSV(
+    report: Report,
+    reportData: ReportData,
+  ): Promise<{ filePath: string; fileName: string }> {
+    const fileName = `${report.name.replace(/\s+/g, '_')}_${Date.now()}.csv`;
+    const filePath = path.join(this.uploadDir, fileName);
+
+    const details = Array.isArray(reportData.details) ? reportData.details : [reportData.details];
+
+    if (details.length === 0 || typeof details[0] !== 'object') {
+      // If no details, export summary
+      const csvContent = this.objectToCSV([reportData.summary]);
+      fs.writeFileSync(filePath, csvContent);
+    } else {
+      const csvContent = this.objectToCSV(details);
+      fs.writeFileSync(filePath, csvContent);
+    }
+
+    return { filePath, fileName };
+  }
+
+  private async exportToJSON(
+    report: Report,
+    reportData: ReportData,
+  ): Promise<{ filePath: string; fileName: string }> {
+    const fileName = `${report.name.replace(/\s+/g, '_')}_${Date.now()}.json`;
+    const filePath = path.join(this.uploadDir, fileName);
+
+    const jsonData = {
+      report: {
+        name: report.name,
+        type: report.type,
+        description: report.description,
+      },
+      data: reportData,
+    };
+
+    fs.writeFileSync(filePath, JSON.stringify(jsonData, null, 2));
+
+    return { filePath, fileName };
+  }
+
+  private objectToCSV(data: any[]): string {
+    if (data.length === 0) return '';
+
+    const headers = Object.keys(data[0]);
+    const csvRows = [headers.join(',')];
+
+    for (const row of data) {
+      const values = headers.map((header) => {
+        const value = row[header];
+        const escaped = ('' + value).replace(/"/g, '""');
+        return `"${escaped}"`;
+      });
+      csvRows.push(values.join(','));
+    }
+
+    return csvRows.join('\n');
+  }
+
+  private formatNumber(num: number): string {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(num);
+  }
+
+  async deleteReportFile(filePath: string): Promise<void> {
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        this.logger.log(`Deleted report file: ${filePath}`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to delete report file: ${filePath}`, error);
+    }
+  }
+}

@@ -1,12 +1,15 @@
 import { format } from 'date-fns';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, GitMerge, Undo, History } from 'lucide-react';
 import { ColumnConfig } from '@components/table';
 
 export const getTransactionColumns = (
   getCategoryName: (id: string) => string,
   getAccountName: (id: string) => string,
   onEdit: (transaction: any) => void,
-  onDelete: (id: string) => void
+  onDelete: (id: string) => void,
+  onHistory?: (transaction: any) => void,
+  onUnmerge?: (id: string) => void,
+  getMergedCount?: (id: string) => Promise<number>
 ): ColumnConfig[] => [
   {
     key: 'date',
@@ -21,7 +24,25 @@ export const getTransactionColumns = (
     sortable: true,
     render: (value, row) => (
       <div>
-        <div className="text-sm font-medium text-gray-900">{value}</div>
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-medium text-gray-900">{value}</div>
+          {row.isMerged && (
+            <span
+              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+              title="This transaction has been merged"
+            >
+              Merged
+            </span>
+          )}
+          {row.mergedIntoId && (
+            <span
+              className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700"
+              title="Part of merged transaction"
+            >
+              Merged Into
+            </span>
+          )}
+        </div>
         {row.notes && <div className="text-sm text-gray-500">{row.notes}</div>}
       </div>
     ),
@@ -66,6 +87,24 @@ export const getTransactionColumns = (
     align: 'right',
     render: (_, row) => (
       <div className="flex justify-end gap-2">
+        {row.isMerged && onUnmerge && (
+          <button
+            onClick={() => onUnmerge(row.id)}
+            className="text-orange-600 hover:text-orange-900"
+            title="Unmerge this transaction"
+          >
+            <Undo className="h-4 w-4" />
+          </button>
+        )}
+        {onHistory && (
+          <button
+            onClick={() => onHistory(row)}
+            className="text-purple-600 hover:text-purple-900"
+            title="View transaction history"
+          >
+            <History className="h-4 w-4" />
+          </button>
+        )}
         <button
           onClick={() => onEdit(row)}
           className="text-blue-600 hover:text-blue-900"
@@ -80,6 +119,6 @@ export const getTransactionColumns = (
         </button>
       </div>
     ),
-    width: '100px',
+    width: '180px',
   },
 ];

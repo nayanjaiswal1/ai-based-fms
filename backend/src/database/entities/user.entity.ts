@@ -17,6 +17,7 @@ import { Reminder } from './reminder.entity';
 import { EmailConnection } from './email-connection.entity';
 import { Category } from './category.entity';
 import { Tag } from './tag.entity';
+import { Session } from './session.entity';
 
 export enum UserRole {
   USER = 'user',
@@ -133,4 +134,7 @@ export class User {
 
   @OneToMany(() => Tag, (tag) => tag.user)
   customTags: Tag[];
+
+  @OneToMany(() => Session, (session) => session.user)
+  sessions: Session[];
 }

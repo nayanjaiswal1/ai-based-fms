@@ -1,0 +1,54 @@
+{
+  "title": "AI Assistant",
+  "chat": {
+    "title": "Chat with AI",
+    "placeholder": "Ask me anything about your finances...",
+    "send": "Send",
+    "clear": "Clear Chat",
+    "newChat": "New Chat",
+    "thinking": "Thinking...",
+    "typing": "AI is typing..."
+  },
+  "suggestions": {
+    "title": "Suggested Questions",
+    "spending": "What are my spending patterns?",
+    "budget": "How am I doing with my budget?",
+    "savings": "How can I save more money?",
+    "categories": "Which category do I spend most on?",
+    "forecast": "What will be my expenses next month?",
+    "advice": "Give me financial advice"
+  },
+  "insights": {
+    "title": "AI Insights",
+    "analyzing": "Analyzing your financial data...",
+    "noData": "Not enough data for insights yet"
+  },
+  "recommendations": {
+    "title": "AI Recommendations",
+    "budget": "Budget Recommendations",
+    "savings": "Savings Opportunities",
+    "investments": "Investment Suggestions",
+    "costCutting": "Cost Cutting Ideas",
+    "noRecommendations": "No recommendations at this time"
+  },
+  "analysis": {
+    "title": "Financial Analysis",
+    "spending": "Spending Analysis",
+    "income": "Income Analysis",
+    "trends": "Trend Analysis",
+    "predictions": "Predictions",
+    "anomalies": "Unusual Transactions"
+  },
+  "actions": {
+    "analyze": "Analyze",
+    "export": "Export Analysis",
+    "refresh": "Refresh",
+    "feedback": "Provide Feedback"
+  },
+  "messages": {
+    "greeting": "Hello! I'm your AI financial assistant. How can I help you today?",
+    "error": "Sorry, I encountered an error. Please try again.",
+    "noData": "I need more transaction data to provide accurate insights.",
+    "processing": "Processing your request..."
+  }
+}

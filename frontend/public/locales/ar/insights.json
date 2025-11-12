@@ -1,0 +1,85 @@
+{
+  "title": "Financial Insights",
+  "dashboard": "Insights Dashboard",
+  "financialHealth": {
+    "title": "Financial Health Score",
+    "score": "Your Score",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "factors": "Key Factors",
+    "savingsRate": "Savings Rate",
+    "debtRatio": "Debt-to-Income Ratio",
+    "emergencyFund": "Emergency Fund",
+    "budgetAdherence": "Budget Adherence",
+    "diversification": "Investment Diversification"
+  },
+  "trends": {
+    "title": "Spending Trends",
+    "increasing": "Increasing",
+    "decreasing": "Decreasing",
+    "stable": "Stable",
+    "volatile": "Volatile",
+    "compared": "Compared to last period"
+  },
+  "predictions": {
+    "title": "Financial Predictions",
+    "nextMonth": "Next Month",
+    "nextQuarter": "Next Quarter",
+    "nextYear": "Next Year",
+    "expectedIncome": "Expected Income",
+    "expectedExpenses": "Expected Expenses",
+    "projectedSavings": "Projected Savings",
+    "confidence": "Confidence Level"
+  },
+  "opportunities": {
+    "title": "Savings Opportunities",
+    "potential": "Potential Savings",
+    "category": "Category",
+    "recommendation": "Recommendation",
+    "impact": "Impact",
+    "difficulty": "Difficulty",
+    "easy": "Easy",
+    "moderate": "Moderate",
+    "hard": "Hard"
+  },
+  "anomalies": {
+    "title": "Unusual Activity",
+    "detected": "Anomalies Detected",
+    "type": "Type",
+    "transaction": "Transaction",
+    "reason": "Reason",
+    "review": "Review",
+    "dismiss": "Dismiss",
+    "noAnomalies": "No unusual activity detected"
+  },
+  "comparison": {
+    "title": "Peer Comparison",
+    "anonymous": "Anonymous comparison with similar users",
+    "yourSpending": "Your Spending",
+    "averageSpending": "Average Spending",
+    "category": "Category",
+    "percentile": "You're in the {{percentile}}th percentile"
+  },
+  "goals": {
+    "title": "Financial Goals",
+    "progress": "Progress",
+    "onTrack": "On Track",
+    "behindSchedule": "Behind Schedule",
+    "aheadOfSchedule": "Ahead of Schedule",
+    "projectedCompletion": "Projected Completion"
+  },
+  "actions": {
+    "refresh": "Refresh Insights",
+    "export": "Export Report",
+    "configure": "Configure",
+    "learnMore": "Learn More"
+  },
+  "messages": {
+    "loading": "Generating insights...",
+    "noData": "Not enough data to generate insights",
+    "updated": "Insights updated",
+    "error": "Failed to generate insights"
+  }
+}

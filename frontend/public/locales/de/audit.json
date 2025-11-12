@@ -1,0 +1,72 @@
+{
+  "title": "Activity Log",
+  "subtitle": "View all account activity and changes",
+  "filters": {
+    "title": "Filters",
+    "dateRange": "Date Range",
+    "action": "Action Type",
+    "entity": "Entity Type",
+    "user": "User",
+    "apply": "Apply",
+    "clear": "Clear"
+  },
+  "actions": {
+    "create": "Created",
+    "update": "Updated",
+    "delete": "Deleted",
+    "login": "Login",
+    "logout": "Logout",
+    "export": "Exported",
+    "import": "Imported",
+    "all": "All Actions"
+  },
+  "entities": {
+    "transaction": "Transaction",
+    "account": "Account",
+    "budget": "Budget",
+    "category": "Category",
+    "tag": "Tag",
+    "user": "User",
+    "settings": "Settings",
+    "all": "All Entities"
+  },
+  "details": {
+    "title": "Activity Details",
+    "timestamp": "Timestamp",
+    "user": "User",
+    "action": "Action",
+    "entity": "Entity",
+    "entityId": "Entity ID",
+    "changes": "Changes",
+    "ipAddress": "IP Address",
+    "userAgent": "User Agent",
+    "oldValue": "Old Value",
+    "newValue": "New Value"
+  },
+  "changes": {
+    "field": "Field",
+    "before": "Before",
+    "after": "After",
+    "added": "Added",
+    "removed": "Removed",
+    "modified": "Modified",
+    "noChanges": "No changes recorded"
+  },
+  "export": {
+    "title": "Export Activity Log",
+    "format": "Format",
+    "dateRange": "Date Range",
+    "filters": "Include Filters",
+    "download": "Download",
+    "success": "Activity log exported successfully"
+  },
+  "messages": {
+    "noActivity": "No activity to display",
+    "loading": "Loading activity...",
+    "error": "Failed to load activity log"
+  },
+  "pagination": {
+    "showing": "Showing {{from}}-{{to}} of {{total}} activities",
+    "loadMore": "Load More"
+  }
+}
