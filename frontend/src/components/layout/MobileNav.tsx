@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuthStore } from '@stores/authStore';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -16,6 +17,7 @@ import {
   Bell,
   Activity,
   Settings,
+  Server,
   X,
 } from 'lucide-react';
 import { lockBodyScroll, unlockBodyScroll } from '@/utils/responsive';
@@ -38,12 +40,19 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
+const adminNavigation = [
+  { name: 'Job Monitoring', href: '/admin/jobs', icon: Server },
+];
+
 interface MobileNavProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'admin';
+
   // Lock body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
@@ -113,6 +122,34 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
               <span className="truncate">{item.name}</span>
             </NavLink>
           ))}
+
+          {/* Admin Section */}
+          {isAdmin && (
+            <>
+              <div className="px-3 py-2 mt-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Admin
+                </h3>
+              </div>
+              {adminNavigation.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-accent text-foreground'
+                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                    }`
+                  }
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">{item.name}</span>
+                </NavLink>
+              ))}
+            </>
+          )}
         </nav>
 
         {/* Footer (optional) */}

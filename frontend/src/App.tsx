@@ -47,6 +47,9 @@ const LendBorrowPage = lazy(() => import('@features/lend-borrow/pages/LendBorrow
 const AnalyticsPage = lazy(() => import('@features/analytics/pages/AnalyticsPage'));
 const InsightsDashboardPage = lazy(() => import('@features/insights/pages/InsightsDashboardPage'));
 
+// Lazy load reports page
+const ReportsPage = lazy(() => import('@features/reports/pages/ReportsPage'));
+
 // Lazy load AI page
 const AIPage = lazy(() => import('@features/ai/pages/AIPage'));
 
@@ -64,6 +67,9 @@ const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage'))
 
 // Lazy load activity log page
 const ActivityLogPage = lazy(() => import('@features/audit/pages/ActivityLogPage'));
+
+// Lazy load admin pages
+const JobsPage = lazy(() => import('@features/admin/pages/JobsPage'));
 
 // Lazy load goodbye page
 const GoodbyePage = lazy(() => import('@pages/GoodbyePage'));
@@ -283,6 +289,14 @@ function App() {
           }
         />
         <Route
+          path="/reports"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <ReportsPage />
+            </Suspense>
+          }
+        />
+        <Route
           path="/ai"
           element={
             <Suspense fallback={<PageLoader />}>
@@ -319,6 +333,14 @@ function App() {
           element={
             <Suspense fallback={<PageLoader />}>
               <ActivityLogPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/admin/jobs"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <JobsPage />
             </Suspense>
           }
         />

@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useAuthStore } from '@stores/authStore';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -15,6 +16,8 @@ import {
   Bell,
   Activity,
   Settings,
+  FileText,
+  Server,
 } from 'lucide-react';
 
 const navigation = [
@@ -27,6 +30,7 @@ const navigation = [
   { name: 'Lend/Borrow', href: '/lend-borrow', icon: HandCoins },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Insights', href: '/insights', icon: Lightbulb },
+  { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'AI Assistant', href: '/ai', icon: Sparkles },
   { name: 'Import', href: '/import', icon: Upload },
   { name: 'Email', href: '/email', icon: Mail },
@@ -35,7 +39,14 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
+const adminNavigation = [
+  { name: 'Job Monitoring', href: '/admin/jobs', icon: Server },
+];
+
 export default function Sidebar() {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'admin';
+
   return (
     <div className="flex w-64 flex-col border-r bg-background transition-colors">
       <div className="flex h-16 items-center border-b px-6">
@@ -61,6 +72,34 @@ export default function Sidebar() {
             <span>{item.name}</span>
           </NavLink>
         ))}
+
+        {/* Admin Section */}
+        {isAdmin && (
+          <>
+            <div className="px-3 py-2 mt-4">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Admin
+              </h3>
+            </div>
+            {adminNavigation.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                    isActive
+                      ? 'bg-accent text-foreground'
+                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                  }`
+                }
+                aria-current={({ isActive }) => (isActive ? 'page' : undefined)}
+              >
+                <item.icon className="h-5 w-5" aria-hidden="true" />
+                <span>{item.name}</span>
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
     </div>
   );
