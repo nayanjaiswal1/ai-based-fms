@@ -5,7 +5,9 @@ import { useAccounts } from '../hooks/useAccounts';
 import { ConfirmDialog } from '@components/ui/ConfirmDialog';
 import { useConfirm } from '@hooks/useConfirm';
 import { useQuery } from '@tanstack/react-query';
-import { accountsApi } from '@services/api';
+import { accountsApi, exportApi } from '@services/api';
+import { ExportButton, ExportFormat } from '@/components/export';
+import { toast } from 'react-hot-toast';
 
 export default function AccountsPage() {
   const navigate = useNavigate();
@@ -51,6 +53,38 @@ export default function AccountsPage() {
     });
   };
 
+  const handleExport = async (format: ExportFormat) => {
+    try {
+      let response;
+      if (format === 'csv') {
+        response = await exportApi.exportAccountsCSV();
+      } else if (format === 'pdf') {
+        response = await exportApi.exportAccountsPDF();
+      }
+
+      // Download the file
+      if (response) {
+        const blob = new Blob([response as any], {
+          type: format === 'csv' ? 'text/csv' : 'application/pdf',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `accounts_${new Date().toISOString().split('T')[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success(`Accounts exported as ${format.toUpperCase()} successfully!`);
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error(error.message || 'Failed to export accounts');
+    }
+  };
+
   const getAccountIcon = (type: string) => {
     switch (type) {
       case 'bank':
@@ -93,11 +127,19 @@ export default function AccountsPage() {
             Manage your financial accounts and track balances
           </p>
         </div>
-        <button
-          onClick={() => navigate('/accounts/new')}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
+        <div className="flex items-center gap-3">
+          <ExportButton
+            entityType="accounts"
+            onExport={handleExport}
+            formats={['csv', 'pdf']}
+            variant="button"
+            label="Export"
+          />
+          <button
+            onClick={() => navigate('/accounts/new')}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
           Add Account
         </button>
       </div>

@@ -246,4 +246,34 @@ export const gdprApi = {
     api.delete('/gdpr/delete-account', { data: { password, reason } }),
 };
 
+export const exportApi = {
+  // Transaction exports
+  exportTransactionsCSV: (filters: any) =>
+    api.post('/export/transactions/csv', filters, { responseType: 'blob' }),
+  exportTransactionsExcel: (filters: any) =>
+    api.post('/export/transactions/excel', filters, { responseType: 'blob' }),
+  exportTransactionsPDF: (filters: any) =>
+    api.post('/export/transactions/pdf', filters, { responseType: 'blob' }),
+
+  // Budget exports
+  exportBudgetsCSV: (filters: any) =>
+    api.post('/export/budgets/csv', filters, { responseType: 'blob' }),
+  exportBudgetsExcel: (filters: any) =>
+    api.post('/export/budgets/excel', filters, { responseType: 'blob' }),
+  exportBudgetsPDF: (filters: any) =>
+    api.post('/export/budgets/pdf', filters, { responseType: 'blob' }),
+
+  // Analytics exports
+  exportAnalyticsCSV: (filters: any) =>
+    api.post('/export/analytics/csv', filters, { responseType: 'blob' }),
+  exportAnalyticsPDF: (filters: any) =>
+    api.post('/export/analytics/pdf', filters, { responseType: 'blob' }),
+
+  // Account exports
+  exportAccountsCSV: () =>
+    api.post('/export/accounts/csv', {}, { responseType: 'blob' }),
+  exportAccountsPDF: () =>
+    api.post('/export/accounts/pdf', {}, { responseType: 'blob' }),
+};
+
 export default api;

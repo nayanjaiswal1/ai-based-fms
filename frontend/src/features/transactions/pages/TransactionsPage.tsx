@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { transactionsApi, accountsApi, categoriesApi, tagsApi } from '@services/api';
+import { transactionsApi, accountsApi, categoriesApi, tagsApi, exportApi } from '@services/api';
 import { Plus, Search, Filter, Download, Upload, Trash2, X } from 'lucide-react';
 import TransactionModal from '../components/TransactionModal';
 import FilterModal from '../components/FilterModal';
@@ -10,6 +10,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@components/table';
 import { getTransactionColumns } from '../config/transactionTable.config';
 import { useUrlParams } from '@/hooks/useUrlParams';
+import { ExportButton, ExportFormat } from '@/components/export';
+import { toast } from 'react-hot-toast';
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
@@ -165,6 +167,50 @@ export default function TransactionsPage() {
     );
   };
 
+  const handleExport = async (format: ExportFormat) => {
+    try {
+      const exportFilters = {
+        ...filters,
+        search: searchTerm || undefined,
+      };
+
+      let response;
+      if (format === 'csv') {
+        response = await exportApi.exportTransactionsCSV(exportFilters);
+      } else if (format === 'excel') {
+        response = await exportApi.exportTransactionsExcel(exportFilters);
+      } else if (format === 'pdf') {
+        response = await exportApi.exportTransactionsPDF(exportFilters);
+      }
+
+      // Download the file
+      if (response) {
+        const blob = new Blob([response as any], {
+          type:
+            format === 'csv'
+              ? 'text/csv'
+              : format === 'excel'
+              ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+              : 'application/pdf',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `transactions_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success(`Transactions exported as ${format.toUpperCase()} successfully!`);
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error(error.message || 'Failed to export transactions');
+    }
+  };
+
   const getCategoryName = (categoryId: string) => {
     const category = categories?.data?.find((c: any) => c.id === categoryId);
     return category?.name || 'Uncategorized';
@@ -196,10 +242,13 @@ export default function TransactionsPage() {
             <Upload className="h-4 w-4" />
             Import
           </button>
-          <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <Download className="h-4 w-4" />
-            Export
-          </button>
+          <ExportButton
+            entityType="transactions"
+            filters={filters}
+            onExport={handleExport}
+            variant="button"
+            label="Export"
+          />
           <button
             onClick={() => navigate('/transactions/new')}
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { accountsApi, transactionsApi, budgetsApi, investmentsApi, groupsApi, analyticsApi } from '@services/api';
+import { accountsApi, transactionsApi, budgetsApi, investmentsApi, groupsApi, analyticsApi, exportApi } from '@services/api';
 import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp } from 'lucide-react';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,8 @@ import { BudgetProgressWidget } from '../components/BudgetProgressWidget';
 import { AccountsWidget } from '../components/AccountsWidget';
 import { InvestmentsWidget } from '../components/InvestmentsWidget';
 import { GroupsWidget } from '../components/GroupsWidget';
+import { ExportButton, ExportFormat } from '@/components/export';
+import { toast } from 'react-hot-toast';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -53,6 +55,45 @@ export default function DashboardPage() {
     queryKey: ['net-worth'],
     queryFn: analyticsApi.getNetWorth,
   });
+
+  const handleExport = async (format: ExportFormat) => {
+    try {
+      const startDate = format(startOfMonth(new Date()), 'yyyy-MM-dd');
+      const endDate = format(endOfMonth(new Date()), 'yyyy-MM-dd');
+
+      const exportFilters = {
+        startDate,
+        endDate,
+        includeCharts: format === 'pdf',
+      };
+
+      let response;
+      if (format === 'pdf') {
+        response = await exportApi.exportAnalyticsPDF(exportFilters);
+      }
+
+      // Download the file
+      if (response) {
+        const blob = new Blob([response as any], {
+          type: 'application/pdf',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dashboard_report_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success('Dashboard report exported successfully!');
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error(error.message || 'Failed to export dashboard report');
+    }
+  };
 
   const totalBalance =
     accounts?.data?.reduce((sum: number, acc: any) => sum + Number(acc.balance), 0) || 0;
@@ -100,9 +141,18 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-600">Welcome back! Here's your financial overview.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-600">Welcome back! Here's your financial overview.</p>
+        </div>
+        <ExportButton
+          entityType="analytics"
+          onExport={handleExport}
+          formats={['pdf']}
+          variant="button"
+          label="Export Report"
+        />
       </div>
 
       {/* Main Stats */}

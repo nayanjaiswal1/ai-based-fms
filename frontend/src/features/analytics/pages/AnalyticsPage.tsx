@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { analyticsApi } from '@services/api';
+import { analyticsApi, exportApi } from '@services/api';
 import { Calendar } from 'lucide-react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { DATE_PRESETS, getDateRangeFromPreset, type DatePreset } from '../config/analytics.config';
 import { SummaryCards } from '@components/cards';
 import { getAnalyticsSummaryCards } from '../config/analyticsSummary.config';
 import { useUrlParams } from '@/hooks/useUrlParams';
+import { ExportButton, ExportFormat } from '@/components/export';
+import { toast } from 'react-hot-toast';
 
 export default function AnalyticsPage() {
   const { getParam, setParams } = useUrlParams();
@@ -58,6 +60,44 @@ export default function AnalyticsPage() {
     });
   };
 
+  const handleExport = async (format: ExportFormat) => {
+    try {
+      const exportFilters = {
+        startDate,
+        endDate,
+        includeCharts: format === 'pdf',
+      };
+
+      let response;
+      if (format === 'csv') {
+        response = await exportApi.exportAnalyticsCSV(exportFilters);
+      } else if (format === 'pdf') {
+        response = await exportApi.exportAnalyticsPDF(exportFilters);
+      }
+
+      // Download the file
+      if (response) {
+        const blob = new Blob([response as any], {
+          type: format === 'csv' ? 'text/csv' : 'application/pdf',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `analytics_${new Date().toISOString().split('T')[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success(`Analytics exported as ${format.toUpperCase()} successfully!`);
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error(error.message || 'Failed to export analytics');
+    }
+  };
+
   const overviewData = overview?.data || {
     totalIncome: 0,
     totalExpense: 0,
@@ -77,6 +117,14 @@ export default function AnalyticsPage() {
             Insights and trends for your financial data
           </p>
         </div>
+        <ExportButton
+          entityType="analytics"
+          filters={{ startDate, endDate }}
+          onExport={handleExport}
+          formats={['csv', 'pdf']}
+          variant="button"
+          label="Export Report"
+        />
       </div>
 
       {/* Date Range Selector */}

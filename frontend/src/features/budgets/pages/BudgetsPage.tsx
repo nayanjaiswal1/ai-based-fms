@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { budgetsApi, categoriesApi } from '@services/api';
+import { budgetsApi, categoriesApi, exportApi } from '@services/api';
 import { Plus, Edit, Trash2, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import BudgetModal from '../components/BudgetModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { getBudgetProgressColor, getBudgetProgressTextColor, formatBudgetPeriod } from '../config/budgets.config';
+import { ExportButton, ExportFormat } from '@/components/export';
+import { toast } from 'react-hot-toast';
 
 export default function BudgetsPage() {
   const navigate = useNavigate();
@@ -65,6 +67,45 @@ export default function BudgetsPage() {
     });
   };
 
+  const handleExport = async (format: ExportFormat) => {
+    try {
+      let response;
+      if (format === 'csv') {
+        response = await exportApi.exportBudgetsCSV({});
+      } else if (format === 'excel') {
+        response = await exportApi.exportBudgetsExcel({});
+      } else if (format === 'pdf') {
+        response = await exportApi.exportBudgetsPDF({});
+      }
+
+      // Download the file
+      if (response) {
+        const blob = new Blob([response as any], {
+          type:
+            format === 'csv'
+              ? 'text/csv'
+              : format === 'excel'
+              ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+              : 'application/pdf',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `budgets_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success(`Budgets exported as ${format.toUpperCase()} successfully!`);
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error(error.message || 'Failed to export budgets');
+    }
+  };
+
   const getCategoryName = (categoryId: string) => {
     const category = categories?.data?.find((c: any) => c.id === categoryId);
     return category?.name || 'All Categories';
@@ -80,13 +121,21 @@ export default function BudgetsPage() {
             Set spending limits and track your progress
           </p>
         </div>
-        <button
-          onClick={() => navigate('/budgets/new')}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Create Budget
-        </button>
+        <div className="flex items-center gap-3">
+          <ExportButton
+            entityType="budgets"
+            onExport={handleExport}
+            variant="button"
+            label="Export"
+          />
+          <button
+            onClick={() => navigate('/budgets/new')}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            Create Budget
+          </button>
+        </div>
       </div>
 
       {/* Loading/Empty States */}
