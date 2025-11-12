@@ -1,4 +1,5 @@
 import { ReactNode, useId } from 'react';
+import { VirtualTable } from '@/components/virtual';
 
 export interface ColumnConfig<T = any> {
   key: string;
@@ -27,6 +28,18 @@ export interface DataTableProps<T = any> {
   actions?: (row: T) => ReactNode;
   onRowClick?: (row: T) => void;
   className?: string;
+  /**
+   * Enable virtual scrolling for large datasets
+   */
+  enableVirtualScrolling?: boolean;
+  /**
+   * Row height for virtual scrolling (in pixels)
+   */
+  virtualRowHeight?: number;
+  /**
+   * Container height for virtual scrolling
+   */
+  virtualHeight?: string | number;
 }
 
 export function DataTable<T = any>({
@@ -42,10 +55,44 @@ export function DataTable<T = any>({
   actions,
   onRowClick,
   className = '',
+  enableVirtualScrolling = false,
+  virtualRowHeight = 65,
+  virtualHeight = '600px',
 }: DataTableProps<T>) {
   const isAllSelected = data.length > 0 && selectedIds.length === data.length;
   const tableId = useId();
   const captionId = useId();
+
+  // Use VirtualTable for large datasets or when explicitly enabled
+  const shouldUseVirtual = enableVirtualScrolling || data.length > 100;
+
+  // Convert ColumnConfig to VirtualTableColumn format
+  const virtualColumns = columns.map(col => ({
+    ...col,
+    render: col.render ? (value: any, row: T, _index: number) => col.render!(value, row) : undefined,
+  }));
+
+  if (shouldUseVirtual) {
+    return (
+      <VirtualTable
+        columns={virtualColumns}
+        data={data}
+        keyExtractor={(row, _index) => keyExtractor(row)}
+        loading={loading}
+        emptyMessage={emptyMessage}
+        selectable={selectable}
+        selectedIds={selectedIds}
+        onSelectAll={onSelectAll}
+        onSelectOne={onSelectOne}
+        actions={actions}
+        onRowClick={onRowClick ? (row, _index) => onRowClick(row) : undefined}
+        rowHeight={virtualRowHeight}
+        height={virtualHeight}
+        className={className}
+        overscan={10}
+      />
+    );
+  }
 
   return (
     <div

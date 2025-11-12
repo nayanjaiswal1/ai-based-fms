@@ -39,6 +39,7 @@ import { GdprModule } from '@modules/gdpr/gdpr.module';
 import { ExportModule } from '@modules/export/export.module';
 import { AuditModule } from '@modules/audit/audit.module';
 import { InsightsModule } from '@modules/insights/insights.module';
+import { ReconciliationModule } from '@modules/reconciliation/reconciliation.module';
 
 @Module({
   imports: [
@@ -104,6 +105,7 @@ import { InsightsModule } from '@modules/insights/insights.module';
     GdprModule,
     ExportModule,
     AuditModule,
+    ReconciliationModule,
   ],
   providers: [
     {

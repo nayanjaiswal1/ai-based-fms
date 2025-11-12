@@ -10,6 +10,7 @@ import FilterModal from '../components/FilterModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@components/table';
+import { VirtualTable } from '@/components/virtual';
 import { getTransactionColumns } from '../config/transactionTable.config';
 import { useUrlParams } from '@/hooks/useUrlParams';
 import { ExportButton, ExportFormat } from '@/components/export';
@@ -279,6 +280,9 @@ export default function TransactionsPage() {
     handleUnmerge
   );
 
+  // Use virtual scrolling for large datasets (>100 items)
+  const useVirtualScrolling = (transactions?.data?.length || 0) > 100;
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header - Responsive */}
@@ -418,6 +422,21 @@ export default function TransactionsPage() {
           selectable
           selectedIds={selectedIds}
           onSelectOne={handleSelectOne}
+        />
+      ) : useVirtualScrolling ? (
+        <VirtualTable
+          columns={columns}
+          data={transactions?.data || []}
+          keyExtractor={(row) => row.id}
+          loading={isLoading}
+          emptyMessage="No transactions found. Add your first transaction to get started."
+          selectable
+          selectedIds={selectedIds}
+          onSelectAll={handleSelectAll}
+          onSelectOne={handleSelectOne}
+          rowHeight={65}
+          height="calc(100vh - 400px)"
+          overscan={10}
         />
       ) : (
         <DataTable

@@ -17,6 +17,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { VirtualList } from '@/components/virtual';
 
 interface AuditLog {
   id: string;
@@ -163,6 +164,76 @@ export const ActivityLogPage: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Use virtual scrolling for large datasets (>50 items)
+  const useVirtualScrolling = logs.length > 50;
+
+  // Render log item
+  const renderLogItem = (log: AuditLog, index: number) => (
+    <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-start gap-4">
+        {/* Entity Icon */}
+        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+          {getEntityIcon(log.entityType)}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`px-2 py-1 rounded text-xs font-medium ${getActionColor(log.action)}`}>
+              {log.action}
+            </span>
+            <span className="text-sm text-gray-600">{log.entityType}</span>
+            <span className="text-sm text-gray-400">
+              {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+            </span>
+          </div>
+
+          {log.description && (
+            <p className="text-gray-900 mb-2">{log.description}</p>
+          )}
+
+          {log.changes && Object.keys(log.changes).length > 0 && (
+            <>
+              {!expandedLogs.has(log.id) ? (
+                <button
+                  onClick={() => toggleExpanded(log.id)}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                >
+                  View {Object.keys(log.changes).length} change{Object.keys(log.changes).length > 1 ? 's' : ''}
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              ) : (
+                <div className="mt-3">
+                  <button
+                    onClick={() => toggleExpanded(log.id)}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 mb-3"
+                  >
+                    Hide changes
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                    {Object.entries(log.changes).map(([key, change]) => (
+                      <FieldDiff
+                        key={key}
+                        fieldName={key}
+                        before={change.before}
+                        after={change.after}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          <p className="text-xs text-gray-400 mt-2">
+            {new Date(log.createdAt).toLocaleString()}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -336,71 +407,21 @@ export const ActivityLogPage: React.FC = () => {
             <p className="text-gray-500 text-lg">No activity found</p>
             <p className="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
           </div>
+        ) : useVirtualScrolling ? (
+          <VirtualList
+            items={logs}
+            renderItem={renderLogItem}
+            keyExtractor={(log) => log.id}
+            itemHeight={120}
+            height="calc(100vh - 450px)"
+            overscan={5}
+            ariaLabel="Activity log entries"
+          />
         ) : (
           <div className="space-y-3">
             {logs.map((log) => (
-              <div key={log.id} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  {/* Entity Icon */}
-                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    {getEntityIcon(log.entityType)}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getActionColor(log.action)}`}>
-                        {log.action}
-                      </span>
-                      <span className="text-sm text-gray-600">{log.entityType}</span>
-                      <span className="text-sm text-gray-400">
-                        {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
-                      </span>
-                    </div>
-
-                    {log.description && (
-                      <p className="text-gray-900 mb-2">{log.description}</p>
-                    )}
-
-                    {log.changes && Object.keys(log.changes).length > 0 && (
-                      <>
-                        {!expandedLogs.has(log.id) ? (
-                          <button
-                            onClick={() => toggleExpanded(log.id)}
-                            className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-                          >
-                            View {Object.keys(log.changes).length} change{Object.keys(log.changes).length > 1 ? 's' : ''}
-                            <ChevronDown className="w-4 h-4" />
-                          </button>
-                        ) : (
-                          <div className="mt-3">
-                            <button
-                              onClick={() => toggleExpanded(log.id)}
-                              className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 mb-3"
-                            >
-                              Hide changes
-                              <ChevronUp className="w-4 h-4" />
-                            </button>
-                            <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                              {Object.entries(log.changes).map(([key, change]) => (
-                                <FieldDiff
-                                  key={key}
-                                  fieldName={key}
-                                  before={change.before}
-                                  after={change.after}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    <p className="text-xs text-gray-400 mt-2">
-                      {new Date(log.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
+              <div key={log.id}>
+                {renderLogItem(log, logs.indexOf(log))}
               </div>
             ))}
           </div>

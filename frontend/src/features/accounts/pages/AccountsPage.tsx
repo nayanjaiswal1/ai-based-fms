@@ -1,4 +1,4 @@
-import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote } from 'lucide-react';
+import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote, CheckCircle, Clock, GitCompare } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import AccountModal from '../components/AccountModal';
 import { useAccounts } from '../hooks/useAccounts';
@@ -117,6 +117,30 @@ export default function AccountsPage() {
 
   const totalBalance = accounts?.reduce((sum: number, acc: any) => sum + Number(acc.balance), 0) || 0;
 
+  const getReconciliationBadge = (status: string, lastReconciledAt?: string) => {
+    if (status === 'in_progress') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">
+          <Clock className="w-3 h-3" />
+          In Progress
+        </span>
+      );
+    }
+    if (status === 'reconciled' && lastReconciledAt) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-800">
+          <CheckCircle className="w-3 h-3" />
+          Reconciled
+        </span>
+      );
+    }
+    return null;
+  };
+
+  const handleReconcile = (account: any) => {
+    navigate(`/reconciliation?accountId=${account.id}&accountName=${encodeURIComponent(account.name)}`);
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header - Responsive */}
@@ -227,10 +251,28 @@ export default function AccountsPage() {
                   </p>
                 )}
 
-                {account.currency && account.currency !== 'USD' && (
-                  <div className="mt-3 inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                    {account.currency}
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {account.currency && account.currency !== 'USD' && (
+                      <span className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                        {account.currency}
+                      </span>
+                    )}
+                    {getReconciliationBadge(account.reconciliationStatus, account.lastReconciledAt)}
                   </div>
+                  <button
+                    onClick={() => handleReconcile(account)}
+                    className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    <GitCompare className="w-3 h-3" />
+                    Reconcile
+                  </button>
+                </div>
+
+                {account.lastReconciledAt && (
+                  <p className="mt-2 text-xs text-gray-500">
+                    Last reconciled: {new Date(account.lastReconciledAt).toLocaleDateString()}
+                  </p>
                 )}
               </div>
             );

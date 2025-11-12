@@ -1,5 +1,5 @@
 export { User, UserRole, SubscriptionTier } from './user.entity';
-export { Account, AccountType } from './account.entity';
+export { Account, AccountType, AccountReconciliationStatus } from './account.entity';
 export { Category, CategoryType } from './category.entity';
 export { Tag } from './tag.entity';
 export { Transaction, TransactionType, TransactionSource } from './transaction.entity';
@@ -17,3 +17,5 @@ export { AuditLog, AuditAction } from './audit-log.entity';
 export { Session } from './session.entity';
 export type { DeviceInfo } from './session.entity';
 export { DeletedUser } from './deleted-user.entity';
+export { Reconciliation, ReconciliationStatus } from './reconciliation.entity';
+export { ReconciliationTransaction, MatchConfidence } from './reconciliation-transaction.entity';
