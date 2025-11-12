@@ -1,8 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { accountsApi, transactionsApi, budgetsApi, investmentsApi, groupsApi, analyticsApi } from '@services/api';
-import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, AlertTriangle, Users, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp } from 'lucide-react';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { StatCards } from '../components/StatCards';
+import { NetWorthBanner } from '../components/NetWorthBanner';
+import { BudgetAlerts } from '../components/BudgetAlerts';
+import { RecentTransactionsWidget } from '../components/RecentTransactionsWidget';
+import { BudgetProgressWidget } from '../components/BudgetProgressWidget';
+import { AccountsWidget } from '../components/AccountsWidget';
+import { InvestmentsWidget } from '../components/InvestmentsWidget';
+import { GroupsWidget } from '../components/GroupsWidget';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -98,237 +106,42 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Stats */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
-          <div
-            key={stat.title}
-            onClick={stat.onClick}
-            className="cursor-pointer rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
-              </div>
-              <div className={`rounded-lg p-3 ${stat.color}`}>
-                <stat.icon className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <StatCards cards={statCards} />
 
       {/* Net Worth Banner */}
-      {netWorth?.data && (
-        <div
-          onClick={() => navigate('/analytics')}
-          className="cursor-pointer rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white shadow-lg transition-shadow hover:shadow-xl"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Net Worth</p>
-              <p className="mt-2 text-4xl font-bold">${netWorth.data.netWorth.toFixed(2)}</p>
-            </div>
-            <ArrowRight className="h-6 w-6 opacity-75" />
-          </div>
-        </div>
-      )}
+      <NetWorthBanner data={netWorth?.data} onClick={() => navigate('/analytics')} />
 
       {/* Budget Alerts */}
-      {alertBudgets.length > 0 && (
-        <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-yellow-600" />
-            <div className="flex-1">
-              <p className="font-semibold text-yellow-900">Budget Alerts</p>
-              <p className="text-sm text-yellow-700">
-                {alertBudgets.length} budget(s) approaching or exceeding limits
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/budgets')}
-              className="rounded-lg bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700"
-            >
-              View Budgets
-            </button>
-          </div>
-        </div>
-      )}
+      <BudgetAlerts budgets={alertBudgets} onViewBudgets={() => navigate('/budgets')} />
 
       {/* Two Column Layout */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column - 2/3 width */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Recent Transactions */}
-          <div className="rounded-lg bg-white p-6 shadow">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Transactions</h2>
-              <button
-                onClick={() => navigate('/transactions')}
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
-                View All
-              </button>
-            </div>
-            <div className="mt-4 space-y-3">
-              {recentTransactions?.data?.length === 0 ? (
-                <p className="text-center text-gray-500">No transactions yet</p>
-              ) : (
-                recentTransactions?.data?.map((transaction: any) => (
-                  <div key={transaction.id} className="flex items-center justify-between border-b pb-3">
-                    <div>
-                      <p className="font-medium text-gray-900">{transaction.description}</p>
-                      <p className="text-sm text-gray-500">{format(new Date(transaction.date), 'MMM dd, yyyy')}</p>
-                    </div>
-                    <p
-                      className={`font-semibold ${
-                        transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {transaction.type === 'income' ? '+' : '-'}${Number(transaction.amount).toFixed(2)}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Budgets Overview */}
-          <div className="rounded-lg bg-white p-6 shadow">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Budget Progress</h2>
-              <button
-                onClick={() => navigate('/budgets')}
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
-                View All
-              </button>
-            </div>
-            <div className="mt-4 space-y-4">
-              {budgets?.data?.length === 0 ? (
-                <p className="text-center text-gray-500">No budgets created</p>
-              ) : (
-                budgets?.data?.slice(0, 3).map((budget: any) => {
-                  const percentage = (budget.spent / budget.amount) * 100;
-                  const getColor = (pct: number) => {
-                    if (pct >= 90) return 'bg-red-500';
-                    if (pct >= 75) return 'bg-yellow-500';
-                    return 'bg-green-500';
-                  };
-
-                  return (
-                    <div key={budget.id}>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-gray-900">{budget.name}</span>
-                        <span className="text-gray-600">
-                          ${budget.spent.toFixed(2)} / ${budget.amount.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                        <div
-                          className={`h-full ${getColor(percentage)}`}
-                          style={{ width: `${Math.min(percentage, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
+          <RecentTransactionsWidget
+            transactions={recentTransactions?.data}
+            onViewAll={() => navigate('/transactions')}
+          />
+          <BudgetProgressWidget
+            budgets={budgets?.data}
+            onViewAll={() => navigate('/budgets')}
+          />
         </div>
 
         {/* Right Column - 1/3 width */}
         <div className="space-y-6">
-          {/* Accounts */}
-          <div className="rounded-lg bg-white p-6 shadow">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Accounts</h2>
-              <button
-                onClick={() => navigate('/accounts')}
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
-                View All
-              </button>
-            </div>
-            <div className="mt-4 space-y-3">
-              {accounts?.data?.length === 0 ? (
-                <p className="text-center text-gray-500">No accounts</p>
-              ) : (
-                accounts?.data?.slice(0, 4).map((account: any) => (
-                  <div key={account.id} className="flex items-center justify-between border-b pb-3">
-                    <div>
-                      <p className="font-medium text-gray-900">{account.name}</p>
-                      <p className="text-sm capitalize text-gray-500">{account.type}</p>
-                    </div>
-                    <p className="font-semibold text-gray-900">${Number(account.balance).toFixed(2)}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Investment Summary */}
-          <div
+          <AccountsWidget
+            accounts={accounts?.data}
+            onViewAll={() => navigate('/accounts')}
+          />
+          <InvestmentsWidget
+            portfolioStats={portfolioStats}
             onClick={() => navigate('/investments')}
-            className="cursor-pointer rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg"
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Investments</h2>
-              <ArrowRight className="h-5 w-5 text-gray-400" />
-            </div>
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Portfolio Value</span>
-                <span className="font-semibold text-gray-900">
-                  ${portfolioStats.totalCurrentValue.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Return</span>
-                <span
-                  className={`font-semibold ${
-                    portfolioStats.totalROI >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}
-                >
-                  {portfolioStats.totalROI >= 0 ? '+' : ''}${portfolioStats.totalROI.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">ROI</span>
-                <span
-                  className={`font-semibold ${
-                    portfolioStats.totalROIPercentage >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}
-                >
-                  {portfolioStats.totalROIPercentage >= 0 ? '+' : ''}
-                  {portfolioStats.totalROIPercentage.toFixed(2)}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Groups Summary */}
-          {groups?.data && groups.data.length > 0 && (
-            <div
-              onClick={() => navigate('/groups')}
-              className="cursor-pointer rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg"
-            >
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Groups</h2>
-                <ArrowRight className="h-5 w-5 text-gray-400" />
-              </div>
-              <div className="mt-4">
-                <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="font-semibold text-gray-900">{groups.data.length} Groups</p>
-                    <p className="text-sm text-gray-500">Active expense sharing</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          />
+          <GroupsWidget
+            groups={groups}
+            onClick={() => navigate('/groups')}
+          />
         </div>
       </div>
     </div>
