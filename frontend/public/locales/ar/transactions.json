@@ -1,0 +1,117 @@
+{
+  "title": "Transactions",
+  "add": "Add Transaction",
+  "edit": "Edit Transaction",
+  "delete": "Delete Transaction",
+  "view": "View Transaction",
+  "list": "Transaction List",
+  "details": "Transaction Details",
+  "history": "Transaction History",
+  "duplicates": "Duplicate Transactions",
+  "fields": {
+    "date": "Date",
+    "amount": "Amount",
+    "type": "Type",
+    "category": "Category",
+    "account": "Account",
+    "description": "Description",
+    "notes": "Notes",
+    "tags": "Tags",
+    "receipt": "Receipt",
+    "payee": "Payee",
+    "payer": "Payer",
+    "reference": "Reference",
+    "location": "Location",
+    "recurring": "Recurring",
+    "status": "Status"
+  },
+  "types": {
+    "income": "Income",
+    "expense": "Expense",
+    "transfer": "Transfer"
+  },
+  "status": {
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "scheduled": "Scheduled"
+  },
+  "filters": {
+    "title": "Filters",
+    "dateRange": "Date Range",
+    "amountRange": "Amount Range",
+    "type": "Transaction Type",
+    "category": "Category",
+    "account": "Account",
+    "tags": "Tags",
+    "status": "Status",
+    "clear": "Clear Filters",
+    "apply": "Apply Filters"
+  },
+  "actions": {
+    "create": "Create Transaction",
+    "update": "Update Transaction",
+    "delete": "Delete Transaction",
+    "duplicate": "Duplicate Transaction",
+    "export": "Export Transactions",
+    "import": "Import Transactions",
+    "merge": "Merge Duplicates",
+    "split": "Split Transaction",
+    "attachReceipt": "Attach Receipt"
+  },
+  "messages": {
+    "created": "Transaction created successfully",
+    "updated": "Transaction updated successfully",
+    "deleted": "Transaction deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this transaction?",
+    "noTransactions": "No transactions found",
+    "loadMore": "Load more transactions",
+    "exportSuccess": "Transactions exported successfully",
+    "importSuccess": "Transactions imported successfully"
+  },
+  "stats": {
+    "total": "Total Transactions",
+    "income": "Total Income",
+    "expenses": "Total Expenses",
+    "balance": "Net Balance",
+    "average": "Average Transaction",
+    "largest": "Largest Transaction",
+    "smallest": "Smallest Transaction"
+  },
+  "recurring": {
+    "title": "Recurring Transaction",
+    "frequency": "Frequency",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "nextOccurrence": "Next Occurrence",
+    "occurrences": "Occurrences",
+    "unlimited": "Unlimited",
+    "frequencies": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "biweekly": "Bi-weekly",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
+    }
+  },
+  "duplicates": {
+    "title": "Duplicate Transactions",
+    "found": "{{count}} potential duplicates found",
+    "merge": "Merge Selected",
+    "ignore": "Ignore",
+    "similarity": "Similarity",
+    "noMatches": "No duplicate transactions found",
+    "mergeConfirm": "Are you sure you want to merge these transactions?",
+    "mergeSuccess": "Transactions merged successfully"
+  },
+  "version": {
+    "title": "Version History",
+    "version": "Version {{number}}",
+    "current": "Current",
+    "restore": "Restore",
+    "changes": "Changes",
+    "by": "by",
+    "noHistory": "No version history available"
+  }
+}

@@ -140,19 +140,24 @@ export default function DashboardPage() {
   const alertBudgets = budgets?.data?.filter((b: any) => (b.spent / b.amount) * 100 >= 75) || [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-600">Welcome back! Here's your financial overview.</p>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 truncate">
+            Welcome back! Here's your financial overview.
+          </p>
         </div>
-        <ExportButton
-          entityType="analytics"
-          onExport={handleExport}
-          formats={['pdf']}
-          variant="button"
-          label="Export Report"
-        />
+        <div className="flex-shrink-0">
+          <ExportButton
+            entityType="analytics"
+            onExport={handleExport}
+            formats={['pdf']}
+            variant="button"
+            label="Export Report"
+          />
+        </div>
       </div>
 
       {/* Main Stats */}
@@ -164,10 +169,10 @@ export default function DashboardPage() {
       {/* Budget Alerts */}
       <BudgetAlerts budgets={alertBudgets} onViewBudgets={() => navigate('/budgets')} />
 
-      {/* Two Column Layout */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Column - 2/3 width */}
-        <div className="space-y-6 lg:col-span-2">
+      {/* Two Column Layout - Responsive */}
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+        {/* Left Column - 2/3 width on desktop, full width on mobile */}
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <RecentTransactionsWidget
             transactions={recentTransactions?.data}
             onViewAll={() => navigate('/transactions')}
@@ -178,8 +183,8 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Right Column - 1/3 width */}
-        <div className="space-y-6">
+        {/* Right Column - 1/3 width on desktop, full width on mobile */}
+        <div className="space-y-4 sm:space-y-6">
           <AccountsWidget
             accounts={accounts?.data}
             onViewAll={() => navigate('/accounts')}

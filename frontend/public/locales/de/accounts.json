@@ -1,0 +1,85 @@
+{
+  "title": "Accounts",
+  "add": "Add Account",
+  "edit": "Edit Account",
+  "delete": "Delete Account",
+  "view": "View Account",
+  "list": "Account List",
+  "details": "Account Details",
+  "fields": {
+    "name": "Account Name",
+    "type": "Account Type",
+    "balance": "Current Balance",
+    "currency": "Currency",
+    "color": "Color",
+    "icon": "Icon",
+    "description": "Description",
+    "bankName": "Bank Name",
+    "accountNumber": "Account Number",
+    "routingNumber": "Routing Number",
+    "swiftCode": "SWIFT Code",
+    "iban": "IBAN",
+    "isDefault": "Default Account",
+    "isActive": "Active",
+    "creditLimit": "Credit Limit",
+    "interestRate": "Interest Rate",
+    "overdraftLimit": "Overdraft Limit"
+  },
+  "types": {
+    "checking": "Checking",
+    "savings": "Savings",
+    "credit": "Credit Card",
+    "investment": "Investment",
+    "loan": "Loan",
+    "cash": "Cash",
+    "other": "Other"
+  },
+  "actions": {
+    "create": "Create Account",
+    "update": "Update Account",
+    "delete": "Delete Account",
+    "setDefault": "Set as Default",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "reconcile": "Reconcile",
+    "transfer": "Transfer Funds"
+  },
+  "messages": {
+    "created": "Account created successfully",
+    "updated": "Account updated successfully",
+    "deleted": "Account deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this account? All associated transactions will be unlinked.",
+    "noAccounts": "No accounts found",
+    "setDefaultSuccess": "Default account updated",
+    "reconcileSuccess": "Account reconciled successfully"
+  },
+  "stats": {
+    "totalBalance": "Total Balance",
+    "totalAccounts": "Total Accounts",
+    "activeAccounts": "Active Accounts",
+    "totalAssets": "Total Assets",
+    "totalLiabilities": "Total Liabilities",
+    "netWorth": "Net Worth"
+  },
+  "reconcile": {
+    "title": "Reconcile Account",
+    "statementBalance": "Statement Balance",
+    "currentBalance": "Current Balance",
+    "difference": "Difference",
+    "instructions": "Compare your statement with the transactions below and mark them as cleared",
+    "cleared": "Cleared",
+    "pending": "Pending",
+    "reconciled": "Reconciled"
+  },
+  "transfer": {
+    "title": "Transfer Funds",
+    "from": "From Account",
+    "to": "To Account",
+    "amount": "Amount",
+    "date": "Transfer Date",
+    "notes": "Notes",
+    "submit": "Transfer",
+    "success": "Transfer completed successfully",
+    "error": "Transfer failed"
+  }
+}

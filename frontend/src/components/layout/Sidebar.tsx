@@ -39,23 +39,26 @@ export default function Sidebar() {
   return (
     <div className="flex w-64 flex-col border-r bg-background transition-colors">
       <div className="flex h-16 items-center border-b px-6">
-        <h1 className="text-xl font-bold text-foreground">FMS</h1>
+        <h2 className="text-xl font-bold text-foreground" aria-label="Finance Management System">
+          FMS
+        </h2>
       </div>
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Main navigation">
         {navigation.map((item) => (
           <NavLink
             key={item.name}
             to={item.href}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
                 isActive
                   ? 'bg-accent text-foreground'
                   : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
               }`
             }
+            aria-current={({ isActive }) => (isActive ? 'page' : undefined)}
           >
-            <item.icon className="h-5 w-5" />
-            {item.name}
+            <item.icon className="h-5 w-5" aria-hidden="true" />
+            <span>{item.name}</span>
           </NavLink>
         ))}
       </nav>

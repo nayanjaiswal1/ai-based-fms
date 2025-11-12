@@ -1,0 +1,78 @@
+{
+  "title": "Dashboard",
+  "welcome": "Welcome back, {{name}}!",
+  "overview": "Financial Overview",
+  "netWorth": {
+    "title": "Net Worth",
+    "total": "Total Net Worth",
+    "change": "Change from last month",
+    "increase": "Increase",
+    "decrease": "Decrease",
+    "noChange": "No change"
+  },
+  "stats": {
+    "income": "Total Income",
+    "expenses": "Total Expenses",
+    "savings": "Savings",
+    "balance": "Account Balance",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "change": "Change"
+  },
+  "recentTransactions": {
+    "title": "Recent Transactions",
+    "viewAll": "View All",
+    "noTransactions": "No recent transactions",
+    "loadMore": "Load More"
+  },
+  "budgetProgress": {
+    "title": "Budget Progress",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "of": "of",
+    "overBudget": "Over Budget",
+    "onTrack": "On Track",
+    "warning": "Warning",
+    "viewAll": "View All Budgets",
+    "noBudgets": "No active budgets"
+  },
+  "budgetAlerts": {
+    "title": "Budget Alerts",
+    "noAlerts": "No alerts at this time",
+    "exceeded": "Budget exceeded",
+    "warning": "Approaching budget limit",
+    "viewBudget": "View Budget"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "totalBalance": "Total Balance",
+    "viewAll": "View All",
+    "noAccounts": "No accounts added yet",
+    "addFirst": "Add your first account"
+  },
+  "investments": {
+    "title": "Investments",
+    "totalValue": "Total Value",
+    "returns": "Returns",
+    "viewAll": "View All",
+    "noInvestments": "No investments tracked"
+  },
+  "groups": {
+    "title": "Groups",
+    "viewAll": "View All",
+    "noGroups": "No groups joined",
+    "yourShare": "Your Share"
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "addTransaction": "Add Transaction",
+    "addAccount": "Add Account",
+    "createBudget": "Create Budget",
+    "viewAnalytics": "View Analytics"
+  },
+  "insights": {
+    "title": "Financial Insights",
+    "viewAll": "View All Insights",
+    "noInsights": "No insights available yet"
+  }
+}

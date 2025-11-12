@@ -1,0 +1,82 @@
+{
+  "title": "Investments",
+  "add": "Add Investment",
+  "edit": "Edit Investment",
+  "delete": "Delete Investment",
+  "view": "View Investment",
+  "list": "Investment List",
+  "portfolio": "Portfolio",
+  "fields": {
+    "name": "Investment Name",
+    "symbol": "Symbol/Ticker",
+    "type": "Investment Type",
+    "quantity": "Quantity",
+    "purchasePrice": "Purchase Price",
+    "currentPrice": "Current Price",
+    "purchaseDate": "Purchase Date",
+    "notes": "Notes",
+    "account": "Account"
+  },
+  "types": {
+    "stock": "Stock",
+    "bond": "Bond",
+    "mutualFund": "Mutual Fund",
+    "etf": "ETF",
+    "crypto": "Cryptocurrency",
+    "realEstate": "Real Estate",
+    "commodity": "Commodity",
+    "other": "Other"
+  },
+  "stats": {
+    "totalValue": "Total Value",
+    "totalInvested": "Total Invested",
+    "totalReturn": "Total Return",
+    "returnPercentage": "Return %",
+    "dayChange": "Day Change",
+    "totalGain": "Total Gain/Loss",
+    "unrealizedGain": "Unrealized Gain/Loss",
+    "realizedGain": "Realized Gain/Loss"
+  },
+  "performance": {
+    "title": "Performance",
+    "today": "Today",
+    "week": "1 Week",
+    "month": "1 Month",
+    "quarter": "3 Months",
+    "year": "1 Year",
+    "all": "All Time",
+    "chart": "Performance Chart"
+  },
+  "allocation": {
+    "title": "Asset Allocation",
+    "byType": "By Type",
+    "byAccount": "By Account",
+    "diversification": "Diversification Score"
+  },
+  "actions": {
+    "create": "Add Investment",
+    "update": "Update Investment",
+    "delete": "Delete Investment",
+    "buy": "Buy More",
+    "sell": "Sell",
+    "dividend": "Record Dividend",
+    "split": "Stock Split",
+    "refresh": "Refresh Prices"
+  },
+  "messages": {
+    "created": "Investment added successfully",
+    "updated": "Investment updated successfully",
+    "deleted": "Investment deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this investment?",
+    "noInvestments": "No investments found",
+    "pricesUpdated": "Prices updated successfully"
+  },
+  "transactions": {
+    "title": "Investment Transactions",
+    "buy": "Buy",
+    "sell": "Sell",
+    "dividend": "Dividend",
+    "split": "Split",
+    "noTransactions": "No transactions yet"
+  }
+}

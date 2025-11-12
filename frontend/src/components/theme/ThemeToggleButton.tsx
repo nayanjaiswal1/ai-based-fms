@@ -17,11 +17,13 @@ export default function ThemeToggleButton() {
   return (
     <button
       onClick={cycleTheme}
-      className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
       aria-label={`Current theme: ${label}. Click to switch`}
+      aria-live="polite"
       title={label}
+      type="button"
     >
-      <Icon className="h-5 w-5" />
+      <Icon className="h-5 w-5" aria-hidden="true" />
     </button>
   );
 }

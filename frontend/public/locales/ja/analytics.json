@@ -1,0 +1,67 @@
+{
+  "title": "Analytics",
+  "overview": "Analytics Overview",
+  "filters": {
+    "title": "Filters",
+    "dateRange": "Date Range",
+    "accounts": "Accounts",
+    "categories": "Categories",
+    "apply": "Apply",
+    "clear": "Clear"
+  },
+  "charts": {
+    "spending": "Spending Trends",
+    "income": "Income Trends",
+    "categoryBreakdown": "Category Breakdown",
+    "accountBalance": "Account Balance",
+    "netWorth": "Net Worth Over Time",
+    "cashFlow": "Cash Flow",
+    "budgetVsActual": "Budget vs Actual",
+    "savingsRate": "Savings Rate"
+  },
+  "insights": {
+    "title": "Key Insights",
+    "topSpendingCategory": "Top Spending Category",
+    "highestIncome": "Highest Income Source",
+    "averageDaily": "Average Daily Spending",
+    "savingsGoal": "Savings Goal Progress",
+    "unusualActivity": "Unusual Activity Detected"
+  },
+  "reports": {
+    "title": "Reports",
+    "incomeStatement": "Income Statement",
+    "balanceSheet": "Balance Sheet",
+    "cashFlowStatement": "Cash Flow Statement",
+    "netWorthReport": "Net Worth Report",
+    "taxSummary": "Tax Summary",
+    "categoryReport": "Category Report",
+    "customReport": "Custom Report"
+  },
+  "comparison": {
+    "title": "Period Comparison",
+    "current": "Current Period",
+    "previous": "Previous Period",
+    "yearOverYear": "Year over Year",
+    "change": "Change",
+    "percentChange": "% Change"
+  },
+  "export": {
+    "title": "Export Analytics",
+    "format": "Format",
+    "dateRange": "Date Range",
+    "includeCharts": "Include Charts",
+    "pdf": "PDF",
+    "excel": "Excel",
+    "csv": "CSV",
+    "success": "Analytics exported successfully"
+  },
+  "summary": {
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "netIncome": "Net Income",
+    "savingsRate": "Savings Rate",
+    "topCategory": "Top Category",
+    "transactionCount": "Transaction Count",
+    "averageTransaction": "Average Transaction"
+  }
+}

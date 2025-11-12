@@ -1,0 +1,78 @@
+{
+  "title": "Import Transactions",
+  "upload": {
+    "title": "Upload File",
+    "description": "Upload a CSV, OFX, or QFX file to import transactions",
+    "dragDrop": "Drag and drop your file here, or click to browse",
+    "supported": "Supported formats: CSV, OFX, QFX",
+    "maxSize": "Maximum file size: 10MB",
+    "select": "Select File",
+    "uploading": "Uploading..."
+  },
+  "mapping": {
+    "title": "Map Columns",
+    "description": "Map your file columns to transaction fields",
+    "sourceColumn": "Source Column",
+    "targetField": "Target Field",
+    "preview": "Preview",
+    "required": "Required",
+    "optional": "Optional",
+    "skip": "Skip this column"
+  },
+  "fields": {
+    "date": "Date",
+    "description": "Description",
+    "amount": "Amount",
+    "type": "Type",
+    "category": "Category",
+    "account": "Account",
+    "notes": "Notes",
+    "reference": "Reference"
+  },
+  "options": {
+    "title": "Import Options",
+    "dateFormat": "Date Format",
+    "amountFormat": "Amount Format",
+    "skipDuplicates": "Skip Duplicates",
+    "autoCategories": "Auto-categorize",
+    "defaultAccount": "Default Account",
+    "defaultType": "Default Type"
+  },
+  "review": {
+    "title": "Review Transactions",
+    "description": "Review and edit transactions before importing",
+    "total": "Total Transactions",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "duplicates": "Duplicates",
+    "new": "New",
+    "conflicts": "Conflicts"
+  },
+  "actions": {
+    "upload": "Upload File",
+    "next": "Next",
+    "back": "Back",
+    "import": "Import Transactions",
+    "cancel": "Cancel",
+    "editMapping": "Edit Mapping",
+    "validateAll": "Validate All"
+  },
+  "messages": {
+    "uploadSuccess": "File uploaded successfully",
+    "uploadError": "Failed to upload file",
+    "importSuccess": "{{count}} transactions imported successfully",
+    "importError": "Failed to import transactions",
+    "invalidFile": "Invalid file format",
+    "noTransactions": "No transactions found in file",
+    "duplicatesFound": "{{count}} duplicate transactions found",
+    "validationErrors": "{{count}} validation errors found"
+  },
+  "status": {
+    "uploading": "Uploading file...",
+    "processing": "Processing file...",
+    "mapping": "Mapping columns...",
+    "validating": "Validating data...",
+    "importing": "Importing transactions...",
+    "completed": "Import completed"
+  }
+}

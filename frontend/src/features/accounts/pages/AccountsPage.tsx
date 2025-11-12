@@ -118,16 +118,16 @@ export default function AccountsPage() {
   const totalBalance = accounts?.reduce((sum: number, acc: any) => sum + Number(acc.balance), 0) || 0;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Accounts</h1>
-          <p className="mt-1 text-sm text-gray-600">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Accounts</h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600">
             Manage your financial accounts and track balances
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <ExportButton
             entityType="accounts"
             onExport={handleExport}
@@ -137,18 +137,19 @@ export default function AccountsPage() {
           />
           <button
             onClick={() => navigate('/accounts/new')}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"
           >
-            <Plus className="h-4 w-4" />
-          Add Account
-        </button>
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span>Add Account</span>
+          </button>
+        </div>
       </div>
 
-      {/* Total Balance Card */}
-      <div className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white shadow-lg">
-        <p className="text-sm font-medium opacity-90">Total Balance</p>
-        <p className="mt-2 text-4xl font-bold">${totalBalance.toFixed(2)}</p>
-        <p className="mt-2 text-sm opacity-75">
+      {/* Total Balance Card - Responsive */}
+      <div className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-4 sm:p-6 text-white shadow-lg">
+        <p className="text-xs sm:text-sm font-medium opacity-90">Total Balance</p>
+        <p className="mt-2 text-3xl sm:text-4xl font-bold">${totalBalance.toFixed(2)}</p>
+        <p className="mt-2 text-xs sm:text-sm opacity-75">
           Across {accounts?.length || 0} account(s)
         </p>
       </div>
@@ -173,7 +174,7 @@ export default function AccountsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {accounts?.map((account: any) => {
             const Icon = getAccountIcon(account.type);
             const colorClass = getAccountTypeColor(account.type);
@@ -181,28 +182,32 @@ export default function AccountsPage() {
             return (
               <div
                 key={account.id}
-                className="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg"
+                className="rounded-lg bg-white p-4 sm:p-6 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`rounded-lg p-3 ${colorClass}`}>
-                      <Icon className="h-6 w-6 text-white" />
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <div className={`rounded-lg p-2 sm:p-3 flex-shrink-0 ${colorClass}`}>
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{account.name}</h3>
-                      <p className="text-sm capitalize text-gray-500">{account.type}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate">
+                        {account.name}
+                      </h3>
+                      <p className="text-xs sm:text-sm capitalize text-gray-500">{account.type}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                     <button
                       onClick={() => handleEdit(account)}
-                      className="text-gray-400 hover:text-blue-600"
+                      className="rounded-lg p-2 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      aria-label="Edit account"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(account.id, account.name)}
-                      className="text-gray-400 hover:text-red-600"
+                      className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                      aria-label="Delete account"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -210,14 +215,16 @@ export default function AccountsPage() {
                 </div>
 
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     ${Number(account.balance).toFixed(2)}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">Current Balance</p>
                 </div>
 
                 {account.description && (
-                  <p className="mt-3 text-sm text-gray-600">{account.description}</p>
+                  <p className="mt-3 text-xs sm:text-sm text-gray-600 line-clamp-2">
+                    {account.description}
+                  </p>
                 )}
 
                 {account.currency && account.currency !== 'USD' && (
