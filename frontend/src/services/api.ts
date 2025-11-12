@@ -294,4 +294,16 @@ export const auditApi = {
     api.get('/audit/activity', { params: dateRange }),
 };
 
+export const insightsApi = {
+  getAll: (options?: any) => api.get('/insights', { params: options }),
+  getSpending: (options?: any) => api.get('/insights/spending', { params: options }),
+  getBudget: () => api.get('/insights/budget'),
+  getSavings: (options?: any) => api.get('/insights/savings', { params: options }),
+  getAnomalies: (options?: any) => api.get('/insights/anomalies', { params: options }),
+  getTrends: () => api.get('/insights/trends'),
+  getHealth: () => api.get('/insights/health'),
+  getPredictions: () => api.get('/insights/predictions'),
+  generate: (options?: any) => api.post('/insights/generate', options),
+};
+
 export default api;

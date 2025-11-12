@@ -15,6 +15,7 @@ import GroupsPage from '@features/groups/pages/GroupsPage';
 import InvestmentsPage from '@features/investments/pages/InvestmentsPage';
 import LendBorrowPage from '@features/lend-borrow/pages/LendBorrowPage';
 import AnalyticsPage from '@features/analytics/pages/AnalyticsPage';
+import InsightsDashboardPage from '@features/insights/pages/InsightsDashboardPage';
 import AIPage from '@features/ai/pages/AIPage';
 import ImportPage from '@features/import/pages/ImportPage';
 import EmailPage from '@features/email/pages/EmailPage';
@@ -59,6 +60,7 @@ function App() {
         <Route path="/lend-borrow/new" element={<LendBorrowPage />} />
         <Route path="/lend-borrow/edit/:id" element={<LendBorrowPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/insights" element={<InsightsDashboardPage />} />
         <Route path="/ai" element={<AIPage />} />
         <Route path="/import" element={<ImportPage />} />
         <Route path="/email" element={<EmailPage />} />

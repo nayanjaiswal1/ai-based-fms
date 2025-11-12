@@ -38,6 +38,7 @@ import { SessionsModule } from '@modules/sessions/sessions.module';
 import { GdprModule } from '@modules/gdpr/gdpr.module';
 import { ExportModule } from '@modules/export/export.module';
 import { AuditModule } from '@modules/audit/audit.module';
+import { InsightsModule } from '@modules/insights/insights.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { AuditModule } from '@modules/audit/audit.module';
     NotificationsModule,
     AnalyticsModule,
     AiModule,
+    InsightsModule,
     ImportModule,
     EmailModule,
     ChatModule,
