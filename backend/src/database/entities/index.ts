@@ -16,3 +16,4 @@ export { ImportLog, ImportStatus, ImportType } from './import-log.entity';
 export { AuditLog, AuditAction } from './audit-log.entity';
 export { Session } from './session.entity';
 export type { DeviceInfo } from './session.entity';
+export { DeletedUser } from './deleted-user.entity';

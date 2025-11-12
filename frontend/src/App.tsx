@@ -19,6 +19,7 @@ import ImportPage from '@features/import/pages/ImportPage';
 import EmailPage from '@features/email/pages/EmailPage';
 import NotificationsPage from '@features/notifications/pages/NotificationsPage';
 import SettingsPage from '@features/settings/pages/SettingsPage';
+import GoodbyePage from '@pages/GoodbyePage';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -31,6 +32,7 @@ function App() {
       <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPasswordPage /> : <Navigate to="/" />} />
       <Route path="/reset-password" element={!isAuthenticated ? <ResetPasswordPage /> : <Navigate to="/" />} />
       <Route path="/auth/callback/google" element={<GoogleCallbackPage />} />
+      <Route path="/goodbye" element={<GoodbyePage />} />
 
       {/* Protected routes */}
       <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>

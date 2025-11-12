@@ -35,6 +35,7 @@ import { EmailModule } from '@modules/email/email.module';
 import { ChatModule } from '@modules/chat/chat.module';
 import { AdminModule } from '@modules/admin/admin.module';
 import { SessionsModule } from '@modules/sessions/sessions.module';
+import { GdprModule } from '@modules/gdpr/gdpr.module';
 
 @Module({
   imports: [
@@ -96,6 +97,7 @@ import { SessionsModule } from '@modules/sessions/sessions.module';
     ChatModule,
     AdminModule,
     SessionsModule,
+    GdprModule,
   ],
   providers: [
     {

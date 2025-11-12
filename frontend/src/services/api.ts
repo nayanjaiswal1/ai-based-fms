@@ -240,4 +240,10 @@ export const adminApi = {
   getPerformanceMetrics: () => api.get('/admin/performance'),
 };
 
+export const gdprApi = {
+  exportData: () => api.get('/gdpr/export'),
+  deleteAccount: (password: string, reason?: string) =>
+    api.delete('/gdpr/delete-account', { data: { password, reason } }),
+};
+
 export default api;
