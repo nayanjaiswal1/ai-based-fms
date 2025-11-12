@@ -1,21 +1,15 @@
 import { useState } from 'react';
-import { Folder, Tag, Bell, Key } from 'lucide-react';
 import CategoriesTab from '../components/CategoriesTab';
 import TagsTab from '../components/TagsTab';
 import RemindersTab from '../components/RemindersTab';
 import OAuthTab from '../components/OAuthTab';
-
-type Tab = 'categories' | 'tags' | 'reminders' | 'oauth';
+import { Tabs } from '@components/tabs';
+import { getSettingsTabs, type SettingsTab } from '../config/settings.config';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('categories');
+  const [activeTab, setActiveTab] = useState<SettingsTab>('categories');
 
-  const tabs = [
-    { id: 'categories' as Tab, label: 'Categories', icon: Folder },
-    { id: 'tags' as Tab, label: 'Tags', icon: Tag },
-    { id: 'reminders' as Tab, label: 'Reminders', icon: Bell },
-    { id: 'oauth' as Tab, label: 'OAuth', icon: Key },
-  ];
+  const tabs = getSettingsTabs();
 
   return (
     <div className="space-y-6">
@@ -28,27 +22,12 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as SettingsTab)}
+        variant="underline"
+      />
 
       {/* Tab Content */}
       <div className="rounded-lg bg-white p-6 shadow">

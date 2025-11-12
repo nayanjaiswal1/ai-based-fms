@@ -7,7 +7,9 @@ import PaymentModal from '../components/PaymentModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@components/table';
+import { Filters } from '@components/filters';
 import { getLendBorrowColumns } from '../config/lendBorrowTable.config';
+import { getLendBorrowFilters } from '../config/lendBorrowFilters.config';
 
 export default function LendBorrowPage() {
   const queryClient = useQueryClient();
@@ -15,15 +17,11 @@ export default function LendBorrowPage() {
   const [isLendBorrowModalOpen, setIsLendBorrowModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [filterType, setFilterType] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filters, setFilters] = useState<Record<string, any>>({});
 
   const { data: records, isLoading } = useQuery({
-    queryKey: ['lend-borrow', filterType, filterStatus],
-    queryFn: () => lendBorrowApi.getAll({
-      type: filterType !== 'all' ? filterType : undefined,
-      status: filterStatus !== 'all' ? filterStatus : undefined,
-    }),
+    queryKey: ['lend-borrow', filters],
+    queryFn: () => lendBorrowApi.getAll(filters),
   });
 
   const { data: summary } = useQuery({
@@ -69,6 +67,15 @@ export default function LendBorrowPage() {
   };
 
   const columns = getLendBorrowColumns(handleEdit, handleDelete, handleRecordPayment);
+  const filterConfigs = getLendBorrowFilters();
+
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+  };
 
   return (
     <div className="space-y-6">
@@ -152,31 +159,14 @@ export default function LendBorrowPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 rounded-lg bg-white p-4 shadow">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Type:</label>
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="all">All</option>
-            <option value="lent">Lent</option>
-            <option value="borrowed">Borrowed</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Status:</label>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="all">All</option>
-            <option value="pending">Pending</option>
-            <option value="partial">Partial</option>
-            <option value="paid">Paid</option>
-          </select>
+      <div className="rounded-lg bg-white p-4 shadow">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Filters
+            filters={filterConfigs}
+            values={filters}
+            onChange={handleFilterChange}
+            onClear={handleClearFilters}
+          />
         </div>
       </div>
 
