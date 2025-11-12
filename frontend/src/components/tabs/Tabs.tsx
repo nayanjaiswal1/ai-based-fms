@@ -29,26 +29,26 @@ export function Tabs({ tabs, activeTab, onTabChange, variant = 'default', classN
       case 'pills':
         return `${baseClasses} rounded-lg ${
           isActive
-            ? 'bg-blue-600 text-white'
-            : 'text-gray-700 hover:bg-gray-100'
+            ? 'bg-primary text-primary-foreground'
+            : 'text-foreground hover:bg-accent'
         }`;
       case 'underline':
         return `${baseClasses} border-b-2 ${
           isActive
-            ? 'border-blue-600 text-blue-600'
-            : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900'
+            ? 'border-primary text-primary'
+            : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
         }`;
       default:
         return `${baseClasses} rounded-t-lg border border-b-0 ${
           isActive
-            ? 'bg-white text-blue-600 border-gray-300'
-            : 'bg-gray-50 text-gray-600 border-transparent hover:bg-gray-100'
+            ? 'bg-background text-primary border-border'
+            : 'bg-muted text-muted-foreground border-transparent hover:bg-accent'
         }`;
     }
   };
 
   return (
-    <div className={`flex gap-1 ${variant === 'underline' ? 'border-b border-gray-200' : ''} ${className}`}>
+    <div className={`flex gap-1 ${variant === 'underline' ? 'border-b border-border' : ''} ${className}`}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -61,8 +61,8 @@ export function Tabs({ tabs, activeTab, onTabChange, variant = 'default', classN
           {tab.count !== undefined && (
             <span className={`ml-1 rounded-full px-2 py-0.5 text-xs ${
               activeTab === tab.id
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700'
+                ? 'bg-primary/20 text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
             }`}>
               {tab.count}
             </span>

@@ -41,12 +41,13 @@ export function TextField<TFieldValues extends FieldValues>({
           w-full rounded-lg border px-4 py-2.5 text-sm transition-all
           ${
             error
-              ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-500'
-              : 'border-gray-300 bg-white focus:border-blue-500 focus:ring-blue-500'
+              ? 'border-destructive/50 bg-destructive/10 text-foreground focus:border-destructive focus:ring-destructive'
+              : 'border-input bg-background text-foreground focus:border-ring focus:ring-ring'
           }
-          ${field.disabled || field.readonly ? 'cursor-not-allowed bg-gray-50 text-gray-500' : ''}
+          ${field.disabled || field.readonly ? 'cursor-not-allowed bg-muted text-muted-foreground' : ''}
           focus:outline-none focus:ring-2 focus:ring-opacity-50
-          disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500
+          disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground
+          placeholder:text-muted-foreground
           ${field.className || ''}
         `}
       />

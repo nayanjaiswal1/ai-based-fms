@@ -42,9 +42,9 @@ export function DataTable<T = any>({
   const isAllSelected = data.length > 0 && selectedIds.length === data.length;
 
   return (
-    <div className={`overflow-hidden rounded-lg bg-white shadow ${className}`}>
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div className={`overflow-hidden rounded-lg bg-card shadow transition-colors ${className}`}>
+      <table className="min-w-full divide-y divide-border">
+        <thead className="bg-muted">
           <tr>
             {selectable && onSelectAll && (
               <th className="px-6 py-3 text-left">
@@ -52,14 +52,14 @@ export function DataTable<T = any>({
                   type="checkbox"
                   checked={isAllSelected}
                   onChange={onSelectAll}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-input bg-background text-primary focus:ring-ring"
                 />
               </th>
             )}
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-6 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 ${
+                className={`px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground ${
                   column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'
                 } ${column.className || ''}`}
                 style={{ width: column.width }}
@@ -68,18 +68,18 @@ export function DataTable<T = any>({
               </th>
             ))}
             {actions && (
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Actions
               </th>
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
+        <tbody className="divide-y divide-border bg-card">
           {loading ? (
             <tr>
               <td
                 colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)}
-                className="px-6 py-12 text-center text-gray-500"
+                className="px-6 py-12 text-center text-muted-foreground"
               >
                 Loading...
               </td>
@@ -88,7 +88,7 @@ export function DataTable<T = any>({
             <tr>
               <td
                 colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)}
-                className="px-6 py-12 text-center text-gray-500"
+                className="px-6 py-12 text-center text-muted-foreground"
               >
                 {emptyMessage}
               </td>
@@ -101,7 +101,7 @@ export function DataTable<T = any>({
               return (
                 <tr
                   key={id}
-                  className={`hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
+                  className={`transition-colors hover:bg-accent ${onRowClick ? 'cursor-pointer' : ''}`}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
                   {selectable && onSelectOne && (
@@ -114,7 +114,7 @@ export function DataTable<T = any>({
                           onSelectOne(id);
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-input bg-background text-primary focus:ring-ring"
                       />
                     </td>
                   )}
