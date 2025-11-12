@@ -200,15 +200,14 @@ export default function BudgetsPage() {
       )}
 
       {/* Modal */}
-      {isModalOpen && (
-        <BudgetModal
-          budget={selectedBudget}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedBudget(null);
-          }}
-        />
-      )}
+      <BudgetModal
+        budget={selectedBudget}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedBudget(null);
+        }}
+      />
     </div>
   );
 }
