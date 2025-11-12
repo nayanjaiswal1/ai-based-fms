@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AiService } from './ai.service';
+import { AiCategorizationFeedbackService, SubmitFeedbackDto } from './ai-categorization-feedback.service';
 import {
   AutoCategorizeDto,
   ParseReceiptDto,
@@ -24,7 +25,10 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 @UseGuards(JwtAuthGuard)
 @Controller('ai')
 export class AiController {
-  constructor(private readonly aiService: AiService) {}
+  constructor(
+    private readonly aiService: AiService,
+    private readonly feedbackService: AiCategorizationFeedbackService,
+  ) {}
 
   @Post('categorize')
   @ApiOperation({ summary: 'Auto-categorize transaction using AI' })
@@ -71,5 +75,40 @@ export class AiController {
     @Query() dto: SmartSuggestionsDto,
   ) {
     return this.aiService.getSmartSuggestions(userId, dto.limit || 3);
+  }
+
+  // NEW: Categorization Feedback Endpoints
+  @Post('categorize/feedback')
+  @ApiOperation({ summary: 'Submit feedback on AI categorization' })
+  @ApiResponse({ status: 201, description: 'Feedback recorded successfully' })
+  submitCategorizationFeedback(
+    @CurrentUser('id') userId: string,
+    @Body() dto: SubmitFeedbackDto,
+  ) {
+    return this.feedbackService.submitFeedback(userId, dto);
+  }
+
+  @Get('categorize/feedback')
+  @ApiOperation({ summary: 'Get user categorization feedback history' })
+  @ApiResponse({ status: 200, description: 'Returns feedback history' })
+  getCategorizationFeedback(
+    @CurrentUser('id') userId: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.feedbackService.getUserFeedback(userId, limit);
+  }
+
+  @Get('categorize/feedback/stats')
+  @ApiOperation({ summary: 'Get categorization accuracy statistics' })
+  @ApiResponse({ status: 200, description: 'Returns accuracy stats' })
+  getFeedbackStats(@CurrentUser('id') userId: string) {
+    return this.feedbackService.getFeedbackStats(userId);
+  }
+
+  @Get('categorize/patterns')
+  @ApiOperation({ summary: 'Get learned categorization patterns from feedback' })
+  @ApiResponse({ status: 200, description: 'Returns categorization patterns' })
+  getCategorizationPatterns(@CurrentUser('id') userId: string) {
+    return this.feedbackService.getCategorizationPatterns(userId);
   }
 }

@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
+import { AdminDashboardService } from './admin-dashboard.service';
 import { UpdateUserRoleDto, UpdateSubscriptionDto, SuspendUserDto } from './dto/admin.dto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -23,7 +24,10 @@ import { UserRole } from '@database/entities';
 @Roles(UserRole.ADMIN)
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly dashboardService: AdminDashboardService,
+  ) {}
 
   @Get('users')
   @ApiOperation({ summary: 'Get all users (Admin only)' })
@@ -94,5 +98,50 @@ export class AdminController {
   @ApiResponse({ status: 200, description: 'Returns performance metrics' })
   getPerformanceMetrics() {
     return this.adminService.getPerformanceMetrics();
+  }
+
+  // NEW: Advanced Dashboard Endpoints
+  @Get('dashboard')
+  @ApiOperation({ summary: 'Get comprehensive dashboard data' })
+  @ApiResponse({ status: 200, description: 'Returns all dashboard metrics' })
+  getDashboardData() {
+    return this.dashboardService.getDashboardData();
+  }
+
+  @Get('dashboard/system')
+  @ApiOperation({ summary: 'Get system metrics (CPU, memory, uptime)' })
+  getSystemMetrics() {
+    return this.dashboardService.getSystemMetrics();
+  }
+
+  @Get('dashboard/user-activity')
+  @ApiOperation({ summary: 'Get user activity metrics' })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  getUserActivityMetrics(@Query('days') days?: number) {
+    return this.dashboardService.getUserActivityMetrics(days || 30);
+  }
+
+  @Get('dashboard/feature-usage')
+  @ApiOperation({ summary: 'Get feature usage analytics' })
+  getFeatureUsageAnalytics() {
+    return this.dashboardService.getFeatureUsageAnalytics();
+  }
+
+  @Get('dashboard/database')
+  @ApiOperation({ summary: 'Get database metrics' })
+  getDatabaseMetrics() {
+    return this.dashboardService.getDatabaseMetrics();
+  }
+
+  @Get('dashboard/heatmap')
+  @ApiOperation({ summary: 'Get user activity heatmap' })
+  getUserActivityHeatmap() {
+    return this.dashboardService.getUserActivityHeatmap();
+  }
+
+  @Get('dashboard/errors')
+  @ApiOperation({ summary: 'Get error rate metrics' })
+  getErrorRateMetrics() {
+    return this.dashboardService.getErrorRateMetrics();
   }
 }

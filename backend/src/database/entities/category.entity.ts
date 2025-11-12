@@ -44,8 +44,14 @@ export class Category {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: false })
+  isArchived: boolean;
+
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @Column({ type: 'int', default: 0 })
+  usageCount: number;
 
   @Column({ nullable: true })
   userId: string;
