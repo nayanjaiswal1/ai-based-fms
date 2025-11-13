@@ -97,7 +97,7 @@ import { AuditModule } from '@modules/audit/audit.module';
     GroupsModule,
     InvestmentsModule,
     LendBorrowModule,
-    NotificationsModule,
+    NotificationsModule.forRoot(),
     AnalyticsModule,
     AiModule,
     // InsightsModule,
