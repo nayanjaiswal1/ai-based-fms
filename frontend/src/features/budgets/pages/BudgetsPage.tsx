@@ -9,6 +9,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { getBudgetProgressColor, getBudgetProgressTextColor, formatBudgetPeriod } from '../config/budgets.config';
 import { ExportButton, ExportFormat } from '@/components/export';
 import { toast } from 'react-hot-toast';
+import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
+import { FeatureFlag } from '@/config/features.config';
 
 export default function BudgetsPage() {
   const navigate = useNavigate();
@@ -113,6 +115,9 @@ export default function BudgetsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Usage Limit Warning */}
+      <UsageLimitBanner resource="maxBudgets" />
+
       {/* Header - Responsive */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
@@ -122,12 +127,14 @@ export default function BudgetsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <ExportButton
-            entityType="budgets"
-            onExport={handleExport}
-            variant="button"
-            label="Export"
-          />
+          <ProtectedAction feature={FeatureFlag.EXPORT_DATA} behavior="disable">
+            <ExportButton
+              entityType="budgets"
+              onExport={handleExport}
+              variant="button"
+              label="Export"
+            />
+          </ProtectedAction>
           <button
             onClick={() => navigate('/budgets/new')}
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"

@@ -8,6 +8,8 @@ import { useQuery } from '@tanstack/react-query';
 import { accountsApi, exportApi } from '@services/api';
 import { ExportButton, ExportFormat } from '@/components/export';
 import { toast } from 'react-hot-toast';
+import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
+import { FeatureFlag } from '@/config/features.config';
 
 export default function AccountsPage() {
   const navigate = useNavigate();
@@ -143,6 +145,9 @@ export default function AccountsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Usage Limit Warning */}
+      <UsageLimitBanner resource="maxAccounts" />
+
       {/* Header - Responsive */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
@@ -152,13 +157,15 @@ export default function AccountsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <ExportButton
-            entityType="accounts"
-            onExport={handleExport}
-            formats={['csv', 'pdf']}
-            variant="button"
-            label="Export"
-          />
+          <ProtectedAction feature={FeatureFlag.EXPORT_DATA} behavior="disable">
+            <ExportButton
+              entityType="accounts"
+              onExport={handleExport}
+              formats={['csv', 'pdf']}
+              variant="button"
+              label="Export"
+            />
+          </ProtectedAction>
           <button
             onClick={() => navigate('/accounts/new')}
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"

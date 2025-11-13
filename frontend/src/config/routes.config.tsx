@@ -1,5 +1,7 @@
 import { lazy } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
+import { FeatureGate } from '@/components/feature-gate';
+import { FeatureFlag } from './features.config';
 
 // Lazy load pages
 const DashboardPage = lazy(() => import('@features/dashboard/pages/DashboardPage'));
@@ -96,63 +98,123 @@ export const protectedRoutes: RouteObject[] = [
   },
   {
     path: '/groups',
-    element: <GroupsPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.GROUPS}>
+        <GroupsPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/groups/new',
-    element: <GroupsPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.GROUPS}>
+        <GroupsPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/groups/edit/:id',
-    element: <GroupsPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.GROUPS}>
+        <GroupsPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/investments',
-    element: <InvestmentsPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.INVESTMENTS}>
+        <InvestmentsPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/investments/new',
-    element: <InvestmentsPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.INVESTMENTS}>
+        <InvestmentsPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/investments/edit/:id',
-    element: <InvestmentsPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.INVESTMENTS}>
+        <InvestmentsPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/lend-borrow',
-    element: <LendBorrowPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.LEND_BORROW}>
+        <LendBorrowPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/lend-borrow/new',
-    element: <LendBorrowPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.LEND_BORROW}>
+        <LendBorrowPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/lend-borrow/edit/:id',
-    element: <LendBorrowPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.LEND_BORROW}>
+        <LendBorrowPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/analytics',
-    element: <AnalyticsPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.ADVANCED_ANALYTICS}>
+        <AnalyticsPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/insights',
-    element: <InsightsDashboardPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.INSIGHTS}>
+        <InsightsDashboardPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/reports',
-    element: <ReportsPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.BASIC_REPORTS}>
+        <ReportsPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/ai',
-    element: <AIPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.AI_ASSISTANT}>
+        <AIPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/import',
-    element: <ImportPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.ADVANCED_IMPORT}>
+        <ImportPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/email',
-    element: <EmailPage />,
+    element: (
+      <FeatureGate feature={FeatureFlag.EMAIL_INTEGRATION}>
+        <EmailPage />
+      </FeatureGate>
+    ),
   },
   {
     path: '/notifications',

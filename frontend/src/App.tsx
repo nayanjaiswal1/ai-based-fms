@@ -1,6 +1,7 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, RouteObject } from 'react-router-dom';
 import { useAuthStore } from '@stores/authStore';
+import { useSubscriptionSync } from '@/hooks/useSubscriptionSync';
 import { ErrorBoundary } from '@/components/error-boundary';
 import Layout from '@components/layout/Layout';
 import { protectedRoutes, publicRoutes } from '@config/routes.config';
@@ -30,6 +31,21 @@ const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
     </Suspense>
   </ErrorBoundary>
 );
+
+/**
+ * Component to initialize subscription data for authenticated users
+ * Syncs subscription and usage data from backend on mount and periodically
+ */
+const SubscriptionInitializer = ({ children }: { children: React.ReactNode }) => {
+  const { isLoading } = useSubscriptionSync();
+
+  // Show loading state while initial subscription data is being fetched
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  return <>{children}</>;
+};
 
 /**
  * Recursively wraps route elements with ProtectedPage component
@@ -85,7 +101,11 @@ function App() {
       })}
 
       {/* Protected routes - All lazy loaded with suspense and error boundaries */}
-      <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
+      <Route element={isAuthenticated ? (
+        <SubscriptionInitializer>
+          <Layout />
+        </SubscriptionInitializer>
+      ) : <Navigate to="/login" />}>
         {wrappedProtectedRoutes.map((route, index) => {
           const key = route.path || `protected-${index}`;
           if (route.children) {

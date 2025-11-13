@@ -16,6 +16,8 @@ import { useUrlParams } from '@/hooks/useUrlParams';
 import { ExportButton, ExportFormat } from '@/components/export';
 import { toast } from 'react-hot-toast';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
+import { FeatureFlag } from '@/config/features.config';
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
@@ -285,6 +287,9 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Usage Limit Warning */}
+      <UsageLimitBanner resource="maxTransactions" />
+
       {/* Header - Responsive */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
@@ -302,18 +307,22 @@ export default function TransactionsPage() {
           </button>
 
           {/* Hide Import on very small screens */}
-          <button className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <Upload className="h-4 w-4" />
-            Import
-          </button>
+          <ProtectedAction feature={FeatureFlag.ADVANCED_IMPORT} behavior="disable">
+            <button className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <Upload className="h-4 w-4" />
+              Import
+            </button>
+          </ProtectedAction>
 
-          <ExportButton
-            entityType="transactions"
-            filters={filters}
-            onExport={handleExport}
-            variant="button"
-            label={isMobile ? undefined : 'Export'}
-          />
+          <ProtectedAction feature={FeatureFlag.EXPORT_DATA} behavior="disable">
+            <ExportButton
+              entityType="transactions"
+              filters={filters}
+              onExport={handleExport}
+              variant="button"
+              label={isMobile ? undefined : 'Export'}
+            />
+          </ProtectedAction>
 
           <button
             onClick={() => navigate('/transactions/new')}
