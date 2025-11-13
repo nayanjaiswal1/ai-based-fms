@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Group, GroupMember, GroupMemberRole, GroupTransaction, SplitType } from '@database/entities';
@@ -15,8 +15,15 @@ export class GroupsService {
     private memberRepository: Repository<GroupMember>,
     @InjectRepository(GroupTransaction)
     private transactionRepository: Repository<GroupTransaction>,
-    private notificationsGateway: NotificationsGateway,
+    @Optional() private notificationsGateway: NotificationsGateway,
   ) {}
+
+  // Helper method to safely broadcast events when WebSocket is enabled
+  private async broadcastGroupEvent(groupId: string, event: string, data: any) {
+    if (this.notificationsGateway) {
+      await this.broadcastGroupEvent(groupId, event, data);
+    }
+  }
 
   async create(userId: string, createDto: CreateGroupDto) {
     const group = this.groupRepository.create({
@@ -118,7 +125,7 @@ export class GroupsService {
     const saved = await this.memberRepository.save(member);
 
     // Broadcast event to all group members
-    await this.notificationsGateway.broadcastGroupEvent(groupId, 'member:joined', {
+    await this.broadcastGroupEvent(groupId, 'member:joined', {
       member: saved,
       addedBy: requestUserId,
       timestamp: new Date().toISOString(),
@@ -142,7 +149,7 @@ export class GroupsService {
     const saved = await this.memberRepository.save(member);
 
     // Broadcast event to all group members
-    await this.notificationsGateway.broadcastGroupEvent(groupId, 'member:left', {
+    await this.broadcastGroupEvent(groupId, 'member:left', {
       userId: memberUserId,
       removedBy: requestUserId,
       timestamp: new Date().toISOString(),
@@ -196,7 +203,7 @@ export class GroupsService {
     await this.updateMemberBalances(groupId, saved);
 
     // Broadcast event to all group members
-    await this.notificationsGateway.broadcastGroupEvent(groupId, 'transaction:created', {
+    await this.broadcastGroupEvent(groupId, 'transaction:created', {
       transaction: saved,
       createdBy: userId,
       timestamp: new Date().toISOString(),
@@ -235,7 +242,7 @@ export class GroupsService {
     await this.updateMemberBalances(groupId, updated);
 
     // Broadcast event to all group members
-    await this.notificationsGateway.broadcastGroupEvent(groupId, 'transaction:updated', {
+    await this.broadcastGroupEvent(groupId, 'transaction:updated', {
       transaction: updated,
       updatedBy: userId,
       timestamp: new Date().toISOString(),
@@ -262,7 +269,7 @@ export class GroupsService {
     const result = await this.transactionRepository.save(transaction);
 
     // Broadcast event to all group members
-    await this.notificationsGateway.broadcastGroupEvent(groupId, 'transaction:deleted', {
+    await this.broadcastGroupEvent(groupId, 'transaction:deleted', {
       transactionId: transaction.id,
       deletedBy: userId,
       timestamp: new Date().toISOString(),
@@ -294,7 +301,7 @@ export class GroupsService {
     await this.updateMemberBalances(groupId, saved);
 
     // Broadcast event to all group members
-    await this.notificationsGateway.broadcastGroupEvent(groupId, 'settlement:recorded', {
+    await this.broadcastGroupEvent(groupId, 'settlement:recorded', {
       settlement: saved,
       recordedBy: userId,
       timestamp: new Date().toISOString(),

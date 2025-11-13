@@ -41,7 +41,7 @@ import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module
 import { AuditModule } from '@modules/audit/audit.module';
 // import { InsightsModule } from '@modules/insights/insights.module';
 // import { ReconciliationModule } from '@modules/reconciliation/reconciliation.module';
-// import { DashboardPreferencesModule } from '@modules/dashboard-preferences/dashboard-preferences.module';
+import { DashboardPreferencesModule } from '@modules/dashboard-preferences/dashboard-preferences.module';
 // import { ReportsModule } from '@modules/reports/reports.module';
 // import { JobMonitorModule } from '@modules/job-monitor/job-monitor.module';
 
@@ -97,7 +97,7 @@ import { AuditModule } from '@modules/audit/audit.module';
     GroupsModule,
     InvestmentsModule,
     LendBorrowModule,
-    NotificationsModule,
+    NotificationsModule.forRoot(),
     AnalyticsModule,
     AiModule,
     // InsightsModule,
@@ -111,7 +111,7 @@ import { AuditModule } from '@modules/audit/audit.module';
     // ExportModule,
     AuditModule,
     // ReconciliationModule,
-    // DashboardPreferencesModule,
+    DashboardPreferencesModule,
     // ReportsModule,
     // JobMonitorModule,
   ],

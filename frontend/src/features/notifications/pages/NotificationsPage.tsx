@@ -8,6 +8,7 @@ import { NotificationFilters } from '../components/NotificationFilters';
 import { WebSocketStatus } from '../components/WebSocketStatus';
 import { NotificationsList } from '../components/NotificationsList';
 import { NotificationTypesInfo } from '../components/NotificationTypesInfo';
+import { API_CONFIG } from '@/config/api.config';
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
@@ -95,8 +96,8 @@ export default function NotificationsPage() {
         unreadCount={unreadCount?.data}
       />
 
-      {/* WebSocket Status */}
-      <WebSocketStatus />
+      {/* WebSocket Status - Only show if WebSocket is enabled */}
+      {API_CONFIG.websocket.enabled && <WebSocketStatus />}
 
       {/* Notifications List */}
       <NotificationsList

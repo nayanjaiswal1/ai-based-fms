@@ -48,6 +48,7 @@ export const API_CONFIG = {
   },
 
   websocket: {
+    enabled: import.meta.env.VITE_ENABLE_WEBSOCKET === 'true',
     url: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
     reconnectDelay: 3000,
     maxRetries: 5,

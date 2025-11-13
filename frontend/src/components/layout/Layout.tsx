@@ -6,15 +6,16 @@ import Header from './Header';
 import MobileNav from './MobileNav';
 import { SkipNav } from '@/components/a11y';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { API_CONFIG } from '@/config/api.config';
 
 export default function Layout() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Initialize WebSocket connection
+  // Initialize WebSocket connection only if enabled
   const { connected, on } = useWebSocket({
     namespace: '/notifications',
-    autoConnect: true,
+    autoConnect: API_CONFIG.websocket.enabled,
     onConnect: () => {
       console.log('✅ Connected to real-time notifications');
     },
@@ -26,8 +27,12 @@ export default function Layout() {
     },
   });
 
-  // Listen for notification events
+  // Listen for notification events (only if WebSocket is enabled)
   useEffect(() => {
+    if (!API_CONFIG.websocket.enabled) {
+      return;
+    }
+
     on('notification', (notification) => {
       console.log('🔔 Received notification:', notification);
       // Invalidate notifications cache to refetch

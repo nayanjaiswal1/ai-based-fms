@@ -33,19 +33,21 @@ export class TagsService {
   }
 
   async findAll(userId: string, includeDefault = true) {
-    const where: any = {};
-
     if (includeDefault) {
       // Include both user's custom tags and default tags
-      where.userId = [userId, IsNull()];
+      // Use query builder to properly handle OR condition with IsNull
+      return this.tagRepository
+        .createQueryBuilder('tag')
+        .where('(tag.userId = :userId OR tag.userId IS NULL)', { userId })
+        .orderBy('tag.name', 'ASC')
+        .getMany();
     } else {
-      where.userId = userId;
+      // Only user's custom tags
+      return this.tagRepository.find({
+        where: { userId },
+        order: { name: 'ASC' },
+      });
     }
-
-    return this.tagRepository.find({
-      where,
-      order: { name: 'ASC' },
-    });
   }
 
   async findOne(id: string, userId: string) {
