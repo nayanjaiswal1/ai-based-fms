@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { Budget, Transaction, NotificationType } from '@database/entities';
@@ -15,7 +15,7 @@ export class BudgetsService {
     private budgetRepository: Repository<Budget>,
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
-    private notificationsGateway: NotificationsGateway,
+    @Optional() private notificationsGateway: NotificationsGateway,
   ) {}
 
   async create(userId: string, createDto: CreateBudgetDto) {
@@ -233,21 +233,23 @@ export class BudgetsService {
         message = `You have reached ${roundedPercentage}% of your "${budget.name}" budget ($${budget.spent.toFixed(2)} of $${budget.amount.toFixed(2)})`;
       }
 
-      // Send real-time notification
-      await this.notificationsGateway.broadcastNotification(budget.userId, {
-        title: percentage >= 100 ? 'Budget Exceeded!' : 'Budget Alert',
-        message,
-        type: NotificationType.BUDGET_ALERT,
-        data: {
-          budgetId: budget.id,
-          budgetName: budget.name,
-          percentage: roundedPercentage,
-          spent: budget.spent,
-          amount: budget.amount,
-          exceeded: percentage >= 100,
-        },
-        link: `/budgets/${budget.id}`,
-      });
+      // Send real-time notification (only if WebSocket is enabled)
+      if (this.notificationsGateway) {
+        await this.notificationsGateway.broadcastNotification(budget.userId, {
+          title: percentage >= 100 ? 'Budget Exceeded!' : 'Budget Alert',
+          message,
+          type: NotificationType.BUDGET_ALERT,
+          data: {
+            budgetId: budget.id,
+            budgetName: budget.name,
+            percentage: roundedPercentage,
+            spent: budget.spent,
+            amount: budget.amount,
+            exceeded: percentage >= 100,
+          },
+          link: `/budgets/${budget.id}`,
+        });
+      }
     }
   }
 }

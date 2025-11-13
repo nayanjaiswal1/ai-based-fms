@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GroupComment, GroupMember } from '@database/entities';
@@ -12,8 +12,15 @@ export class GroupCommentsService {
     private commentRepository: Repository<GroupComment>,
     @InjectRepository(GroupMember)
     private memberRepository: Repository<GroupMember>,
-    private notificationsGateway: NotificationsGateway,
+    @Optional() private notificationsGateway: NotificationsGateway,
   ) {}
+
+  // Helper method to safely broadcast events when WebSocket is enabled
+  private async broadcastGroupEvent(groupId: string, event: string, data: any) {
+    if (this.notificationsGateway) {
+      await this.broadcastGroupEvent(groupId, event, data);
+    }
+  }
 
   async create(groupId: string, userId: string, createDto: CreateGroupCommentDto) {
     // Check if user is a member of the group
@@ -28,7 +35,7 @@ export class GroupCommentsService {
     const saved = await this.commentRepository.save(comment);
 
     // Broadcast comment to all group members
-    await this.notificationsGateway.broadcastGroupEvent(groupId, 'comment:created', {
+    await this.broadcastGroupEvent(groupId, 'comment:created', {
       comment: saved,
       userId,
       timestamp: new Date().toISOString(),
@@ -83,7 +90,7 @@ export class GroupCommentsService {
     const updated = await this.commentRepository.save(comment);
 
     // Broadcast update
-    await this.notificationsGateway.broadcastGroupEvent(comment.groupId, 'comment:updated', {
+    await this.broadcastGroupEvent(comment.groupId, 'comment:updated', {
       comment: updated,
       userId,
       timestamp: new Date().toISOString(),
@@ -118,7 +125,7 @@ export class GroupCommentsService {
     await this.commentRepository.save(comment);
 
     // Broadcast deletion
-    await this.notificationsGateway.broadcastGroupEvent(comment.groupId, 'comment:deleted', {
+    await this.broadcastGroupEvent(comment.groupId, 'comment:deleted', {
       commentId: id,
       userId,
       timestamp: new Date().toISOString(),
