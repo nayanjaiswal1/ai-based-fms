@@ -11,6 +11,9 @@ import {
   HttpStatus,
   Param,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
+import { Public } from '@common/decorators/public.decorator';
 import { SubscriptionsService } from './subscriptions.service';
 import { AddonsService, PurchaseAddonDto } from './addons.service';
 import {
@@ -21,8 +24,10 @@ import {
   ApplyPromoCodeDto,
 } from './dto/subscription.dto';
 
+@ApiTags('Subscriptions')
+@ApiBearerAuth()
 @Controller('subscriptions')
-// @UseGuards(JwtAuthGuard) // Uncomment when auth is set up
+@UseGuards(JwtAuthGuard)
 export class SubscriptionsController {
   constructor(
     private readonly subscriptionsService: SubscriptionsService,
@@ -142,6 +147,7 @@ export class SubscriptionsController {
    * GET /subscriptions/plans
    * Get available subscription plans with pricing
    */
+  @Public()
   @Get('plans')
   async getPlans() {
     return {
@@ -212,6 +218,7 @@ export class SubscriptionsController {
    * GET /subscriptions/addons
    * Get available addons
    */
+  @Public()
   @Get('addons')
   async getAvailableAddons() {
     return this.addonsService.getAvailableAddons();

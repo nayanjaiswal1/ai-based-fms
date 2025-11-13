@@ -17,15 +17,50 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  private setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Set access token cookie
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: isProduction, // Only use secure in production (HTTPS)
+      sameSite: isProduction ? 'strict' : 'lax',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+      path: '/',
+    });
+
+    // Set refresh token cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
+    });
+  }
+
+  private clearAuthCookies(res: Response): void {
+    res.clearCookie('accessToken', { path: '/' });
+    res.clearCookie('refreshToken', { path: '/' });
+  }
+
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   @ApiResponse({ status: 409, description: 'Email already registered' })
-  async register(@Body() registerDto: RegisterDto, @Req() req: any) {
+  async register(@Body() registerDto: RegisterDto, @Req() req: any, @Res({ passthrough: true }) res: Response) {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
-    return this.authService.register(registerDto, userAgent, ipAddress);
+    const result = await this.authService.register(registerDto, userAgent, ipAddress);
+
+    // Set httpOnly cookies for tokens
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    // Return user data without tokens
+    return {
+      user: result.user,
+    };
   }
 
   @Public()
@@ -34,10 +69,23 @@ export class AuthController {
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto, @Req() req: any) {
+  async login(@Body() loginDto: LoginDto, @Req() req: any, @Res({ passthrough: true }) res: Response) {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
-    return this.authService.login(loginDto, userAgent, ipAddress);
+    const result = await this.authService.login(loginDto, userAgent, ipAddress);
+
+    // Handle 2FA case
+    if (result.requires2FA) {
+      return result;
+    }
+
+    // Set httpOnly cookies for tokens
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    // Return user data without tokens
+    return {
+      user: result.user,
+    };
   }
 
   @Public()
@@ -46,8 +94,22 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, description: 'Token successfully refreshed' })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
-  async refresh(@Body('refreshToken') refreshToken: string) {
-    return this.authService.refreshToken(refreshToken);
+  async refresh(@Req() req: any, @Res({ passthrough: true }) res: Response) {
+    // Get refresh token from cookie
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token provided');
+    }
+
+    const result = await this.authService.refreshToken(refreshToken);
+
+    // Set new httpOnly cookies
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    return {
+      message: 'Token refreshed successfully',
+    };
   }
 
   @Public()
@@ -65,10 +127,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Google OAuth login/register' })
   @ApiResponse({ status: 200, description: 'User authenticated via Google' })
   @ApiResponse({ status: 400, description: 'Invalid OAuth code' })
-  async googleOAuthPost(@Body('code') code: string, @Req() req: any) {
+  async googleOAuthPost(@Body('code') code: string, @Req() req: any, @Res({ passthrough: true }) res: Response) {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
-    return this.authService.googleOAuth(code, userAgent, ipAddress);
+    const result = await this.authService.googleOAuth(code, userAgent, ipAddress);
+
+    // Set httpOnly cookies for tokens
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    // Return user data without tokens
+    return {
+      user: result.user,
+    };
   }
 
   // ==================== 2FA Endpoints ====================
@@ -121,10 +191,18 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   @ApiResponse({ status: 400, description: '2FA not enabled for account' })
   @ApiResponse({ status: 401, description: 'Invalid credentials or 2FA code' })
-  async login2FA(@Body() login2FADto: Login2FADto, @Req() req: any) {
+  async login2FA(@Body() login2FADto: Login2FADto, @Req() req: any, @Res({ passthrough: true }) res: Response) {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
-    return this.authService.login2FA(login2FADto, userAgent, ipAddress);
+    const result = await this.authService.login2FA(login2FADto, userAgent, ipAddress);
+
+    // Set httpOnly cookies for tokens
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    // Return user data without tokens
+    return {
+      user: result.user,
+    };
   }
 
   // ==================== Password Reset Endpoints ====================
@@ -146,5 +224,22 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid or expired reset token' })
   async resetPassword(@Body() passwordResetDto: PasswordResetDto) {
     return this.authService.resetPassword(passwordResetDto);
+  }
+
+  // ==================== Logout Endpoint ====================
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'User successfully logged out' })
+  async logout(@Res({ passthrough: true }) res: Response) {
+    // Clear auth cookies
+    this.clearAuthCookies(res);
+
+    return {
+      message: 'Logged out successfully',
+    };
   }
 }

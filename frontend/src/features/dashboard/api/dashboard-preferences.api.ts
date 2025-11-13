@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { api } from '@services/api';
 
 export interface WidgetConfig {
   id: string;
@@ -31,38 +29,18 @@ export interface UpdatePreferencesDto {
   gridColumns?: number;
 }
 
+// Using the centralized API client with cookie-based authentication
 class DashboardPreferencesApi {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-  }
-
   async getPreferences(): Promise<DashboardPreferences> {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/preferences`, {
-      headers: this.getAuthHeaders(),
-    });
-    return response.data;
+    return api.get('/dashboard/preferences');
   }
 
   async updatePreferences(dto: UpdatePreferencesDto): Promise<DashboardPreferences> {
-    const response = await axios.put(`${API_BASE_URL}/dashboard/preferences`, dto, {
-      headers: this.getAuthHeaders(),
-    });
-    return response.data;
+    return api.put('/dashboard/preferences', dto);
   }
 
   async resetToDefault(): Promise<DashboardPreferences> {
-    const response = await axios.post(
-      `${API_BASE_URL}/dashboard/preferences/reset`,
-      {},
-      {
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return response.data;
+    return api.post('/dashboard/preferences/reset', {});
   }
 }
 

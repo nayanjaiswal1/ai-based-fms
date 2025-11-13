@@ -197,12 +197,29 @@ export class AuthService {
       const result = await this.googleOAuth(code);
       const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
 
-      // Redirect to frontend with success message
+      // Set httpOnly cookies
+      const isProduction = process.env.NODE_ENV === 'production';
+
+      res.cookie('accessToken', result.accessToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
+        maxAge: 15 * 60 * 1000, // 15 minutes
+        path: '/',
+      });
+
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/',
+      });
+
+      // Redirect to frontend with success message (no tokens in URL)
       const redirectUrl = new URL(frontendUrl);
       redirectUrl.pathname = '/auth/callback/google';
       redirectUrl.searchParams.set('success', 'true');
-      redirectUrl.searchParams.set('accessToken', result.accessToken);
-      redirectUrl.searchParams.set('refreshToken', result.refreshToken);
 
       return res.redirect(redirectUrl.toString());
     } catch (error: any) {
