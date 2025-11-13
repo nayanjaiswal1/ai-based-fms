@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { Routes, Route, Navigate, useRoutes, RouteObject } from 'react-router-dom';
+import { Routes, Route, Navigate, RouteObject } from 'react-router-dom';
 import { useAuthStore } from '@stores/authStore';
 import { ErrorBoundary } from '@/components/error-boundary';
 import Layout from '@components/layout/Layout';
@@ -35,27 +35,17 @@ const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
  * Recursively wraps route elements with ProtectedPage component
  */
 const wrapRouteWithProtection = (route: RouteObject): RouteObject => {
-  return {
-    ...route,
+  const wrappedRoute: RouteObject = {
+    path: route.path,
+    index: route.index,
     element: route.element ? <ProtectedPage>{route.element}</ProtectedPage> : route.element,
-    children: route.children?.map(wrapRouteWithProtection),
   };
-};
 
-/**
- * Helper component to render nested routes with proper wrapping
- */
-const RouteRenderer = ({ route }: { route: RouteObject }) => {
-  if (route.children && route.children.length > 0) {
-    return (
-      <Route path={route.path} element={route.element} index={route.index}>
-        {route.children.map((child, index) => (
-          <RouteRenderer key={child.path || index} route={child} />
-        ))}
-      </Route>
-    );
+  if (route.children) {
+    wrappedRoute.children = route.children.map(wrapRouteWithProtection);
   }
-  return <Route path={route.path} element={route.element} index={route.index} />;
+
+  return wrappedRoute;
 };
 
 function App() {
@@ -75,15 +65,45 @@ function App() {
       <Route path="/auth/callback/google" element={<GoogleCallbackPage />} />
 
       {/* Public routes from config */}
-      {wrappedPublicRoutes.map((route, index) => (
-        <RouteRenderer key={route.path || `public-${index}`} route={route} />
-      ))}
+      {wrappedPublicRoutes.map((route, index) => {
+        const key = route.path || `public-${index}`;
+        if (route.children) {
+          return (
+            <Route key={key} path={route.path} element={route.element}>
+              {route.children.map((child, childIndex) => (
+                <Route
+                  key={child.path || `child-${childIndex}`}
+                  path={child.path}
+                  index={child.index}
+                  element={child.element}
+                />
+              ))}
+            </Route>
+          );
+        }
+        return <Route key={key} path={route.path} index={route.index} element={route.element} />;
+      })}
 
       {/* Protected routes - All lazy loaded with suspense and error boundaries */}
       <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
-        {wrappedProtectedRoutes.map((route, index) => (
-          <RouteRenderer key={route.path || `protected-${index}`} route={route} />
-        ))}
+        {wrappedProtectedRoutes.map((route, index) => {
+          const key = route.path || `protected-${index}`;
+          if (route.children) {
+            return (
+              <Route key={key} path={route.path} element={route.element}>
+                {route.children.map((child, childIndex) => (
+                  <Route
+                    key={child.path || `child-${childIndex}`}
+                    path={child.path}
+                    index={child.index}
+                    element={child.element}
+                  />
+                ))}
+              </Route>
+            );
+          }
+          return <Route key={key} path={route.path} index={route.index} element={route.element} />;
+        })}
       </Route>
 
       {/* Fallback */}
