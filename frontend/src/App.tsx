@@ -1,7 +1,17 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, useEffect } from 'react';
+import { Routes, Route, Navigate, RouteObject } from 'react-router-dom';
 import { useAuthStore } from '@stores/authStore';
+import { useSubscriptionSync } from '@/hooks/useSubscriptionSync';
+import { ErrorBoundary } from '@/components/error-boundary';
 import Layout from '@components/layout/Layout';
+import { protectedRoutes, publicRoutes } from '@config/routes.config';
+
+// Eager load critical auth pages (no code splitting for auth flow)
+import LoginPage from '@features/auth/pages/LoginPage';
+import RegisterPage from '@features/auth/pages/RegisterPage';
+import ForgotPasswordPage from '@features/auth/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@features/auth/pages/ResetPasswordPage';
+import GoogleCallbackPage from '@features/auth/pages/GoogleCallbackPage';
 
 // Loading fallback component
 const PageLoader = () => (
@@ -13,345 +23,107 @@ const PageLoader = () => (
   </div>
 );
 
-// Eager load critical auth pages (no code splitting for auth flow)
-import LoginPage from '@features/auth/pages/LoginPage';
-import RegisterPage from '@features/auth/pages/RegisterPage';
-import ForgotPasswordPage from '@features/auth/pages/ForgotPasswordPage';
-import ResetPasswordPage from '@features/auth/pages/ResetPasswordPage';
-import GoogleCallbackPage from '@features/auth/pages/GoogleCallbackPage';
+// Helper component to wrap pages with ErrorBoundary and Suspense
+const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
+  <ErrorBoundary level="page">
+    <Suspense fallback={<PageLoader />}>
+      {children}
+    </Suspense>
+  </ErrorBoundary>
+);
 
-// Lazy load dashboard (critical route - preload on auth)
-const DashboardPage = lazy(() => import('@features/dashboard/pages/DashboardPage'));
+/**
+ * Component to initialize subscription data for authenticated users
+ * Syncs subscription and usage data from backend on mount and periodically
+ */
+const SubscriptionInitializer = ({ children }: { children: React.ReactNode }) => {
+  const { isLoading } = useSubscriptionSync();
 
-// Lazy load transaction pages
-const TransactionsPage = lazy(() => import('@features/transactions/pages/TransactionsPage'));
-const DuplicatesPage = lazy(() => import('@features/transactions/pages/DuplicatesPage'));
+  // Show loading state while initial subscription data is being fetched
+  if (isLoading) {
+    return <PageLoader />;
+  }
 
-// Lazy load account pages
-const AccountsPage = lazy(() => import('@features/accounts/pages/AccountsPage'));
-const ReconciliationPage = lazy(() => import('@features/reconciliation/pages/ReconciliationPage'));
+  return <>{children}</>;
+};
 
-// Lazy load budget pages
-const BudgetsPage = lazy(() => import('@features/budgets/pages/BudgetsPage'));
+/**
+ * Recursively wraps route elements with ProtectedPage component
+ */
+const wrapRouteWithProtection = (route: RouteObject): RouteObject => {
+  const wrappedRoute: RouteObject = {
+    path: route.path,
+    index: route.index,
+    element: route.element ? <ProtectedPage>{route.element}</ProtectedPage> : route.element,
+  };
 
-// Lazy load groups pages
-const GroupsPage = lazy(() => import('@features/groups/pages/GroupsPage'));
+  if (route.children) {
+    wrappedRoute.children = route.children.map(wrapRouteWithProtection);
+  }
 
-// Lazy load investment pages
-const InvestmentsPage = lazy(() => import('@features/investments/pages/InvestmentsPage'));
-
-// Lazy load lend-borrow pages
-const LendBorrowPage = lazy(() => import('@features/lend-borrow/pages/LendBorrowPage'));
-
-// Lazy load analytics pages (heavy charts)
-const AnalyticsPage = lazy(() => import('@features/analytics/pages/AnalyticsPage'));
-const InsightsDashboardPage = lazy(() => import('@features/insights/pages/InsightsDashboardPage'));
-
-// Lazy load reports page
-const ReportsPage = lazy(() => import('@features/reports/pages/ReportsPage'));
-
-// Lazy load AI page
-const AIPage = lazy(() => import('@features/ai/pages/AIPage'));
-
-// Lazy load import/export pages
-const ImportPage = lazy(() => import('@features/import/pages/ImportPage'));
-
-// Lazy load email page
-const EmailPage = lazy(() => import('@features/email/pages/EmailPage'));
-
-// Lazy load notifications page
-const NotificationsPage = lazy(() => import('@features/notifications/pages/NotificationsPage'));
-
-// Lazy load settings page
-const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage'));
-
-// Lazy load activity log page
-const ActivityLogPage = lazy(() => import('@features/audit/pages/ActivityLogPage'));
-
-// Lazy load admin pages
-const JobsPage = lazy(() => import('@features/admin/pages/JobsPage'));
-
-// Lazy load goodbye page
-const GoodbyePage = lazy(() => import('@pages/GoodbyePage'));
+  return wrappedRoute;
+};
 
 function App() {
   const { isAuthenticated } = useAuthStore();
 
+  // Wrap all protected routes with error boundaries and suspense
+  const wrappedProtectedRoutes = protectedRoutes.map(wrapRouteWithProtection);
+  const wrappedPublicRoutes = publicRoutes.map(wrapRouteWithProtection);
+
   return (
     <Routes>
-      {/* Public routes - No lazy loading for auth flows */}
+      {/* Public auth routes - No lazy loading for auth flows */}
       <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
       <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
       <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPasswordPage /> : <Navigate to="/" />} />
       <Route path="/reset-password" element={!isAuthenticated ? <ResetPasswordPage /> : <Navigate to="/" />} />
       <Route path="/auth/callback/google" element={<GoogleCallbackPage />} />
-      <Route
-        path="/goodbye"
-        element={
-          <Suspense fallback={<PageLoader />}>
-            <GoodbyePage />
-          </Suspense>
-        }
-      />
 
-      {/* Protected routes - All lazy loaded with suspense */}
-      <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
-        <Route
-          path="/"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <DashboardPage />
-            </Suspense>
+      {/* Public routes from config */}
+      {wrappedPublicRoutes.map((route, index) => {
+        const key = route.path || `public-${index}`;
+        if (route.children) {
+          return (
+            <Route key={key} path={route.path} element={route.element}>
+              {route.children.map((child, childIndex) => (
+                <Route
+                  key={child.path || `child-${childIndex}`}
+                  path={child.path}
+                  index={child.index}
+                  element={child.element}
+                />
+              ))}
+            </Route>
+          );
+        }
+        return <Route key={key} path={route.path} index={route.index} element={route.element} />;
+      })}
+
+      {/* Protected routes - All lazy loaded with suspense and error boundaries */}
+      <Route element={isAuthenticated ? (
+        <SubscriptionInitializer>
+          <Layout />
+        </SubscriptionInitializer>
+      ) : <Navigate to="/login" />}>
+        {wrappedProtectedRoutes.map((route, index) => {
+          const key = route.path || `protected-${index}`;
+          if (route.children) {
+            return (
+              <Route key={key} path={route.path} element={route.element}>
+                {route.children.map((child, childIndex) => (
+                  <Route
+                    key={child.path || `child-${childIndex}`}
+                    path={child.path}
+                    index={child.index}
+                    element={child.element}
+                  />
+                ))}
+              </Route>
+            );
           }
-        />
-        <Route
-          path="/transactions"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <TransactionsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/transactions/new"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <TransactionsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/transactions/edit/:id"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <TransactionsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/transactions/duplicates"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <DuplicatesPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/accounts"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <AccountsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/accounts/new"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <AccountsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/accounts/edit/:id"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <AccountsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/reconciliation"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <ReconciliationPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/reconciliation/:reconciliationId"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <ReconciliationPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/budgets"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <BudgetsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/budgets/new"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <BudgetsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/budgets/edit/:id"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <BudgetsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/groups"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <GroupsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/groups/new"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <GroupsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/groups/edit/:id"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <GroupsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/investments"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <InvestmentsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/investments/new"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <InvestmentsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/investments/edit/:id"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <InvestmentsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/lend-borrow"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <LendBorrowPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/lend-borrow/new"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <LendBorrowPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/lend-borrow/edit/:id"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <LendBorrowPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <AnalyticsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/insights"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <InsightsDashboardPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/reports"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <ReportsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/ai"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <AIPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/import"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <ImportPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/email"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <EmailPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <NotificationsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/activity-log"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <ActivityLogPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/admin/jobs"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <JobsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <SettingsPage />
-            </Suspense>
-          }
-        />
+          return <Route key={key} path={route.path} index={route.index} element={route.element} />;
+        })}
       </Route>
 
       {/* Fallback */}

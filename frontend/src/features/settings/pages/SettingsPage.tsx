@@ -1,25 +1,20 @@
-import AppearanceTab from '../components/AppearanceTab';
-import CategoriesTab from '../components/CategoriesTab';
-import TagsTab from '../components/TagsTab';
-import RemindersTab from '../components/RemindersTab';
-import OAuthTab from '../components/OAuthTab';
-import SecurityTab from '../components/SecurityTab';
-import SessionsTab from '../components/SessionsTab';
-import PrivacyTab from '../components/PrivacyTab';
+import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { Tabs } from '@components/tabs';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { getSettingsTabs, type SettingsTab } from '../config/settings.config';
-import { useUrlParams } from '@/hooks/useUrlParams';
 
 export default function SettingsPage() {
-  const { getParam, setParam } = useUrlParams();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Get active tab from URL, default to 'appearance'
-  const activeTab = (getParam('tab') as SettingsTab) || 'appearance';
+  // Extract active tab from current path (e.g., /settings/appearance -> appearance)
+  const pathSegments = location.pathname.split('/');
+  const activeTab = (pathSegments[pathSegments.length - 1] as SettingsTab) || 'appearance';
 
   const tabs = getSettingsTabs();
 
   const handleTabChange = (tabId: string) => {
-    setParam('tab', tabId);
+    navigate(`/settings/${tabId}`);
   };
 
   return (
@@ -40,16 +35,11 @@ export default function SettingsPage() {
         variant="underline"
       />
 
-      {/* Tab Content */}
+      {/* Tab Content - Rendered via nested routes with Outlet */}
       <div className="rounded-lg bg-card p-6 shadow transition-colors">
-        {activeTab === 'appearance' && <AppearanceTab />}
-        {activeTab === 'categories' && <CategoriesTab />}
-        {activeTab === 'tags' && <TagsTab />}
-        {activeTab === 'reminders' && <RemindersTab />}
-        {activeTab === 'oauth' && <OAuthTab />}
-        {activeTab === 'security' && <SecurityTab />}
-        {activeTab === 'sessions' && <SessionsTab />}
-        {activeTab === 'privacy' && <PrivacyTab />}
+        <ErrorBoundary level="component">
+          <Outlet />
+        </ErrorBoundary>
       </div>
     </div>
   );

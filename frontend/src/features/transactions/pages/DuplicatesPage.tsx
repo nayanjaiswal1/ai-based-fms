@@ -88,6 +88,13 @@ export default function DuplicatesPage() {
   const handleMarkNotDuplicates = (group: DuplicateGroup) => {
     // Mark all pairs in the group as not duplicates
     const transactions = group.transactions;
+
+    // Safety check: ensure transactions array has at least one item
+    if (!transactions || transactions.length === 0) {
+      console.error('Cannot mark duplicates: transactions array is empty');
+      return;
+    }
+
     const primaryId = transactions[0].id;
 
     // Mark each duplicate with the primary

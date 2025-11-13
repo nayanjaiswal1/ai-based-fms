@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { Account } from './account.entity';
 import { Transaction } from './transaction.entity';
@@ -18,6 +19,7 @@ import { EmailConnection } from './email-connection.entity';
 import { Category } from './category.entity';
 import { Tag } from './tag.entity';
 import { Session } from './session.entity';
+import { Subscription } from './subscription.entity';
 
 export enum UserRole {
   USER = 'user',
@@ -26,7 +28,8 @@ export enum UserRole {
 
 export enum SubscriptionTier {
   FREE = 'free',
-  PRO = 'pro',
+  BASIC = 'basic',
+  PREMIUM = 'premium',
   ENTERPRISE = 'enterprise',
 }
 
@@ -137,4 +140,7 @@ export class User {
 
   @OneToMany(() => Session, (session) => session.user)
   sessions: Session[];
+
+  @OneToOne(() => Subscription, (subscription) => subscription.user)
+  subscription: Subscription;
 }

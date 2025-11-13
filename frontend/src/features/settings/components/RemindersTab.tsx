@@ -23,12 +23,20 @@ export default function RemindersTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reminders'] });
     },
+    onError: (error: any) => {
+      console.error('Failed to delete reminder:', error);
+      alert(error?.response?.data?.message || 'Failed to delete reminder. Please try again.');
+    },
   });
 
   const dismissMutation = useMutation({
     mutationFn: remindersApi.dismiss,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reminders'] });
+    },
+    onError: (error: any) => {
+      console.error('Failed to dismiss reminder:', error);
+      alert(error?.response?.data?.message || 'Failed to dismiss reminder. Please try again.');
     },
   });
 

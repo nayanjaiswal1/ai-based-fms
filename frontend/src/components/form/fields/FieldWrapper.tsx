@@ -52,11 +52,14 @@ export function FieldWrapper({
         )}
       </label>
 
-      {description && (
-        <p id={descriptionId} className="text-xs text-muted-foreground">
-          {description}
-        </p>
-      )}
+      {/* Always reserve space for description to maintain alignment */}
+      <div className="min-h-[16px]">
+        {description && (
+          <p id={descriptionId} className="text-xs text-muted-foreground">
+            {description}
+          </p>
+        )}
+      </div>
 
       {childrenWithAria}
 

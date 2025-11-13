@@ -2,6 +2,7 @@ import { useAuthStore } from '@stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { Bell, LogOut, User, Menu } from 'lucide-react';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
+import { SubscriptionStatus } from '@/components/subscription';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -41,6 +42,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2" role="toolbar" aria-label="User actions">
+        {/* Subscription Status - Hidden on small screens */}
+        <div className="hidden md:block">
+          <SubscriptionStatus variant="compact" showUpgrade={false} />
+        </div>
+
         <ThemeToggleButton />
 
         {/* Hide bell icon on very small screens */}

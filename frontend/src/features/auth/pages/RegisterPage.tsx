@@ -17,8 +17,15 @@ export default function RegisterPage() {
   const registerMutation = useMutation({
     mutationFn: authApi.register,
     onSuccess: (data: any) => {
-      setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
-      navigate('/');
+      if (data?.data?.user && data?.data?.accessToken && data?.data?.refreshToken) {
+        setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
+        navigate('/');
+      } else {
+        console.error('Registration response missing required data:', data);
+      }
+    },
+    onError: (error: any) => {
+      console.error('Registration failed:', error);
     },
   });
 
