@@ -35,6 +35,7 @@ import { ImportModule } from '@modules/import/import.module';
 // import { ChatModule } from '@modules/chat/chat.module';
 import { AdminModule } from '@modules/admin/admin.module';
 import { SessionsModule } from '@modules/sessions/sessions.module';
+import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module';
 // import { GdprModule } from '@modules/gdpr/gdpr.module';
 // import { ExportModule } from '@modules/export/export.module';
 import { AuditModule } from '@modules/audit/audit.module';
@@ -105,6 +106,7 @@ import { AuditModule } from '@modules/audit/audit.module';
     // ChatModule,
     AdminModule,
     SessionsModule,
+    SubscriptionsModule,
     // GdprModule,
     // ExportModule,
     AuditModule,
