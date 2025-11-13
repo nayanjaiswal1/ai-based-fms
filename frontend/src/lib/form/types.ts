@@ -10,7 +10,9 @@ export type FieldType =
   | 'datetime-local'
   | 'color'
   | 'select'
+  | 'searchable-select'
   | 'multiselect'
+  | 'creatable-multiselect'
   | 'textarea'
   | 'checkbox'
   | 'radio'
@@ -42,6 +44,7 @@ export interface FieldConfig<TFieldValues extends FieldValues = FieldValues> {
   rows?: number;
   className?: string;
   onChange?: (value: any, form: UseFormReturn<TFieldValues>) => void;
+  onCreateNew?: (searchQuery: string) => Promise<string> | string;
   condition?: (values: Partial<TFieldValues>) => boolean;
   grid?: {
     col?: number;

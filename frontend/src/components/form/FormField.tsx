@@ -2,7 +2,9 @@ import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { FieldConfig } from '../../lib/form/types';
 import { TextField } from './fields/TextField';
 import { SelectField } from './fields/SelectField';
+import { SearchableSelectField } from './fields/SearchableSelectField';
 import { MultiSelectField } from './fields/MultiSelectField';
+import { CreatableMultiSelectField } from './fields/CreatableMultiSelectField';
 import { TextAreaField } from './fields/TextAreaField';
 import { CheckboxField } from './fields/CheckboxField';
 import { SwitchField } from './fields/SwitchField';
@@ -60,8 +62,14 @@ export function FormField<TFieldValues extends FieldValues>({
     case 'select':
       return <SelectField {...commonProps} />;
 
+    case 'searchable-select':
+      return <SearchableSelectField {...commonProps} onCreateNew={field.onCreateNew} />;
+
     case 'multiselect':
       return <MultiSelectField {...commonProps} />;
+
+    case 'creatable-multiselect':
+      return <CreatableMultiSelectField {...commonProps} onCreateNew={field.onCreateNew} />;
 
     case 'textarea':
       return <TextAreaField {...commonProps} />;

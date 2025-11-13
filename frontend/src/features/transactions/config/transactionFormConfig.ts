@@ -24,7 +24,9 @@ export function getTransactionFormConfig(
   transaction?: any,
   accounts?: any[],
   categories?: any[],
-  tags?: any[]
+  tags?: any[],
+  onCreateCategory?: (name: string) => Promise<string>,
+  onCreateTag?: (name: string) => Promise<string>
 ): FormConfig<TransactionFormData> {
   return {
     title: transaction ? 'Edit Transaction' : 'Add Transaction',
@@ -87,9 +89,11 @@ export function getTransactionFormConfig(
           {
             name: 'categoryId',
             label: 'Category',
-            type: 'select',
+            type: 'searchable-select',
             required: true,
-            options: categories?.map(c => ({ value: c.id, label: c.name })) || [],
+            placeholder: 'Search or create category...',
+            options: categories?.map(c => ({ value: c.id, label: c.name, color: c.color })) || [],
+            onCreateNew: onCreateCategory,
           },
         ],
         columns: 2,
@@ -99,13 +103,15 @@ export function getTransactionFormConfig(
           {
             name: 'tagIds',
             label: 'Tags',
-            type: 'multiselect',
-            description: 'Select one or more tags (optional)',
+            type: 'creatable-multiselect',
+            description: 'Search, select or create tags (optional)',
+            placeholder: 'Search or create tags...',
             options: tags?.map(t => ({
               value: t.id,
               label: t.name,
               color: t.color,
             })) || [],
+            onCreateNew: onCreateTag,
           },
         ],
       },
