@@ -1,12 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import MobileNav from './MobileNav';
 import { SkipNav } from '@/components/a11y';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 export default function Layout() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Initialize WebSocket connection
+  const { connected, on } = useWebSocket({
+    namespace: '/notifications',
+    autoConnect: true,
+    onConnect: () => {
+      console.log('✅ Connected to real-time notifications');
+    },
+    onDisconnect: () => {
+      console.log('⚠️ Disconnected from real-time notifications. Retrying...');
+    },
+    onError: (error) => {
+      console.error('❌ WebSocket connection error:', error);
+    },
+  });
+
+  // Listen for notification events
+  useEffect(() => {
+    on('notification', (notification) => {
+      console.log('🔔 Received notification:', notification);
+      // Invalidate notifications cache to refetch
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    });
+
+    on('unreadCount', (data) => {
+      console.log('📬 Updated unread count:', data.count);
+      // Update unread count query
+      queryClient.setQueryData(['notifications-unread-count'], data);
+    });
+  }, [on, queryClient]);
 
   const handleOpenMobileNav = () => {
     setIsMobileNavOpen(true);

@@ -7,6 +7,9 @@ export { Budget, BudgetPeriod, BudgetType } from './budget.entity';
 export { Group } from './group.entity';
 export { GroupMember, GroupMemberRole } from './group-member.entity';
 export { GroupTransaction, SplitType } from './group-transaction.entity';
+export { GroupComment } from './group-comment.entity';
+export { RecurringGroupTransaction, RecurrenceFrequency, RecurrenceStatus } from './recurring-group-transaction.entity';
+export { GroupBudget, GroupBudgetPeriod } from './group-budget.entity';
 export { Investment, InvestmentType } from './investment.entity';
 export { LendBorrow, LendBorrowType, LendBorrowStatus } from './lend-borrow.entity';
 export { Notification, NotificationType, NotificationStatus } from './notification.entity';
@@ -14,6 +17,7 @@ export { Reminder, ReminderType, ReminderFrequency, ReminderStatus } from './rem
 export { EmailConnection, EmailProvider } from './email-connection.entity';
 export { ImportLog, ImportStatus, ImportType } from './import-log.entity';
 export { AuditLog, AuditAction } from './audit-log.entity';
+export { AiCategorizationFeedback, FeedbackType } from './ai-categorization-feedback.entity';
 export { Session } from './session.entity';
 export type { DeviceInfo } from './session.entity';
 export { DeletedUser } from './deleted-user.entity';

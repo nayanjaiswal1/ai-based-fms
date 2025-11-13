@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AuditService } from './audit.service';
 import { AuditFiltersDto } from './dto/audit-filters.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 
 @Controller('audit')
 @UseGuards(JwtAuthGuard)

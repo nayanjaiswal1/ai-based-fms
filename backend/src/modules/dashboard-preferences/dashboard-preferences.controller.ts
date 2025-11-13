@@ -8,7 +8,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { DashboardPreferencesService } from './dashboard-preferences.service';
 import { UpdateDashboardPreferencesDto } from './dto/update-preferences.dto';
 

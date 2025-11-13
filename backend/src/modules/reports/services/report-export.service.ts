@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as PDFDocument from 'pdfkit';
-import * as ExcelJS from 'exceljs';
+import PDFDocument from 'pdfkit';
+import ExcelJS from 'exceljs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ReportFormat } from '@database/entities/generated-report.entity';

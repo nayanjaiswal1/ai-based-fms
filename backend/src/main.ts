@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
-import * as helmet from 'helmet';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@common/pipes/validation.pipe';
 import { AllExceptionsFilter } from '@common/filters/http-exception.filter';
@@ -50,7 +50,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = configService.get<number>('app.port');
+  const port = configService.get<number>('app.port') || 3000;
   await app.listen(port);
 
   logger.log(`Application is running on: http://localhost:${port}/${apiPrefix}`);

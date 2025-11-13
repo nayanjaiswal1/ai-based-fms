@@ -90,13 +90,13 @@ export class Transaction {
 
   // Merge/duplicate detection fields
   @Column({ nullable: true })
-  mergedIntoId: string;
+  mergedIntoId?: string;
 
   @Column({ default: false })
   isMerged: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
-  mergedAt: Date;
+  mergedAt?: Date;
 
   @Column({ type: 'simple-array', nullable: true })
   duplicateExclusions: string[];

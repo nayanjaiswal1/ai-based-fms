@@ -113,8 +113,11 @@ If a field cannot be determined, use null.`;
       });
 
       const responseText = completion.choices[0]?.message?.content?.trim();
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!responseText) {
+        throw new Error('No response from AI');
+      }
 
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('Could not parse receipt data');
       }
@@ -393,7 +396,7 @@ Keep insights concise, actionable, and personalized.`;
         max_tokens: 500,
       });
 
-      const insights = completion.choices[0]?.message?.content?.trim();
+      const insights = completion.choices[0]?.message?.content?.trim() || '';
 
       return {
         period: {

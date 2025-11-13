@@ -10,8 +10,14 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { GroupsService } from './groups.service';
+import { GroupCommentsService } from './group-comments.service';
+import { RecurringGroupTransactionsService } from './recurring-group-transactions.service';
+import { GroupBudgetsService } from './group-budgets.service';
 import { CreateGroupDto, UpdateGroupDto, AddMemberDto } from './dto/group.dto';
 import { CreateGroupTransactionDto, UpdateGroupTransactionDto, SettleUpDto } from './dto/group-transaction.dto';
+import { CreateGroupCommentDto, UpdateGroupCommentDto } from './dto/group-comment.dto';
+import { CreateRecurringGroupTransactionDto, UpdateRecurringGroupTransactionDto } from './dto/recurring-group-transaction.dto';
+import { CreateGroupBudgetDto, UpdateGroupBudgetDto } from './dto/group-budget.dto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 
@@ -20,7 +26,12 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 @UseGuards(JwtAuthGuard)
 @Controller('groups')
 export class GroupsController {
-  constructor(private readonly groupsService: GroupsService) {}
+  constructor(
+    private readonly groupsService: GroupsService,
+    private readonly groupCommentsService: GroupCommentsService,
+    private readonly recurringTransactionsService: RecurringGroupTransactionsService,
+    private readonly groupBudgetsService: GroupBudgetsService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new group' })
@@ -147,5 +158,152 @@ export class GroupsController {
     @Body() settleDto: SettleUpDto,
   ) {
     return this.groupsService.settleUp(id, userId, settleDto);
+  }
+
+  // Comments
+  @Get(':id/comments')
+  @ApiOperation({ summary: 'Get all comments in a group' })
+  getComments(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.groupCommentsService.findAll(id, userId);
+  }
+
+  @Post(':id/comments')
+  @ApiOperation({ summary: 'Add a comment to the group' })
+  @ApiResponse({ status: 201, description: 'Comment created successfully' })
+  createComment(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Body() createDto: CreateGroupCommentDto,
+  ) {
+    return this.groupCommentsService.create(id, userId, createDto);
+  }
+
+  @Patch('comments/:commentId')
+  @ApiOperation({ summary: 'Update a comment' })
+  updateComment(
+    @Param('commentId') commentId: string,
+    @CurrentUser('id') userId: string,
+    @Body() updateDto: UpdateGroupCommentDto,
+  ) {
+    return this.groupCommentsService.update(commentId, userId, updateDto);
+  }
+
+  @Delete('comments/:commentId')
+  @ApiOperation({ summary: 'Delete a comment' })
+  deleteComment(
+    @Param('commentId') commentId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.groupCommentsService.remove(commentId, userId);
+  }
+
+  // Recurring Transactions
+  @Get(':id/recurring')
+  @ApiOperation({ summary: 'Get all recurring transactions for a group' })
+  getRecurringTransactions(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.recurringTransactionsService.findAll(id, userId);
+  }
+
+  @Post(':id/recurring')
+  @ApiOperation({ summary: 'Create a recurring transaction' })
+  @ApiResponse({ status: 201, description: 'Recurring transaction created successfully' })
+  createRecurringTransaction(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Body() createDto: CreateRecurringGroupTransactionDto,
+  ) {
+    return this.recurringTransactionsService.create(id, userId, createDto);
+  }
+
+  @Patch('recurring/:recurringId')
+  @ApiOperation({ summary: 'Update a recurring transaction' })
+  updateRecurringTransaction(
+    @Param('recurringId') recurringId: string,
+    @CurrentUser('id') userId: string,
+    @Body() updateDto: UpdateRecurringGroupTransactionDto,
+  ) {
+    return this.recurringTransactionsService.update(recurringId, userId, updateDto);
+  }
+
+  @Delete('recurring/:recurringId')
+  @ApiOperation({ summary: 'Delete a recurring transaction' })
+  deleteRecurringTransaction(
+    @Param('recurringId') recurringId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.recurringTransactionsService.remove(recurringId, userId);
+  }
+
+  @Post('recurring/:recurringId/pause')
+  @ApiOperation({ summary: 'Pause a recurring transaction' })
+  pauseRecurringTransaction(
+    @Param('recurringId') recurringId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.recurringTransactionsService.pause(recurringId, userId);
+  }
+
+  @Post('recurring/:recurringId/resume')
+  @ApiOperation({ summary: 'Resume a paused recurring transaction' })
+  resumeRecurringTransaction(
+    @Param('recurringId') recurringId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.recurringTransactionsService.resume(recurringId, userId);
+  }
+
+  // Group Budgets
+  @Get(':id/budgets')
+  @ApiOperation({ summary: 'Get all budgets for a group' })
+  getGroupBudgets(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.groupBudgetsService.findAll(id, userId);
+  }
+
+  @Post(':id/budgets')
+  @ApiOperation({ summary: 'Create a group budget' })
+  @ApiResponse({ status: 201, description: 'Budget created successfully' })
+  createGroupBudget(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Body() createDto: CreateGroupBudgetDto,
+  ) {
+    return this.groupBudgetsService.create(id, userId, createDto);
+  }
+
+  @Get('budgets/:budgetId')
+  @ApiOperation({ summary: 'Get a specific group budget' })
+  getGroupBudget(
+    @Param('budgetId') budgetId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.groupBudgetsService.findOne(budgetId, userId);
+  }
+
+  @Get('budgets/:budgetId/progress')
+  @ApiOperation({ summary: 'Get budget progress and status' })
+  getGroupBudgetProgress(
+    @Param('budgetId') budgetId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.groupBudgetsService.getProgress(budgetId, userId);
+  }
+
+  @Patch('budgets/:budgetId')
+  @ApiOperation({ summary: 'Update a group budget' })
+  updateGroupBudget(
+    @Param('budgetId') budgetId: string,
+    @CurrentUser('id') userId: string,
+    @Body() updateDto: UpdateGroupBudgetDto,
+  ) {
+    return this.groupBudgetsService.update(budgetId, userId, updateDto);
+  }
+
+  @Delete('budgets/:budgetId')
+  @ApiOperation({ summary: 'Delete a group budget' })
+  deleteGroupBudget(
+    @Param('budgetId') budgetId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.groupBudgetsService.remove(budgetId, userId);
   }
 }

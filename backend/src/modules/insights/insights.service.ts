@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { OpenAI } from 'openai';
-import { Transaction, Budget, Category } from '@database/entities';
+import { Transaction, TransactionType, Budget, Category } from '@database/entities';
 import {
   InsightsOptionsDto,
   InsightType,
@@ -169,7 +169,7 @@ export class InsightsService {
     const transactions = await this.transactionRepository.find({
       where: {
         userId,
-        type: 'expense',
+        type: TransactionType.EXPENSE,
         date: Between(startDate, endDate),
         isDeleted: false,
       },
@@ -188,7 +188,7 @@ export class InsightsService {
     const prevTransactions = await this.transactionRepository.find({
       where: {
         userId,
-        type: 'expense',
+        type: TransactionType.EXPENSE,
         date: Between(prevStartDate, prevEndDate),
         isDeleted: false,
       },
@@ -387,7 +387,7 @@ export class InsightsService {
     const transactions = await this.transactionRepository.find({
       where: {
         userId,
-        type: 'expense',
+        type: TransactionType.EXPENSE,
         date: Between(startDate, endDate),
         isDeleted: false,
       },
@@ -397,7 +397,7 @@ export class InsightsService {
     const income = await this.transactionRepository.find({
       where: {
         userId,
-        type: 'income',
+        type: TransactionType.INCOME,
         date: Between(startDate, endDate),
         isDeleted: false,
       },
@@ -473,7 +473,7 @@ export class InsightsService {
     const transactions = await this.transactionRepository.find({
       where: {
         userId,
-        type: 'expense',
+        type: TransactionType.EXPENSE,
         date: Between(startDate, endDate),
         isDeleted: false,
       },
@@ -487,7 +487,7 @@ export class InsightsService {
     const historicalTransactions = await this.transactionRepository.find({
       where: {
         userId,
-        type: 'expense',
+        type: TransactionType.EXPENSE,
         date: Between(historicalStartDate, startDate),
         isDeleted: false,
       },
@@ -738,7 +738,7 @@ export class InsightsService {
     const transactions = await this.transactionRepository.find({
       where: {
         userId,
-        type: 'expense',
+        type: TransactionType.EXPENSE,
         date: Between(startDate, endDate),
         isDeleted: false,
       },
@@ -841,7 +841,7 @@ export class InsightsService {
     const allTransactions = await this.transactionRepository.find({
       where: {
         userId,
-        type: 'expense',
+        type: TransactionType.EXPENSE,
         date: MoreThanOrEqual(months[2]),
         isDeleted: false,
       },

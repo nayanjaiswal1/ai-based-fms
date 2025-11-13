@@ -85,4 +85,43 @@ export class CategoriesController {
   remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.categoriesService.remove(id, userId);
   }
+
+  // NEW: Merge categories
+  @Post('merge')
+  @ApiOperation({ summary: 'Merge multiple categories into one' })
+  @ApiResponse({ status: 200, description: 'Categories merged successfully' })
+  merge(
+    @CurrentUser('id') userId: string,
+    @Body() mergeDto: { primaryId: string; secondaryIds: string[] },
+  ) {
+    return this.categoriesService.merge(mergeDto.primaryId, mergeDto.secondaryIds, userId);
+  }
+
+  // NEW: Archive category
+  @Post(':id/archive')
+  @ApiOperation({ summary: 'Archive a category' })
+  archive(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.categoriesService.archive(id, userId);
+  }
+
+  // NEW: Unarchive category
+  @Post(':id/unarchive')
+  @ApiOperation({ summary: 'Unarchive a category' })
+  unarchive(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.categoriesService.unarchive(id, userId);
+  }
+
+  // NEW: Get usage statistics
+  @Get('stats/usage')
+  @ApiOperation({ summary: 'Get category usage statistics' })
+  getUsageStats(@CurrentUser('id') userId: string) {
+    return this.categoriesService.getUsageStats(userId);
+  }
+
+  // NEW: Get archived categories
+  @Get('archived/list')
+  @ApiOperation({ summary: 'Get all archived categories' })
+  getArchived(@CurrentUser('id') userId: string) {
+    return this.categoriesService.getArchived(userId);
+  }
 }

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Group, GroupMember, GroupMemberRole, GroupTransaction, SplitType } from '@database/entities';
 import { CreateGroupDto, UpdateGroupDto, AddMemberDto } from './dto/group.dto';
 import { CreateGroupTransactionDto, UpdateGroupTransactionDto, SettleUpDto } from './dto/group-transaction.dto';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class GroupsService {
@@ -14,6 +15,7 @@ export class GroupsService {
     private memberRepository: Repository<GroupMember>,
     @InjectRepository(GroupTransaction)
     private transactionRepository: Repository<GroupTransaction>,
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   async create(userId: string, createDto: CreateGroupDto) {
@@ -113,7 +115,16 @@ export class GroupsService {
       role: addMemberDto.role as GroupMemberRole || GroupMemberRole.MEMBER,
     });
 
-    return this.memberRepository.save(member);
+    const saved = await this.memberRepository.save(member);
+
+    // Broadcast event to all group members
+    await this.notificationsGateway.broadcastGroupEvent(groupId, 'member:joined', {
+      member: saved,
+      addedBy: requestUserId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return saved;
   }
 
   async removeMember(groupId: string, requestUserId: string, memberUserId: string) {
@@ -128,7 +139,16 @@ export class GroupsService {
     }
 
     member.isActive = false;
-    return this.memberRepository.save(member);
+    const saved = await this.memberRepository.save(member);
+
+    // Broadcast event to all group members
+    await this.notificationsGateway.broadcastGroupEvent(groupId, 'member:left', {
+      userId: memberUserId,
+      removedBy: requestUserId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return saved;
   }
 
   async updateMemberRole(groupId: string, requestUserId: string, memberUserId: string, role: GroupMemberRole) {
@@ -175,6 +195,13 @@ export class GroupsService {
     // Update member balances
     await this.updateMemberBalances(groupId, saved);
 
+    // Broadcast event to all group members
+    await this.notificationsGateway.broadcastGroupEvent(groupId, 'transaction:created', {
+      transaction: saved,
+      createdBy: userId,
+      timestamp: new Date().toISOString(),
+    });
+
     return saved;
   }
 
@@ -207,6 +234,13 @@ export class GroupsService {
     // Apply new balance changes
     await this.updateMemberBalances(groupId, updated);
 
+    // Broadcast event to all group members
+    await this.notificationsGateway.broadcastGroupEvent(groupId, 'transaction:updated', {
+      transaction: updated,
+      updatedBy: userId,
+      timestamp: new Date().toISOString(),
+    });
+
     return updated;
   }
 
@@ -225,7 +259,16 @@ export class GroupsService {
     await this.reverseMemberBalances(groupId, transaction);
 
     transaction.isDeleted = true;
-    return this.transactionRepository.save(transaction);
+    const result = await this.transactionRepository.save(transaction);
+
+    // Broadcast event to all group members
+    await this.notificationsGateway.broadcastGroupEvent(groupId, 'transaction:deleted', {
+      transactionId: transaction.id,
+      deletedBy: userId,
+      timestamp: new Date().toISOString(),
+    });
+
+    return result;
   }
 
   async settleUp(groupId: string, userId: string, settleDto: SettleUpDto) {
@@ -249,6 +292,13 @@ export class GroupsService {
 
     const saved = await this.transactionRepository.save(settlement);
     await this.updateMemberBalances(groupId, saved);
+
+    // Broadcast event to all group members
+    await this.notificationsGateway.broadcastGroupEvent(groupId, 'settlement:recorded', {
+      settlement: saved,
+      recordedBy: userId,
+      timestamp: new Date().toISOString(),
+    });
 
     return saved;
   }

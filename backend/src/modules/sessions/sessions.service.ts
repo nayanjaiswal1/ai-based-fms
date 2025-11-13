@@ -9,7 +9,7 @@ import { Repository, LessThan } from 'typeorm';
 import { Session, DeviceInfo } from '@database/entities';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { SessionResponseDto } from './dto/session-response.dto';
-import * as UAParser from 'ua-parser-js';
+import UAParser from 'ua-parser-js';
 
 @Injectable()
 export class SessionsService {
@@ -33,13 +33,13 @@ export class SessionsService {
       userId,
       deviceInfo,
       ipAddress,
-      location: null, // Can be enhanced with IP geolocation service
+      location: undefined, // Can be enhanced with IP geolocation service
       lastActive: new Date(),
       isActive: true,
       refreshToken,
     });
 
-    return this.sessionRepository.save(session);
+    return await this.sessionRepository.save(session);
   }
 
   /**
@@ -169,7 +169,7 @@ export class SessionsService {
    * Parse user agent string to extract device information
    */
   private parseUserAgent(userAgent: string): DeviceInfo {
-    const parser = new UAParser(userAgent);
+    const parser = new (UAParser as any)(userAgent);
     const result = parser.getResult();
 
     return {

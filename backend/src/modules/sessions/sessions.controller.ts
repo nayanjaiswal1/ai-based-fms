@@ -8,7 +8,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { SessionsService } from './sessions.service';
 import { SessionResponseDto } from './dto/session-response.dto';
 
@@ -21,7 +21,7 @@ export class SessionsController {
    * Get all active sessions for the current user
    */
   @Get()
-  async getActiveSessions(@Request() req): Promise<SessionResponseDto[]> {
+  async getActiveSessions(@Request() req: any): Promise<SessionResponseDto[]> {
     const userId = req.user.id;
     const currentSessionId = req.user.sessionId;
 
@@ -33,7 +33,7 @@ export class SessionsController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async revokeSession(@Param('id') sessionId: string, @Request() req): Promise<void> {
+  async revokeSession(@Param('id') sessionId: string, @Request() req: any): Promise<void> {
     const userId = req.user.id;
 
     // Prevent revoking current session
@@ -49,7 +49,7 @@ export class SessionsController {
    */
   @Delete()
   @HttpCode(HttpStatus.OK)
-  async revokeAllSessions(@Request() req): Promise<{ message: string; count: number }> {
+  async revokeAllSessions(@Request() req: any): Promise<{ message: string; count: number }> {
     const userId = req.user.id;
     const currentSessionId = req.user.sessionId;
 

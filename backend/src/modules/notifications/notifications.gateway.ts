@@ -98,4 +98,34 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     await this.sendNotificationToUser(userId, notification);
     return notification;
   }
+
+  // NEW: Send group transaction event to all members in the group
+  async broadcastGroupEvent(groupId: string, event: string, data: any) {
+    this.server.to(`group:${groupId}`).emit(event, data);
+  }
+
+  // NEW: Send presence update to group
+  async broadcastPresence(groupId: string, userId: string, status: string) {
+    this.server.to(`group:${groupId}`).emit('presence:update', {
+      userId,
+      status,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // NEW: Join a group room for real-time updates
+  @SubscribeMessage('joinGroup')
+  handleJoinGroup(client: AuthenticatedSocket, groupId: string) {
+    client.join(`group:${groupId}`);
+    console.log(`Client ${client.id} joined group ${groupId}`);
+    return { success: true, message: `Joined group ${groupId}` };
+  }
+
+  // NEW: Leave a group room
+  @SubscribeMessage('leaveGroup')
+  handleLeaveGroup(client: AuthenticatedSocket, groupId: string) {
+    client.leave(`group:${groupId}`);
+    console.log(`Client ${client.id} left group ${groupId}`);
+    return { success: true, message: `Left group ${groupId}` };
+  }
 }
