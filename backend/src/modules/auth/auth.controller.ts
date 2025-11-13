@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query, Res, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query, Res, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -75,16 +75,18 @@ export class AuthController {
     const result = await this.authService.login(loginDto, userAgent, ipAddress);
 
     // Handle 2FA case
-    if (result.requires2FA) {
+    if ('requires2FA' in result && result.requires2FA) {
       return result;
     }
 
     // Set httpOnly cookies for tokens
-    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    if ('accessToken' in result && 'refreshToken' in result) {
+      this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    }
 
     // Return user data without tokens
     return {
-      user: result.user,
+      user: 'user' in result ? result.user : undefined,
     };
   }
 
