@@ -17,8 +17,10 @@ export default function RegisterPage() {
   const registerMutation = useMutation({
     mutationFn: authApi.register,
     onSuccess: (data: any) => {
-      if (data?.data?.user && data?.data?.accessToken && data?.data?.refreshToken) {
-        setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
+      if (data?.data?.user || data?.user) {
+        // Tokens are now stored in httpOnly cookies, only user data is returned
+        const user = data?.data?.user || data?.user;
+        setAuth(user);
         navigate('/');
       } else {
         console.error('Registration response missing required data:', data);

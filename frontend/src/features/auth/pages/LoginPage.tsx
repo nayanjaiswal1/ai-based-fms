@@ -18,10 +18,12 @@ export default function LoginPage() {
     mutationFn: authApi.login,
     onSuccess: (data: any) => {
       // Check if 2FA is required
-      if (data?.data?.requires2FA) {
+      if (data?.data?.requires2FA || data?.requires2FA) {
         setRequires2FA(true);
-      } else if (data?.data?.user && data?.data?.accessToken && data?.data?.refreshToken) {
-        setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
+      } else if (data?.data?.user || data?.user) {
+        // Tokens are now stored in httpOnly cookies, only user data is returned
+        const user = data?.data?.user || data?.user;
+        setAuth(user);
         navigate('/');
       } else {
         console.error('Login response missing required data:', data);
@@ -35,8 +37,10 @@ export default function LoginPage() {
   const login2FAMutation = useMutation({
     mutationFn: authApi.login2FA,
     onSuccess: (data: any) => {
-      if (data?.data?.user && data?.data?.accessToken && data?.data?.refreshToken) {
-        setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
+      if (data?.data?.user || data?.user) {
+        // Tokens are now stored in httpOnly cookies, only user data is returned
+        const user = data?.data?.user || data?.user;
+        setAuth(user);
         navigate('/');
       } else {
         console.error('2FA login response missing required data:', data);

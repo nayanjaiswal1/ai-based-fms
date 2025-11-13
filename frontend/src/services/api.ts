@@ -10,13 +10,11 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor
+// Request interceptor - cookies are sent automatically
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().accessToken;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // Ensure credentials are included for cookie-based auth
+    config.withCredentials = true;
     return config;
   },
   (error) => Promise.reject(error),
@@ -32,19 +30,18 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const { refreshToken } = useAuthStore.getState();
-        const response = await axios.post(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.auth.refresh}`, { refreshToken });
-        const { accessToken: newAccessToken } = response.data;
-
-        useAuthStore.getState().setAuth(
-          useAuthStore.getState().user!,
-          newAccessToken,
-          refreshToken!,
+        // Attempt to refresh token using cookie-based refresh endpoint
+        await axios.post(
+          `${API_CONFIG.baseURL}${API_CONFIG.endpoints.auth.refresh}`,
+          {},
+          { withCredentials: true }
         );
 
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        // Retry the original request with new cookie
+        originalRequest.withCredentials = true;
         return api(originalRequest);
       } catch (refreshError) {
+        // Refresh failed - clear auth and redirect to login
         useAuthStore.getState().logout();
         window.location.href = '/login';
         return Promise.reject(refreshError);
@@ -60,7 +57,8 @@ export const authApi = {
   register: (data: any) => api.post('/auth/register', data),
   login: (data: any) => api.post('/auth/login', data),
   login2FA: (data: any) => api.post('/auth/login/2fa', data),
-  refresh: (refreshToken: string) => api.post('/auth/refresh', { refreshToken }),
+  refresh: () => api.post('/auth/refresh', {}),
+  logout: () => api.post('/auth/logout', {}),
   enable2FA: () => api.post('/auth/2fa/enable'),
   verify2FASetup: (code: string) => api.post('/auth/2fa/verify-setup', { code }),
   disable2FA: (code: string) => api.post('/auth/2fa/disable', { code }),

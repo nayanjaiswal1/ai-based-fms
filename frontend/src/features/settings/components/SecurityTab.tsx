@@ -8,9 +8,7 @@ import Disable2FAModal from '@components/2fa/Disable2FAModal';
 export default function SecurityTab() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
-  const setAuth = useAuthStore((state) => state.setAuth);
-  const accessToken = useAuthStore((state) => state.accessToken);
-  const refreshToken = useAuthStore((state) => state.refreshToken);
+  const setUser = useAuthStore((state) => state.setUser);
 
   const [showEnableModal, setShowEnableModal] = useState(false);
   const [showDisableModal, setShowDisableModal] = useState(false);
@@ -19,8 +17,8 @@ export default function SecurityTab() {
 
   const handleEnable2FASuccess = () => {
     // Update user state to reflect 2FA is now enabled
-    if (user && accessToken && refreshToken) {
-      setAuth({ ...user, twoFactorEnabled: true }, accessToken, refreshToken);
+    if (user) {
+      setUser({ ...user, twoFactorEnabled: true });
     }
     // Invalidate any relevant queries
     queryClient.invalidateQueries({ queryKey: ['user'] });
@@ -28,8 +26,8 @@ export default function SecurityTab() {
 
   const handleDisable2FASuccess = () => {
     // Update user state to reflect 2FA is now disabled
-    if (user && accessToken && refreshToken) {
-      setAuth({ ...user, twoFactorEnabled: false }, accessToken, refreshToken);
+    if (user) {
+      setUser({ ...user, twoFactorEnabled: false });
     }
     // Invalidate any relevant queries
     queryClient.invalidateQueries({ queryKey: ['user'] });

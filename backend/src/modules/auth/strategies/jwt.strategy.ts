@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '@database/entities';
 import { SessionsService } from '@modules/sessions/sessions.service';
+import { Request } from 'express';
 
 export interface JwtPayload {
   sub: string;
@@ -22,7 +23,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private sessionsService: SessionsService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        // First, try to extract from cookie
+        (request: Request) => {
+          return request?.cookies?.accessToken;
+        },
+        // Fallback to Authorization header for backward compatibility
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('jwt.secret'),
     });
