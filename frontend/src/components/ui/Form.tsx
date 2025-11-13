@@ -1,5 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useForm, UseFormReturn, FieldValues, DefaultValues, Path, FieldError } from 'react-hook-form';
+import { toast } from 'react-hot-toast';
 
 export interface FormField<T extends FieldValues = FieldValues> {
   name: Path<T>;
@@ -35,12 +36,27 @@ export default function Form<T extends FieldValues>({
   onCancel,
   renderCustomField,
 }: FormProps<T>) {
-  const form = useForm<T>({ defaultValues });
+  const form = useForm<T>({ defaultValues, mode: 'onChange' });
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
+    trigger,
   } = form;
+  const [showErrors, setShowErrors] = useState(false);
+
+  const handleDisabledClick = async () => {
+    // Trigger validation for all fields
+    await trigger();
+    setShowErrors(true);
+
+    // Show toast with first error
+    const errorFields = Object.keys(errors);
+    if (errorFields.length > 0) {
+      const firstError = errors[errorFields[0] as Path<T>] as FieldError;
+      toast.error(firstError?.message || 'Please fix validation errors before submitting');
+    }
+  };
 
   const renderField = (field: FormField<T>) => {
     // Allow custom rendering for complex fields
@@ -110,8 +126,8 @@ export default function Form<T extends FieldValues>({
           />
         )}
 
-        {error && (
-          <p className="mt-1 text-sm text-red-600">
+        {(error || showErrors) && error && (
+          <p className="mt-1 text-sm text-red-600 animate-in fade-in slide-in-from-top-1">
             {error.message || `${field.label} is required`}
           </p>
         )}
@@ -133,13 +149,26 @@ export default function Form<T extends FieldValues>({
             {cancelLabel}
           </button>
         )}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isLoading ? 'Processing...' : submitLabel}
-        </button>
+        {!isValid && !isLoading ? (
+          <button
+            type="button"
+            onClick={handleDisabledClick}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white opacity-50 cursor-not-allowed relative group"
+          >
+            {submitLabel}
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Please fix validation errors first
+            </span>
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {isLoading ? 'Processing...' : submitLabel}
+          </button>
+        )}
       </div>
     </form>
   );
