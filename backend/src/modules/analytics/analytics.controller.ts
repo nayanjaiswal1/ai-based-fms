@@ -89,4 +89,15 @@ export class AnalyticsController {
   ) {
     return this.analyticsService.getComparison(userId, queryDto);
   }
+
+  @Get('net-worth')
+  @ApiOperation({ summary: 'Get net worth over time' })
+  @ApiQuery({ name: 'months', type: Number, required: false, example: 12 })
+  @ApiResponse({ status: 200, description: 'Returns net worth history and trends' })
+  getNetWorth(
+    @CurrentUser('id') userId: string,
+    @Query('months') months?: number,
+  ) {
+    return this.analyticsService.getNetWorth(userId, months ? Number(months) : 12);
+  }
 }

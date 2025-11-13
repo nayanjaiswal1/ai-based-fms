@@ -40,20 +40,25 @@ export class CategoriesService {
   }
 
   async findAll(userId: string, includeDefault = true) {
-    const where: any = { isActive: true };
-
     if (includeDefault) {
       // Include both user's custom categories and default categories
-      where.userId = [userId, IsNull()];
+      // Use query builder to properly handle OR condition with IsNull
+      return this.categoryRepository
+        .createQueryBuilder('category')
+        .leftJoinAndSelect('category.parent', 'parent')
+        .leftJoinAndSelect('category.children', 'children')
+        .where('category.isActive = :isActive', { isActive: true })
+        .andWhere('(category.userId = :userId OR category.userId IS NULL)', { userId })
+        .orderBy('category.name', 'ASC')
+        .getMany();
     } else {
-      where.userId = userId;
+      // Only user's custom categories
+      return this.categoryRepository.find({
+        where: { isActive: true, userId },
+        relations: ['parent', 'children'],
+        order: { name: 'ASC' },
+      });
     }
-
-    return this.categoryRepository.find({
-      where,
-      relations: ['parent', 'children'],
-      order: { name: 'ASC' },
-    });
   }
 
   async findTree(userId: string) {

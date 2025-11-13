@@ -531,6 +531,116 @@ export class AnalyticsService {
   }
 
   /**
+   * Get net worth over time (assets - liabilities)
+   */
+  async getNetWorth(userId: string, months: number = 12) {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+
+    // Get all accounts
+    const accounts = await this.accountRepository.find({
+      where: { userId, isActive: true },
+    });
+
+    // Calculate current net worth
+    const currentNetWorth = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
+
+    // Get all transactions in the period to calculate historical net worth
+    const transactions = await this.transactionRepository.find({
+      where: {
+        userId,
+        date: Between(startDate, endDate),
+        isDeleted: false,
+      },
+      order: { date: 'ASC' },
+    });
+
+    // Get investments
+    const investments = await this.investmentRepository.find({
+      where: { userId, isActive: true },
+    });
+    const investmentsValue = investments.reduce((sum, inv) => sum + Number(inv.currentValue || 0), 0);
+
+    // Get lend/borrow balances
+    const lendBorrowRecords = await this.lendBorrowRepository.find({
+      where: { userId },
+    });
+    const lendBorrowBalance = lendBorrowRecords.reduce((sum, record) => {
+      const remaining = Number(record.amountRemaining || 0);
+      return sum + (record.type === 'lend' ? remaining : -remaining);
+    }, 0);
+
+    // Group by month for trend
+    const monthlyNetWorth = new Map<string, number>();
+    let runningBalance = currentNetWorth;
+
+    // Work backwards from current date
+    for (let i = 0; i < months; i++) {
+      const date = new Date(endDate);
+      date.setMonth(date.getMonth() - i);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+      // Get transactions for this month
+      const monthTransactions = transactions.filter(t => {
+        const tDate = new Date(t.date);
+        return tDate.getFullYear() === date.getFullYear() && tDate.getMonth() === date.getMonth();
+      });
+
+      // Calculate net cash flow for the month
+      const monthIncome = monthTransactions
+        .filter(t => t.type === TransactionType.INCOME)
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      const monthExpenses = monthTransactions
+        .filter(t => t.type === TransactionType.EXPENSE)
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      const netChange = monthIncome - monthExpenses;
+
+      if (i === 0) {
+        monthlyNetWorth.set(monthKey, currentNetWorth);
+      } else {
+        const prevMonth = Array.from(monthlyNetWorth.values())[0];
+        runningBalance = prevMonth - netChange;
+        monthlyNetWorth.set(monthKey, runningBalance);
+      }
+    }
+
+    // Convert to array and reverse to chronological order
+    const trends = Array.from(monthlyNetWorth.entries())
+      .reverse()
+      .map(([month, netWorth]) => ({
+        month,
+        netWorth: Number(netWorth.toFixed(2)),
+      }));
+
+    // Calculate change
+    const firstMonthNetWorth = trends[0]?.netWorth || 0;
+    const lastMonthNetWorth = trends[trends.length - 1]?.netWorth || 0;
+    const totalChange = lastMonthNetWorth - firstMonthNetWorth;
+    const percentageChange = firstMonthNetWorth > 0
+      ? ((totalChange / firstMonthNetWorth) * 100)
+      : 0;
+
+    return {
+      current: {
+        netWorth: Number(currentNetWorth.toFixed(2)),
+        accounts: Number(currentNetWorth.toFixed(2)),
+        investments: Number(investmentsValue.toFixed(2)),
+        lendBorrow: Number(lendBorrowBalance.toFixed(2)),
+        total: Number((currentNetWorth + investmentsValue + lendBorrowBalance).toFixed(2)),
+      },
+      change: {
+        amount: Number(totalChange.toFixed(2)),
+        percentage: Number(percentageChange.toFixed(2)),
+        trend: totalChange >= 0 ? 'up' : 'down',
+      },
+      trends,
+    };
+  }
+
+  /**
    * Helper to calculate date range from query
    */
   private getDateRange(queryDto: DateRangeQueryDto): { startDate: Date; endDate: Date } {
