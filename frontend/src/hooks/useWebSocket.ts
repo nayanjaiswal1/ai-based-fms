@@ -24,6 +24,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { user, accessToken } = useAuthStore();
 
   const connect = useCallback(() => {
+    // Don't connect if WebSocket is disabled
+    if (!API_CONFIG.websocket.enabled) {
+      console.log('WebSocket is disabled via configuration');
+      return;
+    }
+
     if (socketRef.current?.connected || !user || !accessToken) {
       return;
     }

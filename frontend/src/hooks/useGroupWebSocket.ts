@@ -1,16 +1,17 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useWebSocket } from './useWebSocket';
+import { API_CONFIG } from '@/config/api.config';
 
 export function useGroupWebSocket(groupId: string) {
   const queryClient = useQueryClient();
   const { connected, on, emit } = useWebSocket({
     namespace: `/groups/${groupId}`,
-    autoConnect: true,
+    autoConnect: API_CONFIG.websocket.enabled,
   });
 
   useEffect(() => {
-    if (!connected) return;
+    if (!connected || !API_CONFIG.websocket.enabled) return;
 
     // Listen for transaction events
     on('transaction:created', (data) => {
