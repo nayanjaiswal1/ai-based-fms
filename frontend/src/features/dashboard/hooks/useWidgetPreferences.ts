@@ -12,7 +12,7 @@ export function useWidgetPreferences() {
   // Load preferences from backend
   const { data: preferences, isLoading, error } = useQuery({
     queryKey: [PREFERENCES_KEY],
-    queryFn: dashboardPreferencesApi.getPreferences,
+    queryFn: () => dashboardPreferencesApi.getPreferences(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -65,7 +65,7 @@ export function useWidgetPreferences() {
 
   // Reset to default mutation
   const resetMutation = useMutation({
-    mutationFn: dashboardPreferencesApi.resetToDefault,
+    mutationFn: () => dashboardPreferencesApi.resetToDefault(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PREFERENCES_KEY] });
       localStorage.removeItem(LOCAL_STORAGE_KEY);

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '@stores/authStore';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 import { FeatureFlag } from '@/config/features.config';
+import { Tooltip } from '@/components/ui/tooltip';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -96,15 +97,13 @@ function NavItem({ item, onClick }: NavItemProps) {
 
   if (!hasAccess) {
     return (
-      <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground/60 cursor-not-allowed relative group">
-        <item.icon className="h-5 w-5" aria-hidden="true" />
-        <span>{item.name}</span>
-        <Lock className="h-3 w-3 ml-auto" />
-        {/* Tooltip */}
-        <div className="absolute left-full ml-2 hidden group-hover:block z-50 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg whitespace-nowrap">
-          Upgrade to unlock
+      <Tooltip content="Upgrade to unlock this feature" side="right">
+        <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground/60 cursor-not-allowed">
+          <item.icon className="h-5 w-5" aria-hidden="true" />
+          <span>{item.name}</span>
+          <Lock className="h-3 w-3 ml-auto" aria-hidden="true" />
         </div>
-      </div>
+      </Tooltip>
     );
   }
 
