@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@stores/authStore';
+import { ErrorBoundary } from '@/components/error-boundary';
 import Layout from '@components/layout/Layout';
 
 // Loading fallback component
@@ -11,6 +12,15 @@ const PageLoader = () => (
       <p className="mt-4 text-muted-foreground">Loading...</p>
     </div>
   </div>
+);
+
+// Helper component to wrap pages with ErrorBoundary and Suspense
+const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
+  <ErrorBoundary level="page">
+    <Suspense fallback={<PageLoader />}>
+      {children}
+    </Suspense>
+  </ErrorBoundary>
 );
 
 // Eager load critical auth pages (no code splitting for auth flow)
@@ -88,9 +98,9 @@ function App() {
       <Route
         path="/goodbye"
         element={
-          <Suspense fallback={<PageLoader />}>
+          <ProtectedPage>
             <GoodbyePage />
-          </Suspense>
+          </ProtectedPage>
         }
       />
 
@@ -99,257 +109,265 @@ function App() {
         <Route
           path="/"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <DashboardPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/transactions"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <TransactionsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/transactions/new"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <TransactionsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/transactions/edit/:id"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <TransactionsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/transactions/duplicates"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <DuplicatesPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/accounts"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <AccountsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/accounts/new"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <AccountsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/accounts/edit/:id"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <AccountsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/reconciliation"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <ReconciliationPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/reconciliation/:reconciliationId"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <ReconciliationPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/budgets"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <BudgetsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/budgets/new"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <BudgetsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/budgets/edit/:id"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <BudgetsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/groups"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <GroupsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/groups/new"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <GroupsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/groups/edit/:id"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <GroupsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/investments"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <InvestmentsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/investments/new"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <InvestmentsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/investments/edit/:id"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <InvestmentsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/lend-borrow"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <LendBorrowPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/lend-borrow/new"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <LendBorrowPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/lend-borrow/edit/:id"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <LendBorrowPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/analytics"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <AnalyticsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/insights"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <InsightsDashboardPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/reports"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <ReportsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/ai"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <AIPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/import"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <ImportPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/email"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <EmailPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/notifications"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <NotificationsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/activity-log"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <ActivityLogPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/admin/jobs"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <JobsPage />
-            </Suspense>
+            </ProtectedPage>
           }
         />
         <Route
           path="/settings"
           element={
-            <Suspense fallback={<PageLoader />}>
+            <ProtectedPage>
               <SettingsPage />
-            </Suspense>
+            </ProtectedPage>
+          }
+        />
+        <Route
+          path="/settings/:tab"
+          element={
+            <ProtectedPage>
+              <SettingsPage />
+            </ProtectedPage>
           }
         />
       </Route>

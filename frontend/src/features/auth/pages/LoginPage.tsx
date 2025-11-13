@@ -18,20 +18,32 @@ export default function LoginPage() {
     mutationFn: authApi.login,
     onSuccess: (data: any) => {
       // Check if 2FA is required
-      if (data.data?.requires2FA) {
+      if (data?.data?.requires2FA) {
         setRequires2FA(true);
-      } else {
+      } else if (data?.data?.user && data?.data?.accessToken && data?.data?.refreshToken) {
         setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
         navigate('/');
+      } else {
+        console.error('Login response missing required data:', data);
       }
+    },
+    onError: (error: any) => {
+      console.error('Login failed:', error);
     },
   });
 
   const login2FAMutation = useMutation({
     mutationFn: authApi.login2FA,
     onSuccess: (data: any) => {
-      setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
-      navigate('/');
+      if (data?.data?.user && data?.data?.accessToken && data?.data?.refreshToken) {
+        setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
+        navigate('/');
+      } else {
+        console.error('2FA login response missing required data:', data);
+      }
+    },
+    onError: (error: any) => {
+      console.error('2FA login failed:', error);
     },
   });
 

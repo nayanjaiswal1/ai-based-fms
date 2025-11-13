@@ -1,3 +1,4 @@
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import AppearanceTab from '../components/AppearanceTab';
 import CategoriesTab from '../components/CategoriesTab';
 import TagsTab from '../components/TagsTab';
@@ -7,19 +8,32 @@ import SecurityTab from '../components/SecurityTab';
 import SessionsTab from '../components/SessionsTab';
 import PrivacyTab from '../components/PrivacyTab';
 import { Tabs } from '@components/tabs';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { getSettingsTabs, type SettingsTab } from '../config/settings.config';
-import { useUrlParams } from '@/hooks/useUrlParams';
 
 export default function SettingsPage() {
-  const { getParam, setParam } = useUrlParams();
+  const { tab } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
 
-  // Get active tab from URL, default to 'appearance'
-  const activeTab = (getParam('tab') as SettingsTab) || 'appearance';
+  // Get active tab from URL path, default to 'appearance'
+  const activeTab = (tab as SettingsTab) || 'appearance';
+
+  // Valid tabs list for validation
+  const validTabs: SettingsTab[] = ['appearance', 'categories', 'tags', 'reminders', 'oauth', 'security', 'sessions', 'privacy'];
+
+  // Redirect to default tab if no tab specified or invalid tab
+  if (!tab) {
+    return <Navigate to="/settings/appearance" replace />;
+  }
+
+  if (!validTabs.includes(tab as SettingsTab)) {
+    return <Navigate to="/settings/appearance" replace />;
+  }
 
   const tabs = getSettingsTabs();
 
   const handleTabChange = (tabId: string) => {
-    setParam('tab', tabId);
+    navigate(`/settings/${tabId}`);
   };
 
   return (
@@ -42,14 +56,16 @@ export default function SettingsPage() {
 
       {/* Tab Content */}
       <div className="rounded-lg bg-card p-6 shadow transition-colors">
-        {activeTab === 'appearance' && <AppearanceTab />}
-        {activeTab === 'categories' && <CategoriesTab />}
-        {activeTab === 'tags' && <TagsTab />}
-        {activeTab === 'reminders' && <RemindersTab />}
-        {activeTab === 'oauth' && <OAuthTab />}
-        {activeTab === 'security' && <SecurityTab />}
-        {activeTab === 'sessions' && <SessionsTab />}
-        {activeTab === 'privacy' && <PrivacyTab />}
+        <ErrorBoundary level="component">
+          {activeTab === 'appearance' && <AppearanceTab />}
+          {activeTab === 'categories' && <CategoriesTab />}
+          {activeTab === 'tags' && <TagsTab />}
+          {activeTab === 'reminders' && <RemindersTab />}
+          {activeTab === 'oauth' && <OAuthTab />}
+          {activeTab === 'security' && <SecurityTab />}
+          {activeTab === 'sessions' && <SessionsTab />}
+          {activeTab === 'privacy' && <PrivacyTab />}
+        </ErrorBoundary>
       </div>
     </div>
   );
