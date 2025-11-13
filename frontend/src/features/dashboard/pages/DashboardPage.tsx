@@ -199,16 +199,18 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600 truncate">
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header with staggered animation */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between animate-fade-in-down">
+        <div className="min-w-0 space-y-2">
+          <h1 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight text-gradient">
+            Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Welcome back! Here's your financial overview.
           </p>
         </div>
-        <div className="flex gap-2 items-center flex-shrink-0">
+        <div className="flex gap-3 items-center flex-shrink-0 animate-fade-in-left" style={{ animationDelay: '0.1s' }}>
           <DashboardCustomizer
             isCustomizing={isCustomizing}
             onToggleCustomizing={() => setIsCustomizing(!isCustomizing)}
@@ -223,7 +225,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Customizable Widget Grid */}
+      {/* Customizable Widget Grid with staggered animations */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -233,37 +235,45 @@ export default function DashboardPage() {
       >
         <SortableContext items={visibleWidgets.map((w) => w.id)} strategy={rectSortingStrategy}>
           <div
-            className={`grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ${
+            className={`grid gap-5 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ${
               isDragging ? 'cursor-grabbing' : ''
             }`}
           >
-            {visibleWidgets.map((widget) => (
-              <WidgetWrapper
+            {visibleWidgets.map((widget, index) => (
+              <div
                 key={widget.id}
-                widget={widget}
-                isCustomizing={isCustomizing}
-                onRemove={() => removeWidget(widget.id)}
-                onConfigure={() => setConfigWidget(widget)}
-                onToggleVisibility={() => toggleWidgetVisibility(widget.id)}
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${0.1 + index * 0.05}s`, animationFillMode: 'backwards' }}
               >
-                {renderWidget(widget)}
-              </WidgetWrapper>
+                <WidgetWrapper
+                  widget={widget}
+                  isCustomizing={isCustomizing}
+                  onRemove={() => removeWidget(widget.id)}
+                  onConfigure={() => setConfigWidget(widget)}
+                  onToggleVisibility={() => toggleWidgetVisibility(widget.id)}
+                >
+                  {renderWidget(widget)}
+                </WidgetWrapper>
+              </div>
             ))}
           </div>
         </SortableContext>
       </DndContext>
 
-      {/* Empty State */}
+      {/* Empty State with modern styling */}
       {visibleWidgets.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <Wallet className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Widgets</h3>
-          <p className="text-gray-600 mb-4">
-            Click "Customize Dashboard" to add widgets and personalize your view.
+        <div className="text-center py-20 bg-card/50 backdrop-blur-sm rounded-xl border-2 border-dashed border-border animate-scale-in">
+          <div className="relative inline-block">
+            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+            <Wallet className="relative h-16 w-16 text-primary mx-auto mb-4 animate-float" />
+          </div>
+          <h3 className="font-serif text-2xl font-bold text-foreground mb-2">No Widgets Yet</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Click "Customize Dashboard" to add widgets and personalize your financial view.
           </p>
           <button
             onClick={() => setIsCustomizing(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-3 bg-gradient-primary text-primary-foreground rounded-lg font-medium shadow-glow-sm hover:shadow-glow-md transition-all duration-200 active:scale-95"
           >
             Customize Dashboard
           </button>

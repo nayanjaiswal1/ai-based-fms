@@ -69,22 +69,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary px-4 py-12 transition-colors">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">
-            Finance Management System
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-dawn px-4 py-12 overflow-hidden">
+      {/* Atmospheric background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-1/2 -left-1/4 w-1/2 h-full bg-primary/10 blur-3xl rounded-full animate-pulse-glow" />
+        <div className="absolute -bottom-1/2 -right-1/4 w-1/2 h-full bg-accent/10 blur-3xl rounded-full animate-pulse-glow" style={{ animationDelay: '1s' }} />
+      </div>
+
+      <div className="relative w-full max-w-md space-y-8 animate-scale-in">
+        <div className="text-center space-y-3 animate-fade-in-down">
+          <h2 className="font-serif text-5xl font-bold tracking-tight text-gradient">
+            FMS
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="text-lg font-medium text-foreground">Finance Management System</p>
+          <p className="text-sm text-muted-foreground">
             {requires2FA ? 'Enter your verification code' : 'Sign in to your account'}
           </p>
         </div>
 
         {!requires2FA ? (
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="space-y-4 rounded-md shadow-sm">
+          <form className="mt-8 space-y-6 animate-fade-in-up" style={{ animationDelay: '0.2s' }} onSubmit={handleSubmit}>
+            <div className="surface-elevated rounded-xl p-8 space-y-5 backdrop-blur-sm">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground">
+                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
                   Email address
                 </label>
                 <input
@@ -95,12 +102,13 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-foreground shadow-sm transition-colors focus:border-ring focus:outline-none focus:ring-ring"
+                  className="block w-full rounded-lg border-2 border-border bg-background/50 px-4 py-3 text-foreground backdrop-blur-sm transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 hover:border-border/80"
+                  placeholder="you@example.com"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
                   Password
                 </label>
                 <input
@@ -111,12 +119,13 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-foreground shadow-sm transition-colors focus:border-ring focus:outline-none focus:ring-ring"
+                  className="block w-full rounded-lg border-2 border-border bg-background/50 px-4 py-3 text-foreground backdrop-blur-sm transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 hover:border-border/80"
+                  placeholder="••••••••"
                 />
-                <div className="mt-2 text-right">
+                <div className="mt-3 text-right">
                   <Link
                     to="/forgot-password"
-                    className="text-sm font-medium text-primary hover:text-primary/80"
+                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -125,12 +134,10 @@ export default function LoginPage() {
             </div>
 
             {loginMutation.error && (
-              <div className="rounded-md bg-destructive/10 p-4">
-                <div className="flex">
-                  <AlertCircle className="h-5 w-5 text-destructive" />
-                  <div className="ml-3">
-                    <p className="text-sm text-destructive">Invalid email or password</p>
-                  </div>
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 animate-scale-in">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
+                  <p className="text-sm text-destructive">Invalid email or password</p>
                 </div>
               </div>
             )}
@@ -138,28 +145,33 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="group relative flex w-full justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:bg-primary/50 disabled:cursor-not-allowed"
+              className="group relative flex w-full justify-center rounded-lg bg-gradient-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-glow-sm transition-all duration-200 hover:shadow-glow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
             >
               {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
             </button>
 
             <p className="text-center text-sm text-muted-foreground">
               Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-primary hover:text-primary/80">
+              <Link to="/register" className="font-semibold text-primary hover:text-primary/80 transition-colors">
                 Sign up
               </Link>
             </p>
           </form>
         ) : (
-          <div className="mt-8 space-y-6">
-            <div className="rounded-md bg-primary/10 p-4">
-              <p className="text-sm text-primary">
-                Two-factor authentication is enabled for this account. Enter the 6-digit code
-                from your authenticator app.
-              </p>
+          <div className="mt-8 space-y-6 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <div className="surface-elevated rounded-xl p-6 backdrop-blur-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <AlertCircle className="h-5 w-5 text-primary" />
+                </div>
+                <p className="text-sm text-foreground leading-relaxed">
+                  Two-factor authentication is enabled for this account. Enter the 6-digit code
+                  from your authenticator app.
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="surface-elevated rounded-xl p-8 space-y-6 backdrop-blur-sm">
               <label className="block text-sm font-medium text-foreground text-center">
                 Verification Code
               </label>
@@ -172,14 +184,12 @@ export default function LoginPage() {
             </div>
 
             {login2FAMutation.error && (
-              <div className="rounded-md bg-destructive/10 p-4">
-                <div className="flex">
-                  <AlertCircle className="h-5 w-5 text-destructive" />
-                  <div className="ml-3">
-                    <p className="text-sm text-destructive">
-                      Invalid verification code. Please try again.
-                    </p>
-                  </div>
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 animate-scale-in">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
+                  <p className="text-sm text-destructive">
+                    Invalid verification code. Please try again.
+                  </p>
                 </div>
               </div>
             )}
@@ -188,14 +198,14 @@ export default function LoginPage() {
               <button
                 onClick={handleBack}
                 disabled={login2FAMutation.isPending}
-                className="flex-1 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:bg-muted disabled:cursor-not-allowed"
+                className="flex-1 rounded-lg border-2 border-border bg-background/50 px-5 py-3 text-sm font-medium text-foreground backdrop-blur-sm transition-all duration-200 hover:bg-accent/20 hover:border-border/80 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
               >
                 Back
               </button>
               <button
                 onClick={() => handle2FASubmit(twoFactorCode)}
                 disabled={twoFactorCode.length !== 6 || login2FAMutation.isPending}
-                className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed"
+                className="flex-1 rounded-lg bg-gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow-sm transition-all duration-200 hover:shadow-glow-md disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
               >
                 {login2FAMutation.isPending ? 'Verifying...' : 'Verify'}
               </button>
@@ -203,7 +213,7 @@ export default function LoginPage() {
 
             <p className="text-center text-sm text-muted-foreground">
               Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-primary hover:text-primary/80">
+              <Link to="/register" className="font-semibold text-primary hover:text-primary/80 transition-colors">
                 Sign up
               </Link>
             </p>
