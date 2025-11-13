@@ -1,8 +1,16 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense } from 'react';
+import { Routes, Route, Navigate, useRoutes, RouteObject } from 'react-router-dom';
 import { useAuthStore } from '@stores/authStore';
 import { ErrorBoundary } from '@/components/error-boundary';
 import Layout from '@components/layout/Layout';
+import { protectedRoutes, publicRoutes } from '@config/routes.config';
+
+// Eager load critical auth pages (no code splitting for auth flow)
+import LoginPage from '@features/auth/pages/LoginPage';
+import RegisterPage from '@features/auth/pages/RegisterPage';
+import ForgotPasswordPage from '@features/auth/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@features/auth/pages/ResetPasswordPage';
+import GoogleCallbackPage from '@features/auth/pages/GoogleCallbackPage';
 
 // Loading fallback component
 const PageLoader = () => (
@@ -23,353 +31,59 @@ const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
   </ErrorBoundary>
 );
 
-// Eager load critical auth pages (no code splitting for auth flow)
-import LoginPage from '@features/auth/pages/LoginPage';
-import RegisterPage from '@features/auth/pages/RegisterPage';
-import ForgotPasswordPage from '@features/auth/pages/ForgotPasswordPage';
-import ResetPasswordPage from '@features/auth/pages/ResetPasswordPage';
-import GoogleCallbackPage from '@features/auth/pages/GoogleCallbackPage';
+/**
+ * Recursively wraps route elements with ProtectedPage component
+ */
+const wrapRouteWithProtection = (route: RouteObject): RouteObject => {
+  return {
+    ...route,
+    element: route.element ? <ProtectedPage>{route.element}</ProtectedPage> : route.element,
+    children: route.children?.map(wrapRouteWithProtection),
+  };
+};
 
-// Lazy load dashboard (critical route - preload on auth)
-const DashboardPage = lazy(() => import('@features/dashboard/pages/DashboardPage'));
-
-// Lazy load transaction pages
-const TransactionsPage = lazy(() => import('@features/transactions/pages/TransactionsPage'));
-const DuplicatesPage = lazy(() => import('@features/transactions/pages/DuplicatesPage'));
-
-// Lazy load account pages
-const AccountsPage = lazy(() => import('@features/accounts/pages/AccountsPage'));
-const ReconciliationPage = lazy(() => import('@features/reconciliation/pages/ReconciliationPage'));
-
-// Lazy load budget pages
-const BudgetsPage = lazy(() => import('@features/budgets/pages/BudgetsPage'));
-
-// Lazy load groups pages
-const GroupsPage = lazy(() => import('@features/groups/pages/GroupsPage'));
-
-// Lazy load investment pages
-const InvestmentsPage = lazy(() => import('@features/investments/pages/InvestmentsPage'));
-
-// Lazy load lend-borrow pages
-const LendBorrowPage = lazy(() => import('@features/lend-borrow/pages/LendBorrowPage'));
-
-// Lazy load analytics pages (heavy charts)
-const AnalyticsPage = lazy(() => import('@features/analytics/pages/AnalyticsPage'));
-const InsightsDashboardPage = lazy(() => import('@features/insights/pages/InsightsDashboardPage'));
-
-// Lazy load reports page
-const ReportsPage = lazy(() => import('@features/reports/pages/ReportsPage'));
-
-// Lazy load AI page
-const AIPage = lazy(() => import('@features/ai/pages/AIPage'));
-
-// Lazy load import/export pages
-const ImportPage = lazy(() => import('@features/import/pages/ImportPage'));
-
-// Lazy load email page
-const EmailPage = lazy(() => import('@features/email/pages/EmailPage'));
-
-// Lazy load notifications page
-const NotificationsPage = lazy(() => import('@features/notifications/pages/NotificationsPage'));
-
-// Lazy load settings page
-const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage'));
-
-// Lazy load activity log page
-const ActivityLogPage = lazy(() => import('@features/audit/pages/ActivityLogPage'));
-
-// Lazy load admin pages
-const JobsPage = lazy(() => import('@features/admin/pages/JobsPage'));
-
-// Lazy load goodbye page
-const GoodbyePage = lazy(() => import('@pages/GoodbyePage'));
+/**
+ * Helper component to render nested routes with proper wrapping
+ */
+const RouteRenderer = ({ route }: { route: RouteObject }) => {
+  if (route.children && route.children.length > 0) {
+    return (
+      <Route path={route.path} element={route.element} index={route.index}>
+        {route.children.map((child, index) => (
+          <RouteRenderer key={child.path || index} route={child} />
+        ))}
+      </Route>
+    );
+  }
+  return <Route path={route.path} element={route.element} index={route.index} />;
+};
 
 function App() {
   const { isAuthenticated } = useAuthStore();
 
+  // Wrap all protected routes with error boundaries and suspense
+  const wrappedProtectedRoutes = protectedRoutes.map(wrapRouteWithProtection);
+  const wrappedPublicRoutes = publicRoutes.map(wrapRouteWithProtection);
+
   return (
     <Routes>
-      {/* Public routes - No lazy loading for auth flows */}
+      {/* Public auth routes - No lazy loading for auth flows */}
       <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
       <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
       <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPasswordPage /> : <Navigate to="/" />} />
       <Route path="/reset-password" element={!isAuthenticated ? <ResetPasswordPage /> : <Navigate to="/" />} />
       <Route path="/auth/callback/google" element={<GoogleCallbackPage />} />
-      <Route
-        path="/goodbye"
-        element={
-          <ProtectedPage>
-            <GoodbyePage />
-          </ProtectedPage>
-        }
-      />
 
-      {/* Protected routes - All lazy loaded with suspense */}
+      {/* Public routes from config */}
+      {wrappedPublicRoutes.map((route, index) => (
+        <RouteRenderer key={route.path || `public-${index}`} route={route} />
+      ))}
+
+      {/* Protected routes - All lazy loaded with suspense and error boundaries */}
       <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
-        <Route
-          path="/"
-          element={
-            <ProtectedPage>
-              <DashboardPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/transactions"
-          element={
-            <ProtectedPage>
-              <TransactionsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/transactions/new"
-          element={
-            <ProtectedPage>
-              <TransactionsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/transactions/edit/:id"
-          element={
-            <ProtectedPage>
-              <TransactionsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/transactions/duplicates"
-          element={
-            <ProtectedPage>
-              <DuplicatesPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/accounts"
-          element={
-            <ProtectedPage>
-              <AccountsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/accounts/new"
-          element={
-            <ProtectedPage>
-              <AccountsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/accounts/edit/:id"
-          element={
-            <ProtectedPage>
-              <AccountsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/reconciliation"
-          element={
-            <ProtectedPage>
-              <ReconciliationPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/reconciliation/:reconciliationId"
-          element={
-            <ProtectedPage>
-              <ReconciliationPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/budgets"
-          element={
-            <ProtectedPage>
-              <BudgetsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/budgets/new"
-          element={
-            <ProtectedPage>
-              <BudgetsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/budgets/edit/:id"
-          element={
-            <ProtectedPage>
-              <BudgetsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/groups"
-          element={
-            <ProtectedPage>
-              <GroupsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/groups/new"
-          element={
-            <ProtectedPage>
-              <GroupsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/groups/edit/:id"
-          element={
-            <ProtectedPage>
-              <GroupsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/investments"
-          element={
-            <ProtectedPage>
-              <InvestmentsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/investments/new"
-          element={
-            <ProtectedPage>
-              <InvestmentsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/investments/edit/:id"
-          element={
-            <ProtectedPage>
-              <InvestmentsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/lend-borrow"
-          element={
-            <ProtectedPage>
-              <LendBorrowPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/lend-borrow/new"
-          element={
-            <ProtectedPage>
-              <LendBorrowPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/lend-borrow/edit/:id"
-          element={
-            <ProtectedPage>
-              <LendBorrowPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <ProtectedPage>
-              <AnalyticsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/insights"
-          element={
-            <ProtectedPage>
-              <InsightsDashboardPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/reports"
-          element={
-            <ProtectedPage>
-              <ReportsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/ai"
-          element={
-            <ProtectedPage>
-              <AIPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/import"
-          element={
-            <ProtectedPage>
-              <ImportPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/email"
-          element={
-            <ProtectedPage>
-              <EmailPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedPage>
-              <NotificationsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/activity-log"
-          element={
-            <ProtectedPage>
-              <ActivityLogPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/admin/jobs"
-          element={
-            <ProtectedPage>
-              <JobsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedPage>
-              <SettingsPage />
-            </ProtectedPage>
-          }
-        />
-        <Route
-          path="/settings/:tab"
-          element={
-            <ProtectedPage>
-              <SettingsPage />
-            </ProtectedPage>
-          }
-        />
+        {wrappedProtectedRoutes.map((route, index) => (
+          <RouteRenderer key={route.path || `protected-${index}`} route={route} />
+        ))}
       </Route>
 
       {/* Fallback */}
