@@ -138,11 +138,10 @@ export class SubscriptionsService {
       [SubscriptionTier.ENTERPRISE]: { monthly: 99.99, yearly: 999.99 },
     };
 
-    if (dto.tier !== SubscriptionTier.FREE) {
-      subscription.price = dto.billingCycle === BillingCycle.MONTHLY
-        ? pricing[dto.tier].monthly
-        : pricing[dto.tier].yearly;
-    }
+    // dto.tier is guaranteed to not be FREE due to validation above
+    subscription.price = dto.billingCycle === BillingCycle.MONTHLY
+      ? pricing[dto.tier].monthly
+      : pricing[dto.tier].yearly;
 
     await this.subscriptionRepository.save(subscription);
 

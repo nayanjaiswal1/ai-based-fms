@@ -18,6 +18,14 @@ export function CurrencyField<TFieldValues extends FieldValues>({
   const isCurrency = field.type === 'currency';
   const Icon = isCurrency ? DollarSign : Percent;
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Prevent invalid characters for number input
+    const invalidChars = ['e', 'E', '+'];
+    if (invalidChars.includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <FieldWrapper
       label={field.label}
@@ -31,6 +39,28 @@ export function CurrencyField<TFieldValues extends FieldValues>({
         </div>
         <input
           {...register(field.name, {
+            required: field.required ? `${field.label} is required` : false,
+            valueAsNumber: true,
+            validate: {
+              positive: (value) => {
+                if (field.min !== undefined && Number(value) < field.min) {
+                  return `${field.label} must be at least ${field.min}`;
+                }
+                return true;
+              },
+              maximum: (value) => {
+                if (field.max !== undefined && Number(value) > field.max) {
+                  return `${field.label} must be at most ${field.max}`;
+                }
+                return true;
+              },
+              validNumber: (value) => {
+                if (value !== undefined && value !== null && value !== '' && isNaN(Number(value))) {
+                  return `${field.label} must be a valid number`;
+                }
+                return true;
+              },
+            },
             onChange: (e) => {
               if (field.onChange) {
                 field.onChange(e.target.value, form);
@@ -44,6 +74,7 @@ export function CurrencyField<TFieldValues extends FieldValues>({
           placeholder={field.placeholder}
           disabled={field.disabled}
           readOnly={field.readonly}
+          onKeyDown={handleKeyDown}
           className={`
             w-full rounded-lg border py-2.5 pl-10 pr-4 text-sm transition-all
             ${
