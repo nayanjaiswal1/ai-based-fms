@@ -77,6 +77,9 @@ export class Account {
   @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true })
   lastReconciledBalance: number;
 
+  @Column({ type: 'text', nullable: true })
+  statementPassword: string; // Encrypted password for password-protected statements
+
   @Column()
   userId: string;
 

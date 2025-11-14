@@ -39,6 +39,12 @@ export class CreateAccountDto {
   @IsString()
   @MaxLength(500)
   description?: string;
+
+  @ApiPropertyOptional({ description: 'Password for password-protected bank statements', maxLength: 200 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  statementPassword?: string;
 }
 
 export class UpdateAccountDto {
@@ -81,4 +87,10 @@ export class UpdateAccountDto {
   @IsString()
   @MaxLength(500)
   description?: string;
+
+  @ApiPropertyOptional({ description: 'Password for password-protected bank statements', maxLength: 200 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  statementPassword?: string;
 }
