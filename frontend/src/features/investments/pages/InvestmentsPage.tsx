@@ -1,12 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { investmentsApi } from '@services/api';
-import { Plus } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Percent } from 'lucide-react';
 import InvestmentModal from '../components/InvestmentModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PortfolioSummary } from '../components/PortfolioSummary';
 import { InvestmentsTable } from '../components/InvestmentsTable';
+import { StatusBar } from '@/components/ui/StatusBar';
+import { useCurrency } from '@/hooks/useCurrency';
+import { useMemo } from 'react';
 
 export default function InvestmentsPage() {
   const navigate = useNavigate();
@@ -66,12 +69,57 @@ export default function InvestmentsPage() {
     });
   };
 
+  const { formatLocale } = useCurrency();
+
   const portfolioStats = portfolio?.data || {
     totalInvested: 0,
     totalCurrentValue: 0,
     totalROI: 0,
     totalROIPercentage: 0,
   };
+
+  const statusBarItems = useMemo(() => [
+    {
+      id: 'invested',
+      label: 'Invested',
+      value: formatLocale(portfolioStats.totalInvested),
+      icon: DollarSign,
+      color: '#3b82f6',
+      details: [
+        { label: 'Total Invested', value: formatLocale(portfolioStats.totalInvested) },
+        { label: 'Number of Investments', value: investments?.data?.length || 0 },
+      ],
+    },
+    {
+      id: 'current',
+      label: 'Current Value',
+      value: formatLocale(portfolioStats.totalCurrentValue),
+      icon: TrendingUp,
+      color: '#10b981',
+      details: [
+        { label: 'Current Value', value: formatLocale(portfolioStats.totalCurrentValue) },
+        { label: 'Profit/Loss', value: formatLocale(portfolioStats.totalROI) },
+      ],
+    },
+    {
+      id: 'roi',
+      label: 'ROI',
+      value: formatLocale(portfolioStats.totalROI),
+      icon: portfolioStats.totalROI >= 0 ? TrendingUp : TrendingDown,
+      color: portfolioStats.totalROI >= 0 ? '#10b981' : '#ef4444',
+      details: [
+        { label: 'Total ROI', value: formatLocale(portfolioStats.totalROI) },
+        { label: 'ROI Percentage', value: Number(portfolioStats.totalROIPercentage).toFixed(2) + '%' },
+      ],
+    },
+    {
+      id: 'percentage',
+      label: 'ROI %',
+      value: Number(portfolioStats.totalROIPercentage).toFixed(2) + '%',
+      icon: Percent,
+      color: portfolioStats.totalROIPercentage >= 0 ? '#10b981' : '#ef4444',
+    },
+  ], [portfolioStats, investments, formatLocale]);
 
   return (
     <div className="space-y-6">
@@ -92,8 +140,6 @@ export default function InvestmentsPage() {
         </button>
       </div>
 
-      {/* Portfolio Summary */}
-      <PortfolioSummary stats={portfolioStats} />
 
       {/* Investments List */}
       <InvestmentsTable
@@ -112,6 +158,9 @@ export default function InvestmentsPage() {
       />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
+
+      {/* Excel-style Status Bar */}
+      {investments?.data && investments.data.length > 0 && <StatusBar items={statusBarItems} />}
     </div>
   );
 }

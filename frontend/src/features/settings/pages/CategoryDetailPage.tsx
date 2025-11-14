@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesApi, transactionsApi } from '@services/api';
 import { ArrowLeft, TrendingUp, TrendingDown, Calendar, DollarSign } from 'lucide-react';
 import { useCurrency } from '@/hooks/useCurrency';
+import { StatusBar } from '@/components/ui/StatusBar';
 
 export default function CategoryDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -48,6 +50,33 @@ export default function CategoryDetailPage() {
 
   const categoryData = category.data;
   const transactionsList = transactions?.data || [];
+  const statusBarItems = useMemo(() => [
+    {
+      id: 'count',
+      label: 'Transactions',
+      value: transactionCount,
+      icon: Calendar,
+      color: '#3b82f6',
+    },
+    {
+      id: 'total',
+      label: 'Total Amount',
+      value: formatLocale(totalAmount),
+      icon: DollarSign,
+      color: categoryData.type === 'income' ? '#10b981' : '#ef4444',
+      details: [
+        { label: 'Total Amount', value: formatLocale(totalAmount) },
+        { label: 'Average per Transaction', value: transactionCount > 0 ? formatLocale(totalAmount / transactionCount) : formatLocale(0) },
+      ],
+    },
+    {
+      id: 'type',
+      label: 'Type',
+      value: categoryData.type === 'income' ? 'Income' : 'Expense',
+      icon: categoryData.type === 'income' ? TrendingUp : TrendingDown,
+      color: categoryData.type === 'income' ? '#10b981' : '#ef4444',
+    },
+  ], [transactionCount, totalAmount, categoryData, formatLocale]);
   const totalAmount = transactionsList.reduce((sum, t) => sum + Number(t.amount), 0);
   const transactionCount = transactionsList.length;
 
@@ -79,52 +108,6 @@ export default function CategoryDetailPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-              <Calendar className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{transactionCount}</p>
-              <p className="text-sm text-muted-foreground">Total Transactions</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex h-12 w-12 items-center justify-center rounded-lg ${
-                categoryData.type === 'income'
-                  ? 'bg-green-100 dark:bg-green-900/20'
-                  : 'bg-red-100 dark:bg-red-900/20'
-              }`}
-            >
-              <DollarSign
-                className={`h-6 w-6 ${
-                  categoryData.type === 'income'
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
-                }`}
-              />
-            </div>
-            <div>
-              <p
-                className={`text-2xl font-bold ${
-                  categoryData.type === 'income'
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
-                }`}
-              >
-                {formatLocale(totalAmount)}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Amount</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Transactions List */}
       <div className="space-y-4">
@@ -186,6 +169,9 @@ export default function CategoryDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Excel-style Status Bar */}
+      {transactionsList.length > 0 && <StatusBar items={statusBarItems} />}
     </div>
   );
 }

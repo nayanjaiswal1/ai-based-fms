@@ -54,9 +54,9 @@ export function StatusBar({ items, className = '' }: StatusBarProps) {
 
   return (
     <>
-      {/* Status Bar */}
+      {/* Status Bar - Offset for sidebar on desktop */}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-800 to-slate-900 border-t border-slate-700 z-40 ${className}`}
+        className={`fixed bottom-0 left-0 md:left-64 right-0 bg-gradient-to-r from-slate-800 to-slate-900 border-t border-slate-700 z-40 ${className}`}
         onClick={handleClick}
         style={{ cursor: ctrlPressed ? 'pointer' : 'default' }}
       >

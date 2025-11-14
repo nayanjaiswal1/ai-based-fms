@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { tagsApi, transactionsApi } from '@services/api';
 import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Tag } from 'lucide-react';
 import { useCurrency } from '@/hooks/useCurrency';
+import { StatusBar } from '@/components/ui/StatusBar';
+import { DollarSign } from 'lucide-react';
 
 export default function TagDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -53,6 +56,45 @@ export default function TagDetailPage() {
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + Number(t.amount), 0);
   const totalExpense = transactionsList
+
+  const statusBarItems = useMemo(() => [
+    {
+      id: 'count',
+      label: 'Transactions',
+      value: transactionCount,
+      icon: Calendar,
+      color: '#3b82f6',
+    },
+    {
+      id: 'income',
+      label: 'Income',
+      value: formatLocale(totalIncome),
+      icon: TrendingUp,
+      color: '#10b981',
+      details: [
+        { label: 'Total Income', value: formatLocale(totalIncome) },
+        { label: 'Income Count', value: transactionsList.filter(t => t.type === 'income').length },
+      ],
+    },
+    {
+      id: 'expense',
+      label: 'Expense',
+      value: formatLocale(totalExpense),
+      icon: TrendingDown,
+      color: '#ef4444',
+      details: [
+        { label: 'Total Expense', value: formatLocale(totalExpense) },
+        { label: 'Expense Count', value: transactionsList.filter(t => t.type === 'expense').length },
+      ],
+    },
+    {
+      id: 'net',
+      label: 'Net',
+      value: formatLocale(Math.abs(totalIncome - totalExpense)),
+      icon: (totalIncome - totalExpense) >= 0 ? TrendingUp : TrendingDown,
+      color: (totalIncome - totalExpense) >= 0 ? '#10b981' : '#ef4444',
+    },
+  ], [transactionCount, totalIncome, totalExpense, transactionsList, formatLocale]);
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
@@ -80,48 +122,6 @@ export default function TagDetailPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-              <Calendar className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{transactionCount}</p>
-              <p className="text-sm text-muted-foreground">Transactions</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/20">
-              <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {formatLocale(totalIncome)}
-              </p>
-              <p className="text-sm text-muted-foreground">Income</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/20">
-              <TrendingDown className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {formatLocale(totalExpense)}
-              </p>
-              <p className="text-sm text-muted-foreground">Expenses</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Transactions List */}
       <div className="space-y-4">
@@ -186,6 +186,9 @@ export default function TagDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Excel-style Status Bar */}
+      {transactionsList.length > 0 && <StatusBar items={statusBarItems} />}
     </div>
   );
 }

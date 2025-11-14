@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote, CheckCircle, Clock, GitCompare, LayoutGrid, Layers } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote, CheckCircle, Clock, GitCompare, LayoutGrid, Layers, TrendingUp } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import AccountModal from '../components/AccountModal';
 import { AccountCardsView } from '../components/AccountCardsView';
@@ -11,6 +11,8 @@ import { accountsApi, exportApi } from '@services/api';
 import { toast } from 'react-hot-toast';
 import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
+import { StatusBar } from '@/components/ui/StatusBar';
+import { useCurrency } from '@/hooks/useCurrency';
 
 type ViewMode = 'grid' | 'cards';
 type ExportFormat = 'csv' | 'pdf';
@@ -122,7 +124,50 @@ export default function AccountsPage() {
     }
   };
 
+  const { formatLocale } = useCurrency();
+
   const totalBalance = accounts?.reduce((sum: number, acc: any) => sum + Number(acc.balance), 0) || 0;
+  const reconciledCount = accounts?.filter((acc: any) => acc.reconciliationStatus === 'reconciled').length || 0;
+  const inProgressCount = accounts?.filter((acc: any) => acc.reconciliationStatus === 'in_progress').length || 0;
+
+  const statusBarItems = useMemo(() => [
+    {
+      id: 'total',
+      label: 'Total Balance',
+      value: formatLocale(totalBalance),
+      icon: TrendingUp,
+      color: '#10b981',
+      details: [
+        { label: 'Total Balance', value: formatLocale(totalBalance) },
+        { label: 'Total Accounts', value: accounts?.length || 0 },
+      ],
+    },
+    {
+      id: 'accounts',
+      label: 'Accounts',
+      value: accounts?.length || 0,
+      icon: Wallet,
+      color: '#3b82f6',
+      details: [
+        { label: 'Bank Accounts', value: accounts?.filter((a: any) => a.type === 'bank').length || 0 },
+        { label: 'Cards', value: accounts?.filter((a: any) => a.type === 'card').length || 0 },
+        { label: 'Wallets', value: accounts?.filter((a: any) => a.type === 'wallet').length || 0 },
+        { label: 'Cash', value: accounts?.filter((a: any) => a.type === 'cash').length || 0 },
+      ],
+    },
+    {
+      id: 'reconciled',
+      label: 'Reconciled',
+      value: reconciledCount,
+      icon: CheckCircle,
+      color: '#10b981',
+      details: [
+        { label: 'Reconciled', value: reconciledCount },
+        { label: 'In Progress', value: inProgressCount },
+        { label: 'Not Reconciled', value: (accounts?.length || 0) - reconciledCount - inProgressCount },
+      ],
+    },
+  ], [totalBalance, accounts, reconciledCount, inProgressCount, formatLocale]);
 
   const getReconciliationBadge = (status: string, lastReconciledAt?: string) => {
     if (status === 'in_progress') {
@@ -202,15 +247,6 @@ export default function AccountsPage() {
                 <span>Add Account</span>
               </button>
             </div>
-          </div>
-
-          {/* Total Balance Card - Responsive */}
-          <div className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-4 sm:p-6 text-white shadow-lg">
-            <p className="text-xs sm:text-sm font-medium opacity-90">Total Balance</p>
-            <p className="mt-2 text-3xl sm:text-4xl font-bold">${totalBalance.toFixed(2)}</p>
-            <p className="mt-2 text-xs sm:text-sm opacity-75">
-              Across {accounts?.length || 0} account(s)
-            </p>
           </div>
         </>
       )}
@@ -362,6 +398,9 @@ export default function AccountsPage() {
         onClose={closeConfirm}
         isLoading={isDeleting}
       />
+
+      {/* Excel-style Status Bar */}
+      {accounts && accounts.length > 0 && <StatusBar items={statusBarItems} />}
     </div>
   );
 }

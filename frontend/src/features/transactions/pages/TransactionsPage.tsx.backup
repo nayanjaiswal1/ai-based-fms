@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsApi, accountsApi, categoriesApi, tagsApi, exportApi } from '@services/api';
-import { Plus, Search, Filter, Download, Upload, Trash2, X, Copy, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { Plus, Search, Filter, Download, Upload, Trash2, X, Copy } from 'lucide-react';
 import TransactionModal from '../components/TransactionModal';
 import TransactionHistoryModal from '../components/TransactionHistoryModal';
 import TransactionCards from '../components/TransactionCards';
@@ -17,8 +17,6 @@ import { toast } from 'react-hot-toast';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
-import { StatusBar } from '@/components/ui/StatusBar';
-import { useCurrency } from '@/hooks/useCurrency';
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
@@ -270,71 +268,9 @@ export default function TransactionsPage() {
     return account?.name || 'Unknown';
   };
 
-  const { formatLocale } = useCurrency();
-
   const activeFiltersCount = Object.keys(filters).filter(
     (key) => filters[key] !== undefined && filters[key] !== ''
   ).length;
-
-  // Calculate metrics for status bar
-  const transactionData = transactions?.data || [];
-  const totalIncome = transactionData
-    .filter((t: any) => t.type === 'income')
-    .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
-  const totalExpense = transactionData
-    .filter((t: any) => t.type === 'expense')
-    .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
-  const netAmount = totalIncome - totalExpense;
-  const unverifiedCount = transactionData.filter((t: any) => !t.isVerified).length;
-
-  const statusBarItems = useMemo(() => [
-    {
-      id: 'count',
-      label: 'Transactions',
-      value: transactionData.length,
-      icon: DollarSign,
-      color: '#3b82f6',
-      details: [
-        { label: 'Total Transactions', value: transactionData.length },
-        { label: 'Income Count', value: transactionData.filter((t: any) => t.type === 'income').length },
-        { label: 'Expense Count', value: transactionData.filter((t: any) => t.type === 'expense').length },
-        { label: 'Unverified', value: unverifiedCount },
-      ],
-    },
-    {
-      id: 'income',
-      label: 'Income',
-      value: formatLocale(totalIncome),
-      icon: TrendingUp,
-      color: '#10b981',
-      details: [
-        { label: 'Total Income', value: formatLocale(totalIncome) },
-        { label: 'Average', value: transactionData.filter((t: any) => t.type === 'income').length > 0 ? formatLocale(totalIncome / transactionData.filter((t: any) => t.type === 'income').length) : formatLocale(0) },
-      ],
-    },
-    {
-      id: 'expense',
-      label: 'Expense',
-      value: formatLocale(totalExpense),
-      icon: TrendingDown,
-      color: '#ef4444',
-      details: [
-        { label: 'Total Expense', value: formatLocale(totalExpense) },
-        { label: 'Average', value: transactionData.filter((t: any) => t.type === 'expense').length > 0 ? formatLocale(totalExpense / transactionData.filter((t: any) => t.type === 'expense').length) : formatLocale(0) },
-      ],
-    },
-    {
-      id: 'net',
-      label: 'Net',
-      value: formatLocale(Math.abs(netAmount)),
-      icon: netAmount >= 0 ? TrendingUp : TrendingDown,
-      color: netAmount >= 0 ? '#10b981' : '#ef4444',
-      details: [
-        { label: 'Net Amount', value: formatLocale(netAmount) },
-        { label: 'Status', value: netAmount >= 0 ? 'Surplus' : 'Deficit' },
-      ],
-    },
-  ], [transactionData, totalIncome, totalExpense, netAmount, unverifiedCount, formatLocale]);
 
   const columns = getTransactionColumns(
     getCategoryName,
@@ -549,9 +485,6 @@ export default function TransactionsPage() {
       )}
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
-
-      {/* Excel-style Status Bar */}
-      {transactionData.length > 0 && <StatusBar items={statusBarItems} />}
     </div>
   );
 }
