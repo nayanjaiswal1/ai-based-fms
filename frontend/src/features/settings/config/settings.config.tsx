@@ -1,7 +1,7 @@
-import { Folder, Tag, Bell, Key, Shield, Monitor, ShieldCheck, Palette } from 'lucide-react';
+import { Folder, Tag, Bell, Key, Shield, Monitor, ShieldCheck, Palette, Download } from 'lucide-react';
 import { TabConfig } from '@components/tabs';
 
-export type SettingsTab = 'appearance' | 'categories' | 'tags' | 'reminders' | 'oauth' | 'security' | 'sessions' | 'privacy';
+export type SettingsTab = 'appearance' | 'categories' | 'tags' | 'reminders' | 'oauth' | 'security' | 'sessions' | 'privacy' | 'export';
 
 export const getSettingsTabs = (): TabConfig[] => [
   {
@@ -23,6 +23,11 @@ export const getSettingsTabs = (): TabConfig[] => [
     id: 'reminders',
     label: 'Reminders',
     icon: <Bell className="h-5 w-5" />,
+  },
+  {
+    id: 'export',
+    label: 'Export Data',
+    icon: <Download className="h-5 w-5" />,
   },
   {
     id: 'oauth',

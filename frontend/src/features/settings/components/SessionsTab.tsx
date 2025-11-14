@@ -101,7 +101,7 @@ export default function SessionsTab() {
     return `${deviceInfo.browser} on ${deviceInfo.os}`;
   };
 
-  const otherSessions = sessions.filter((s) => !s.isCurrent);
+  const otherSessions = Array.isArray(sessions) ? sessions.filter((s) => !s.isCurrent) : [];
 
   return (
     <div className="space-y-6">
@@ -155,7 +155,7 @@ export default function SessionsTab() {
       {/* Sessions List */}
       {!isLoading && !error && (
         <div className="space-y-4">
-          {sessions.map((session) => (
+          {Array.isArray(sessions) && sessions.map((session) => (
             <div
               key={session.id}
               className={`rounded-lg border p-4 ${
@@ -231,7 +231,7 @@ export default function SessionsTab() {
             </div>
           ))}
 
-          {sessions.length === 0 && (
+          {(!Array.isArray(sessions) || sessions.length === 0) && (
             <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
               <Monitor className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-4 font-medium text-gray-900">No active sessions</h3>

@@ -58,7 +58,7 @@ export default function LoginPage() {
 
   const handle2FASubmit = (code: string) => {
     if (code.length === 6) {
-      login2FAMutation.mutate({ email, password, code });
+      login2FAMutation.mutate({ email, password, twoFactorCode: code });
     }
   };
 

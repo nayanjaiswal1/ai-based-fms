@@ -87,7 +87,8 @@ export function useWidgetPreferences() {
     (widgetId: string, updates: Partial<WidgetConfig>) => {
       if (!preferences) return;
 
-      const updatedWidgets = preferences.widgets.map((widget) =>
+      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const updatedWidgets = currentWidgets.map((widget) =>
         widget.id === widgetId ? { ...widget, ...updates } : widget
       );
 
@@ -100,7 +101,8 @@ export function useWidgetPreferences() {
     (widget: WidgetConfig) => {
       if (!preferences) return;
 
-      const updatedWidgets = [...preferences.widgets, widget];
+      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const updatedWidgets = [...currentWidgets, widget];
       updateMutation.mutate({ widgets: updatedWidgets });
     },
     [preferences, updateMutation]
@@ -110,7 +112,8 @@ export function useWidgetPreferences() {
     (widgetId: string) => {
       if (!preferences) return;
 
-      const updatedWidgets = preferences.widgets.filter((w) => w.id !== widgetId);
+      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const updatedWidgets = currentWidgets.filter((w) => w.id !== widgetId);
       updateMutation.mutate({ widgets: updatedWidgets });
     },
     [preferences, updateMutation]
@@ -120,7 +123,8 @@ export function useWidgetPreferences() {
     (widgetId: string) => {
       if (!preferences) return;
 
-      const updatedWidgets = preferences.widgets.map((widget) =>
+      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const updatedWidgets = currentWidgets.map((widget) =>
         widget.id === widgetId ? { ...widget, visible: !widget.visible } : widget
       );
 
@@ -133,7 +137,8 @@ export function useWidgetPreferences() {
     (sourceIndex: number, destinationIndex: number) => {
       if (!preferences) return;
 
-      const widgets = [...preferences.widgets];
+      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const widgets = [...currentWidgets];
       const [removed] = widgets.splice(sourceIndex, 1);
       widgets.splice(destinationIndex, 0, removed);
 
@@ -155,7 +160,7 @@ export function useWidgetPreferences() {
   return {
     preferences,
     widgets: preferences?.widgets || [],
-    visibleWidgets: preferences?.widgets.filter((w) => w.visible) || [],
+    visibleWidgets: preferences?.widgets?.filter((w) => w.visible) || [],
     isLoading,
     error,
     updateWidgets,

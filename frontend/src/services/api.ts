@@ -254,7 +254,14 @@ export const gdprApi = {
 };
 
 export const exportApi = {
-  // Transaction exports
+  // Email-based export (new centralized method)
+  requestEmailExport: (data: {
+    entities: string[];
+    format: string;
+    includeFilters?: boolean;
+  }) => api.post('/export/email', data),
+
+  // Transaction exports (legacy - kept for backward compatibility)
   exportTransactionsCSV: (filters: any) =>
     api.post('/export/transactions/csv', filters, { responseType: 'blob' }),
   exportTransactionsExcel: (filters: any) =>
@@ -262,7 +269,7 @@ export const exportApi = {
   exportTransactionsPDF: (filters: any) =>
     api.post('/export/transactions/pdf', filters, { responseType: 'blob' }),
 
-  // Budget exports
+  // Budget exports (legacy)
   exportBudgetsCSV: (filters: any) =>
     api.post('/export/budgets/csv', filters, { responseType: 'blob' }),
   exportBudgetsExcel: (filters: any) =>

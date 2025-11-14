@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { useAuthStore } from '@/stores/authStore';
 import {
   FeatureFlag,
   SubscriptionTier,
@@ -21,10 +22,22 @@ interface FeatureAccessResult {
  */
 export function useFeatureAccess(feature: FeatureFlag): FeatureAccessResult {
   const { subscription } = useSubscriptionStore();
+  const { user } = useAuthStore();
 
   return useMemo(() => {
-    const userTier = subscription.tier;
-    const allowedTiers = FEATURE_ACCESS[feature];
+    const userTier = subscription?.tier || SubscriptionTier.FREE;
+    const isAdmin = user?.role === 'admin';
+
+    // Admins have access to all features
+    if (isAdmin) {
+      return {
+        hasAccess: true,
+        tier: userTier,
+        requiresUpgrade: false,
+      };
+    }
+
+    const allowedTiers = FEATURE_ACCESS[feature] || [];
     const hasAccess = allowedTiers.includes(userTier);
     const requiredTier = getRequiredTier(feature);
 
@@ -43,7 +56,7 @@ export function useFeatureAccess(feature: FeatureFlag): FeatureAccessResult {
       requiresUpgrade: true,
       reason: `This feature requires ${getTierDisplayName(requiredTier)} plan`,
     };
-  }, [feature, subscription.tier]);
+  }, [feature, subscription?.tier, user?.role]);
 }
 
 /**

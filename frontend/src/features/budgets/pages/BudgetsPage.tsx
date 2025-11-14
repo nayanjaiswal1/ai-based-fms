@@ -1,13 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { budgetsApi, categoriesApi, exportApi } from '@services/api';
+import { budgetsApi, categoriesApi } from '@services/api';
 import { Plus, Edit, Trash2, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import BudgetModal from '../components/BudgetModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { getBudgetProgressColor, getBudgetProgressTextColor, formatBudgetPeriod } from '../config/budgets.config';
-import { ExportButton, ExportFormat } from '@/components/export';
 import { toast } from 'react-hot-toast';
 import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
@@ -127,14 +126,6 @@ export default function BudgetsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <ProtectedAction feature={FeatureFlag.EXPORT_DATA} behavior="disable">
-            <ExportButton
-              entityType="budgets"
-              onExport={handleExport}
-              variant="button"
-              label="Export"
-            />
-          </ProtectedAction>
           <button
             onClick={() => navigate('/budgets/new')}
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"

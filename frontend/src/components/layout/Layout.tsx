@@ -55,7 +55,7 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-secondary transition-colors">
+    <div className="flex h-screen bg-background transition-colors">
       {/* Skip Navigation for accessibility */}
       <SkipNav />
 
@@ -71,7 +71,7 @@ export default function Layout() {
         <Header onMenuClick={handleOpenMobileNav} />
         <main
           id="main-content"
-          className="flex-1 overflow-y-auto bg-secondary p-4 sm:p-6"
+          className="flex-1 overflow-y-auto bg-background p-4 sm:p-6"
           role="main"
           tabIndex={-1}
         >

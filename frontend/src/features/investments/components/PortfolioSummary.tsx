@@ -37,14 +37,19 @@ interface PortfolioSummaryProps {
 }
 
 export function PortfolioSummary({ stats }: PortfolioSummaryProps) {
-  const isROIPositive = stats.totalROI >= 0;
-  const isROIPercentagePositive = stats.totalROIPercentage >= 0;
+  const totalInvested = stats?.totalInvested ?? 0;
+  const totalCurrentValue = stats?.totalCurrentValue ?? 0;
+  const totalROI = stats?.totalROI ?? 0;
+  const totalROIPercentage = stats?.totalROIPercentage ?? 0;
+
+  const isROIPositive = totalROI >= 0;
+  const isROIPercentagePositive = totalROIPercentage >= 0;
 
   return (
     <div className="grid gap-6 md:grid-cols-4">
       <StatCard
         label="Total Invested"
-        value={`$${stats.totalInvested.toFixed(2)}`}
+        value={`$${totalInvested.toFixed(2)}`}
         icon={DollarSign}
         bgColor="bg-blue-100"
         iconColor="text-blue-600"
@@ -52,7 +57,7 @@ export function PortfolioSummary({ stats }: PortfolioSummaryProps) {
 
       <StatCard
         label="Current Value"
-        value={`$${stats.totalCurrentValue.toFixed(2)}`}
+        value={`$${totalCurrentValue.toFixed(2)}`}
         icon={TrendingUp}
         bgColor="bg-green-100"
         iconColor="text-green-600"
@@ -60,7 +65,7 @@ export function PortfolioSummary({ stats }: PortfolioSummaryProps) {
 
       <StatCard
         label="Total Return"
-        value={`${isROIPositive ? '+' : ''}$${stats.totalROI.toFixed(2)}`}
+        value={`${isROIPositive ? '+' : ''}$${totalROI.toFixed(2)}`}
         icon={isROIPositive ? TrendingUp : TrendingDown}
         bgColor={isROIPositive ? 'bg-green-100' : 'bg-red-100'}
         iconColor={isROIPositive ? 'text-green-600' : 'text-red-600'}
@@ -69,7 +74,7 @@ export function PortfolioSummary({ stats }: PortfolioSummaryProps) {
 
       <StatCard
         label="ROI %"
-        value={`${isROIPercentagePositive ? '+' : ''}${stats.totalROIPercentage.toFixed(2)}%`}
+        value={`${isROIPercentagePositive ? '+' : ''}${totalROIPercentage.toFixed(2)}%`}
         icon={Percent}
         bgColor={isROIPercentagePositive ? 'bg-green-100' : 'bg-red-100'}
         iconColor={isROIPercentagePositive ? 'text-green-600' : 'text-red-600'}

@@ -99,9 +99,9 @@ function NavItem({ item, onClick }: NavItemProps) {
     return (
       <Tooltip content="Upgrade to unlock this feature" side="right">
         <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground/60 cursor-not-allowed">
-          <item.icon className="h-5 w-5" aria-hidden="true" />
-          <span>{item.name}</span>
-          <Lock className="h-3 w-3 ml-auto" aria-hidden="true" />
+          <item.icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+          <span className="truncate">{item.name}</span>
+          <Lock className="h-3 w-3 ml-auto flex-shrink-0" aria-hidden="true" />
         </div>
       </Tooltip>
     );
@@ -119,8 +119,8 @@ function NavItem({ item, onClick }: NavItemProps) {
         }`
       }
     >
-      <item.icon className="h-5 w-5" aria-hidden="true" />
-      <span>{item.name}</span>
+      <item.icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+      <span className="truncate">{item.name}</span>
     </NavLink>
   );
 }
@@ -174,7 +174,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="flex w-64 flex-col border-r bg-background transition-colors">
+    <div className="flex w-64 flex-col border-r bg-background transition-colors overflow-hidden">
       {/* Header */}
       <div className="flex h-16 items-center border-b px-6">
         <h2 className="text-xl font-bold text-foreground" aria-label="Finance Management System">
@@ -183,7 +183,7 @@ export default function Sidebar() {
       </div>
 
       {/* Scrollable navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Main navigation">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4" aria-label="Main navigation">
         {/* Core Navigation (always visible) */}
         <div className="space-y-1 mb-4">
           {coreNavigation.map((item) => (

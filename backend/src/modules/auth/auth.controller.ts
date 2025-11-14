@@ -250,6 +250,20 @@ export class AuthController {
     return this.authService.resetPassword(passwordResetDto);
   }
 
+  // ==================== Get Current User ====================
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user' })
+  @ApiResponse({ status: 200, description: 'Returns current user data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getCurrentUser(@CurrentUser() user: any) {
+    return {
+      user,
+    };
+  }
+
   // ==================== Logout Endpoint ====================
 
   @Post('logout')

@@ -34,6 +34,7 @@ const AppearanceTab = lazy(() => import('@features/settings/components/Appearanc
 const CategoriesTab = lazy(() => import('@features/settings/components/CategoriesTab'));
 const TagsTab = lazy(() => import('@features/settings/components/TagsTab'));
 const RemindersTab = lazy(() => import('@features/settings/components/RemindersTab'));
+const ExportTab = lazy(() => import('@features/settings/components/ExportTab'));
 const OAuthTab = lazy(() => import('@features/settings/components/OAuthTab'));
 const SecurityTab = lazy(() => import('@features/settings/components/SecurityTab'));
 const SessionsTab = lazy(() => import('@features/settings/components/SessionsTab'));
@@ -251,6 +252,10 @@ export const protectedRoutes: RouteObject[] = [
       {
         path: 'reminders',
         element: <RemindersTab />,
+      },
+      {
+        path: 'export',
+        element: <ExportTab />,
       },
       {
         path: 'oauth',

@@ -6,7 +6,6 @@ import { DATE_PRESETS, getDateRangeFromPreset, type DatePreset } from '../config
 import { SummaryCards } from '@components/cards';
 import { getAnalyticsSummaryCards } from '../config/analyticsSummary.config';
 import { useUrlParams } from '@/hooks/useUrlParams';
-import { ExportButton, ExportFormat } from '@/components/export';
 import { toast } from 'react-hot-toast';
 
 export default function AnalyticsPage() {
@@ -117,14 +116,6 @@ export default function AnalyticsPage() {
             Insights and trends for your financial data
           </p>
         </div>
-        <ExportButton
-          entityType="analytics"
-          filters={{ startDate, endDate }}
-          onExport={handleExport}
-          formats={['csv', 'pdf']}
-          variant="button"
-          label="Export Report"
-        />
       </div>
 
       {/* Date Range Selector */}
@@ -175,19 +166,19 @@ export default function AnalyticsPage() {
       {netWorth?.data && (
         <div className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white shadow-lg">
           <h2 className="text-lg font-semibold">Net Worth</h2>
-          <p className="mt-2 text-4xl font-bold">${netWorth.data.netWorth.toFixed(2)}</p>
+          <p className="mt-2 text-4xl font-bold">${(netWorth.data.netWorth ?? 0).toFixed(2)}</p>
           <div className="mt-4 grid grid-cols-3 gap-4">
             <div>
               <p className="text-sm opacity-75">Assets</p>
-              <p className="text-xl font-semibold">${netWorth.data.totalAssets.toFixed(2)}</p>
+              <p className="text-xl font-semibold">${(netWorth.data.totalAssets ?? 0).toFixed(2)}</p>
             </div>
             <div>
               <p className="text-sm opacity-75">Liabilities</p>
-              <p className="text-xl font-semibold">${netWorth.data.totalLiabilities.toFixed(2)}</p>
+              <p className="text-xl font-semibold">${(netWorth.data.totalLiabilities ?? 0).toFixed(2)}</p>
             </div>
             <div>
               <p className="text-sm opacity-75">Investments</p>
-              <p className="text-xl font-semibold">${netWorth.data.totalInvestments.toFixed(2)}</p>
+              <p className="text-xl font-semibold">${(netWorth.data.totalInvestments ?? 0).toFixed(2)}</p>
             </div>
           </div>
         </div>
@@ -202,13 +193,13 @@ export default function AnalyticsPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-gray-900">{category.categoryName}</span>
                 <span className="text-gray-600">
-                  ${category.amount.toFixed(2)} ({category.percentage.toFixed(1)}%)
+                  ${(category.amount ?? 0).toFixed(2)} ({(category.percentage ?? 0).toFixed(1)}%)
                 </span>
               </div>
               <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200">
                 <div
                   className="h-full bg-blue-600"
-                  style={{ width: `${Math.min(category.percentage, 100)}%` }}
+                  style={{ width: `${Math.min(category.percentage ?? 0, 100)}%` }}
                 />
               </div>
             </div>
@@ -234,17 +225,17 @@ export default function AnalyticsPage() {
                   <span className="text-sm font-medium text-gray-900">{month.month}</span>
                   <div className="flex gap-4 text-sm">
                     <span className="text-green-600">
-                      Income: ${month.income.toFixed(2)}
+                      Income: ${(month.income ?? 0).toFixed(2)}
                     </span>
                     <span className="text-red-600">
-                      Expenses: ${month.expense.toFixed(2)}
+                      Expenses: ${(month.expense ?? 0).toFixed(2)}
                     </span>
                     <span
                       className={`font-semibold ${
-                        month.savings >= 0 ? 'text-blue-600' : 'text-yellow-600'
+                        (month.savings ?? 0) >= 0 ? 'text-blue-600' : 'text-yellow-600'
                       }`}
                     >
-                      Savings: ${month.savings.toFixed(2)}
+                      Savings: ${(month.savings ?? 0).toFixed(2)}
                     </span>
                   </div>
                 </div>

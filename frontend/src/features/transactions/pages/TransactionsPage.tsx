@@ -13,7 +13,6 @@ import { DataTable } from '@components/table';
 import { VirtualTable } from '@/components/virtual';
 import { getTransactionColumns } from '../config/transactionTable.config';
 import { useUrlParams } from '@/hooks/useUrlParams';
-import { ExportButton, ExportFormat } from '@/components/export';
 import { toast } from 'react-hot-toast';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
@@ -312,16 +311,6 @@ export default function TransactionsPage() {
               <Upload className="h-4 w-4" />
               Import
             </button>
-          </ProtectedAction>
-
-          <ProtectedAction feature={FeatureFlag.EXPORT_DATA} behavior="disable">
-            <ExportButton
-              entityType="transactions"
-              filters={filters}
-              onExport={handleExport}
-              variant="button"
-              label={isMobile ? undefined : 'Export'}
-            />
           </ProtectedAction>
 
           <button

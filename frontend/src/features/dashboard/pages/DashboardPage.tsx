@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { accountsApi, transactionsApi, budgetsApi, investmentsApi, groupsApi, analyticsApi, exportApi } from '@services/api';
+import { accountsApi, transactionsApi, budgetsApi, investmentsApi, groupsApi, analyticsApi } from '@services/api';
 import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp } from 'lucide-react';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { ExportButton, ExportFormat } from '@/components/export';
 import { toast } from 'react-hot-toast';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
@@ -214,13 +213,6 @@ export default function DashboardPage() {
           <DashboardCustomizer
             isCustomizing={isCustomizing}
             onToggleCustomizing={() => setIsCustomizing(!isCustomizing)}
-          />
-          <ExportButton
-            entityType="analytics"
-            onExport={handleExport}
-            formats={['pdf']}
-            variant="button"
-            label="Export Report"
           />
         </div>
       </div>
