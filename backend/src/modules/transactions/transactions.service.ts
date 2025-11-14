@@ -194,71 +194,78 @@ export class TransactionsService {
    * Merge duplicate transactions
    */
   async mergeTransactions(userId: string, primaryTransactionId: string, duplicateTransactionIds: string[]) {
-    // Validate primary transaction
-    const primaryTransaction = await this.transactionRepository.findOne({
-      where: { id: primaryTransactionId, userId, isDeleted: false },
-    });
+    return await this.dataSource.transaction(async (manager) => {
+      const transactionRepo = manager.getRepository(Transaction);
+      const accountRepo = manager.getRepository(Account);
 
-    if (!primaryTransaction) {
-      throw new NotFoundException('Primary transaction not found');
-    }
-
-    if (primaryTransaction.isMerged) {
-      throw new BadRequestException('Cannot merge into an already merged transaction');
-    }
-
-    // Validate duplicate transactions
-    const duplicateTransactions = await this.transactionRepository.find({
-      where: {
-        id: In(duplicateTransactionIds),
-        userId,
-        isDeleted: false,
-      },
-    });
-
-    if (duplicateTransactions.length !== duplicateTransactionIds.length) {
-      throw new BadRequestException('Some duplicate transactions not found or do not belong to user');
-    }
-
-    // Check if any duplicate is already merged
-    const alreadyMerged = duplicateTransactions.find(t => t.isMerged);
-    if (alreadyMerged) {
-      throw new BadRequestException('Cannot merge already merged transactions');
-    }
-
-    // Mark duplicates as merged
-    const now = new Date();
-    for (const duplicate of duplicateTransactions) {
-      duplicate.isMerged = true;
-      duplicate.mergedIntoId = primaryTransactionId;
-      duplicate.mergedAt = now;
-
-      // Reverse balance change for merged transaction
-      const balanceChange = duplicate.type === 'expense' ? -duplicate.amount : duplicate.amount;
-      await this.accountsService.updateBalance(duplicate.accountId, -balanceChange);
-    }
-
-    await this.transactionRepository.save(duplicateTransactions);
-
-    // Create audit log for each merged transaction
-    for (const duplicate of duplicateTransactions) {
-      await this.auditService.createAuditLog({
-        userId,
-        action: AuditAction.UPDATE,
-        entityType: 'Transaction',
-        entityId: duplicate.id,
-        oldValues: this.serializeTransaction(duplicate),
-        newValues: { ...this.serializeTransaction(duplicate), isMerged: true, mergedIntoId: primaryTransactionId },
-        description: `Merged transaction into ${primaryTransaction.description || primaryTransactionId}`,
+      // Validate primary transaction
+      const primaryTransaction = await transactionRepo.findOne({
+        where: { id: primaryTransactionId, userId, isDeleted: false },
       });
-    }
 
-    // Return the primary transaction with merge info
-    return {
-      ...primaryTransaction,
-      mergedCount: duplicateTransactionIds.length,
-      mergedTransactionIds: duplicateTransactionIds,
-    };
+      if (!primaryTransaction) {
+        throw new NotFoundException('Primary transaction not found');
+      }
+
+      if (primaryTransaction.isMerged) {
+        throw new BadRequestException('Cannot merge into an already merged transaction');
+      }
+
+      // Validate duplicate transactions
+      const duplicateTransactions = await transactionRepo.find({
+        where: {
+          id: In(duplicateTransactionIds),
+          userId,
+          isDeleted: false,
+        },
+      });
+
+      if (duplicateTransactions.length !== duplicateTransactionIds.length) {
+        throw new BadRequestException('Some duplicate transactions not found or do not belong to user');
+      }
+
+      // Check if any duplicate is already merged
+      const alreadyMerged = duplicateTransactions.find(t => t.isMerged);
+      if (alreadyMerged) {
+        throw new BadRequestException('Cannot merge already merged transactions');
+      }
+
+      // Mark duplicates as merged and reverse balances atomically
+      const now = new Date();
+      for (const duplicate of duplicateTransactions) {
+        duplicate.isMerged = true;
+        duplicate.mergedIntoId = primaryTransactionId;
+        duplicate.mergedAt = now;
+
+        // Reverse balance change for merged transaction atomically
+        const balanceChange = duplicate.type === 'expense' ? -duplicate.amount : duplicate.amount;
+        await accountRepo.increment({ id: duplicate.accountId }, 'balance', -balanceChange);
+      }
+
+      await transactionRepo.save(duplicateTransactions);
+
+      // Create audit logs after transaction commits
+      setImmediate(async () => {
+        for (const duplicate of duplicateTransactions) {
+          await this.auditService.createAuditLog({
+            userId,
+            action: AuditAction.UPDATE,
+            entityType: 'Transaction',
+            entityId: duplicate.id,
+            oldValues: this.serializeTransaction(duplicate),
+            newValues: { ...this.serializeTransaction(duplicate), isMerged: true, mergedIntoId: primaryTransactionId },
+            description: `Merged transaction into ${primaryTransaction.description || primaryTransactionId}`,
+          });
+        }
+      });
+
+      // Return the primary transaction with merge info
+      return {
+        ...primaryTransaction,
+        mergedCount: duplicateTransactionIds.length,
+        mergedTransactionIds: duplicateTransactionIds,
+      };
+    });
   }
 
   /**

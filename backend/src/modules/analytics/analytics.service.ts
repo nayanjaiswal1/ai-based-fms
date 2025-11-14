@@ -93,29 +93,29 @@ export class AnalyticsService {
         endDate: endDate.toISOString().split('T')[0],
       },
       summary: {
-        totalIncome: Number(income.toFixed(2)),
-        totalExpenses: Number(expenses.toFixed(2)),
-        netCashFlow: Number((income - expenses).toFixed(2)),
-        savingsRate: income > 0 ? Number((((income - expenses) / income) * 100).toFixed(2)) : 0,
+        totalIncome: Math.round(income * 100) / 100,
+        totalExpenses: Math.round(expenses * 100) / 100,
+        netCashFlow: Math.round((income - expenses) * 100) / 100,
+        savingsRate: income > 0 ? Math.round(((income - expenses) / income) * 10000) / 100 : 0,
       },
       accounts: {
-        totalBalance: Number(totalBalance.toFixed(2)),
+        totalBalance: Math.round(totalBalance * 100) / 100,
         count: accounts.length,
       },
       budgets: {
-        totalBudgeted: Number(totalBudgeted.toFixed(2)),
-        totalSpent: Number(totalSpent.toFixed(2)),
-        remaining: Number((totalBudgeted - totalSpent).toFixed(2)),
-        utilizationRate: totalBudgeted > 0 ? Number(((totalSpent / totalBudgeted) * 100).toFixed(2)) : 0,
+        totalBudgeted: Math.round(totalBudgeted * 100) / 100,
+        totalSpent: Math.round(totalSpent * 100) / 100,
+        remaining: Math.round((totalBudgeted - totalSpent) * 100) / 100,
+        utilizationRate: totalBudgeted > 0 ? Math.round((totalSpent / totalBudgeted) * 10000) / 100 : 0,
       },
       investments: {
-        totalValue: Number(totalInvested.toFixed(2)),
+        totalValue: Math.round(totalInvested * 100) / 100,
         count: investments.length,
       },
       lendBorrow: {
-        totalLent: Number(lentAmount.toFixed(2)),
-        totalBorrowed: Number(borrowedAmount.toFixed(2)),
-        netPosition: Number((lentAmount - borrowedAmount).toFixed(2)),
+        totalLent: Math.round(lentAmount * 100) / 100,
+        totalBorrowed: Math.round(borrowedAmount * 100) / 100,
+        netPosition: Math.round((lentAmount - borrowedAmount) * 100) / 100,
       },
     };
   }
@@ -167,7 +167,7 @@ export class AnalyticsService {
       .map(([id, data]) => ({
         categoryId: id !== 'uncategorized' ? id : null,
         categoryName: data.name,
-        amount: Number(data.amount.toFixed(2)),
+        amount: Math.round(data.amount * 100) / 100,
         transactionCount: data.count,
         percentage: totalSpent > 0 ? Number(((data.amount / totalSpent) * 100).toFixed(2)) : 0,
       }))
@@ -178,7 +178,7 @@ export class AnalyticsService {
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
       },
-      totalSpent: Number(totalSpent.toFixed(2)),
+      totalSpent: Math.round(totalSpent * 100) / 100,
       categories,
     };
   }
@@ -229,7 +229,7 @@ export class AnalyticsService {
       .map(([id, data]) => ({
         categoryId: id !== 'uncategorized' ? id : null,
         categoryName: data.name,
-        amount: Number(data.amount.toFixed(2)),
+        amount: Math.round(data.amount * 100) / 100,
         transactionCount: data.count,
         percentage: totalIncome > 0 ? Number(((data.amount / totalIncome) * 100).toFixed(2)) : 0,
       }))
@@ -240,7 +240,7 @@ export class AnalyticsService {
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
       },
-      totalIncome: Number(totalIncome.toFixed(2)),
+      totalIncome: Math.round(totalIncome * 100) / 100,
       categories,
     };
   }
@@ -284,8 +284,8 @@ export class AnalyticsService {
     const trends = Array.from(monthlyData.entries())
       .map(([month, data]) => ({
         month,
-        income: Number(data.income.toFixed(2)),
-        expenses: Number(data.expenses.toFixed(2)),
+        income: Math.round(data.income * 100) / 100,
+        expenses: Math.round(data.expenses * 100) / 100,
         netCashFlow: Number((data.income - data.expenses).toFixed(2)),
         savingsRate: data.income > 0 ? Number((((data.income - data.expenses) / data.income) * 100).toFixed(2)) : 0,
       }))
@@ -338,7 +338,7 @@ export class AnalyticsService {
     const trends = Array.from(monthlyData.entries())
       .map(([month, data]) => ({
         month,
-        amount: Number(data.amount.toFixed(2)),
+        amount: Math.round(data.amount * 100) / 100,
         transactionCount: data.count,
         averagePerTransaction: data.count > 0 ? Number((data.amount / data.count).toFixed(2)) : 0,
       }))
@@ -428,14 +428,14 @@ export class AnalyticsService {
 
       trends.push({
         month,
-        balance: Number(balance.toFixed(2)),
+        balance: Math.round(balance * 100) / 100,
       });
     }
 
     return {
       accountId,
       accountName: account.name,
-      currentBalance: Number(account.balance.toFixed(2)),
+      currentBalance: Math.round(account.balance * 100) / 100,
       period: {
         months,
         startDate: startDate.toISOString().split('T')[0],
@@ -498,16 +498,16 @@ export class AnalyticsService {
       currentPeriod: {
         startDate: currentStart.toISOString().split('T')[0],
         endDate: currentEnd.toISOString().split('T')[0],
-        income: Number(currentIncome.toFixed(2)),
-        expenses: Number(currentExpenses.toFixed(2)),
+        income: Math.round(currentIncome * 100) / 100,
+        expenses: Math.round(currentExpenses * 100) / 100,
         netCashFlow: Number((currentIncome - currentExpenses).toFixed(2)),
         transactionCount: currentTransactions.length,
       },
       previousPeriod: {
         startDate: previousStart.toISOString().split('T')[0],
         endDate: previousEnd.toISOString().split('T')[0],
-        income: Number(previousIncome.toFixed(2)),
-        expenses: Number(previousExpenses.toFixed(2)),
+        income: Math.round(previousIncome * 100) / 100,
+        expenses: Math.round(previousExpenses * 100) / 100,
         netCashFlow: Number((previousIncome - previousExpenses).toFixed(2)),
         transactionCount: previousTransactions.length,
       },
@@ -612,7 +612,7 @@ export class AnalyticsService {
       .reverse()
       .map(([month, netWorth]) => ({
         month,
-        netWorth: Number(netWorth.toFixed(2)),
+        netWorth: Math.round(netWorth * 100) / 100,
       }));
 
     // Calculate change
@@ -625,15 +625,15 @@ export class AnalyticsService {
 
     return {
       current: {
-        netWorth: Number(currentNetWorth.toFixed(2)),
-        accounts: Number(currentNetWorth.toFixed(2)),
-        investments: Number(investmentsValue.toFixed(2)),
-        lendBorrow: Number(lendBorrowBalance.toFixed(2)),
+        netWorth: Math.round(currentNetWorth * 100) / 100,
+        accounts: Math.round(currentNetWorth * 100) / 100,
+        investments: Math.round(investmentsValue * 100) / 100,
+        lendBorrow: Math.round(lendBorrowBalance * 100) / 100,
         total: Number((currentNetWorth + investmentsValue + lendBorrowBalance).toFixed(2)),
       },
       change: {
-        amount: Number(totalChange.toFixed(2)),
-        percentage: Number(percentageChange.toFixed(2)),
+        amount: Math.round(totalChange * 100) / 100,
+        percentage: Math.round(percentageChange * 100) / 100,
         trend: totalChange >= 0 ? 'up' : 'down',
       },
       trends,

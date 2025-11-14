@@ -92,6 +92,9 @@ export class User {
   @Column({ default: false })
   twoFactorEnabled: boolean;
 
+  @Column({ type: 'simple-array', nullable: true })
+  twoFactorBackupCodes: string[];
+
   @Column({ nullable: true })
   refreshToken: string;
 

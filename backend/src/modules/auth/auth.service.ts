@@ -343,16 +343,20 @@ export class AuthService {
       throw new UnauthorizedException('Invalid 2FA code');
     }
 
-    // Enable 2FA
+    // Generate and hash backup codes
+    const backupCodes = this.generateBackupCodes();
+    const hashedCodes = await Promise.all(
+      backupCodes.map(code => bcrypt.hash(code, 10))
+    );
+
+    // Enable 2FA and save backup codes
     user.twoFactorEnabled = true;
+    user.twoFactorBackupCodes = hashedCodes;
     await this.userRepository.save(user);
 
-    // Generate backup codes
-    const backupCodes = this.generateBackupCodes();
-
     return {
-      message: '2FA successfully enabled',
-      backupCodes,
+      message: '2FA successfully enabled. Save these backup codes in a safe place.',
+      backupCodes, // Show unhashed codes to user (only this once!)
     };
   }
 
@@ -382,6 +386,7 @@ export class AuthService {
     // Disable 2FA
     user.twoFactorEnabled = false;
     user.twoFactorSecret = null;
+    user.twoFactorBackupCodes = null;
     await this.userRepository.save(user);
 
     return {
