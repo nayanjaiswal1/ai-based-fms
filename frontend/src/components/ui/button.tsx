@@ -16,7 +16,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:shadow-sm active:scale-95',
       ghost: 'hover:bg-accent/20 hover:text-accent active:scale-95',
       link: 'underline-offset-4 hover:underline text-primary hover:text-primary/80',
-      gradient: 'bg-gradient-primary text-primary-foreground hover:shadow-glow-md active:scale-95 before:absolute before:inset-0 before:bg-white/20 before:translate-y-full before:transition-transform before:duration-300 hover:before:translate-y-0',
+      gradient: 'bg-gradient-primary text-primary-foreground hover:shadow-glow-md active:scale-95 before:absolute before:inset-0 before:bg-white/20 before:translate-y-full before:transition-transform before:duration-300 before:pointer-events-none hover:before:translate-y-0',
     };
 
     const sizeStyles = {

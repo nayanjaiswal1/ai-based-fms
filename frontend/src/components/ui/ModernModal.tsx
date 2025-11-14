@@ -75,12 +75,12 @@ export function ModernModal({
   return (
     <div
       className={`fixed inset-0 z-50 flex ${isMobile && fullScreenOnMobile ? 'items-stretch' : 'items-center justify-center'}`}
-      onClick={closeOnOverlayClick ? onClose : undefined}
       role="presentation"
     >
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        onClick={closeOnOverlayClick ? onClose : undefined}
         aria-hidden="true"
       />
 
