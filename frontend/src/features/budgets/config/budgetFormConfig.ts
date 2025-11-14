@@ -14,6 +14,7 @@ export const budgetSchema = z.object({
   type: z.enum(['category', 'tag', 'overall', 'group'], {
     required_error: 'Type is required',
   }),
+  budgetMonth: z.string().optional(), // Format: YYYY-MM
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
   categoryId: z.string().optional(),
@@ -42,6 +43,17 @@ function calculateEndDate(startDate: string, period: string): string {
     default:
       return format(start, 'yyyy-MM-dd');
   }
+}
+
+function calculateDatesFromMonth(budgetMonth: string): { startDate: string; endDate: string } {
+  const [year, month] = budgetMonth.split('-').map(Number);
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0); // Last day of month
+
+  return {
+    startDate: format(startDate, 'yyyy-MM-dd'),
+    endDate: format(endDate, 'yyyy-MM-dd'),
+  };
 }
 
 export function getBudgetFormConfig(budget?: any, categories?: any[]): FormConfig<BudgetFormData> {
