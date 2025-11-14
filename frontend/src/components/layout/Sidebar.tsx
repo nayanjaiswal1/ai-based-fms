@@ -59,9 +59,7 @@ const navigationGroups = [
     label: 'Analysis',
     defaultOpen: false,
     items: [
-      { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: FeatureFlag.ADVANCED_ANALYTICS },
-      { name: 'Insights', href: '/insights', icon: Lightbulb, feature: FeatureFlag.INSIGHTS },
-      { name: 'Reports', href: '/reports', icon: FileText, feature: FeatureFlag.BASIC_REPORTS },
+      { name: 'Analytics & Reports', href: '/analytics', icon: BarChart3, feature: FeatureFlag.ADVANCED_ANALYTICS },
     ],
   },
   {

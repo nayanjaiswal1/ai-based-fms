@@ -56,19 +56,27 @@ export default function Modal({
           }
         }}
       >
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0 px-6 pt-6">
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        {/* Add horizontal line below header */}
+        <div className="border-t border-border/50 flex-shrink-0" />
+
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
           {children}
         </div>
 
+        {/* Fixed footer at bottom */}
         {footer && (
-          <DialogFooter className="border-t border-border/50 pt-4 px-6 pb-6">
-            {footer}
-          </DialogFooter>
+          <>
+            <div className="border-t border-border/50 flex-shrink-0" />
+            <DialogFooter className="flex-shrink-0 px-6 py-4 bg-muted/30">
+              {footer}
+            </DialogFooter>
+          </>
         )}
       </DialogContent>
     </Dialog>

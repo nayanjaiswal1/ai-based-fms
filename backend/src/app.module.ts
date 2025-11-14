@@ -32,7 +32,7 @@ import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { AiModule } from '@modules/ai/ai.module';
 import { ImportModule } from '@modules/import/import.module';
 // import { EmailModule } from '@modules/email/email.module';
-// import { ChatModule } from '@modules/chat/chat.module';
+import { ChatModule } from '@modules/chat/chat.module';
 import { AdminModule } from '@modules/admin/admin.module';
 import { SessionsModule } from '@modules/sessions/sessions.module';
 import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module';
@@ -103,7 +103,7 @@ import { DashboardPreferencesModule } from '@modules/dashboard-preferences/dashb
     // InsightsModule,
     ImportModule,
     // EmailModule,
-    // ChatModule,
+    ChatModule,
     AdminModule,
     SessionsModule,
     SubscriptionsModule,

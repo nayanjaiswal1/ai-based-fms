@@ -16,16 +16,17 @@ const ReconciliationPage = lazy(() =>
 const BudgetsPage = lazy(() => import('@features/budgets/pages/BudgetsPage'));
 const AIBudgetWizardPage = lazy(() => import('@features/budgets/pages/AIBudgetWizardPage'));
 const GroupsPage = lazy(() => import('@features/groups/pages/GroupsPage'));
+const GroupDetailPage = lazy(() => import('@features/groups/pages/GroupDetailPage'));
 const InvestmentsPage = lazy(() => import('@features/investments/pages/InvestmentsPage'));
 const LendBorrowPage = lazy(() => import('@features/lend-borrow/pages/LendBorrowPage'));
-const AnalyticsPage = lazy(() => import('@features/analytics/pages/AnalyticsPage'));
-const InsightsDashboardPage = lazy(() => import('@features/insights/pages/InsightsDashboardPage'));
-const ReportsPage = lazy(() => import('@features/reports/pages/ReportsPage'));
+const CombinedAnalyticsPage = lazy(() => import('@features/analytics/pages/CombinedAnalyticsPage'));
 const AIPage = lazy(() => import('@features/ai/pages/AIPage'));
 const ImportPage = lazy(() => import('@features/import/pages/ImportPage'));
 const EmailPage = lazy(() => import('@features/email/pages/EmailPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/pages/NotificationsPage'));
 const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage'));
+const CategoryDetailPage = lazy(() => import('@features/settings/pages/CategoryDetailPage'));
+const TagDetailPage = lazy(() => import('@features/settings/pages/TagDetailPage'));
 const ActivityLogPage = lazy(() => import('@features/audit/pages/ActivityLogPage'));
 const JobsPage = lazy(() => import('@features/admin/pages/JobsPage'));
 const GoodbyePage = lazy(() => import('../pages/GoodbyePage'));
@@ -119,6 +120,14 @@ export const protectedRoutes: RouteObject[] = [
     ),
   },
   {
+    path: '/groups/:id',
+    element: (
+      <FeatureGate feature={FeatureFlag.GROUPS}>
+        <GroupDetailPage />
+      </FeatureGate>
+    ),
+  },
+  {
     path: '/groups/edit/:id',
     element: (
       <FeatureGate feature={FeatureFlag.GROUPS}>
@@ -178,23 +187,7 @@ export const protectedRoutes: RouteObject[] = [
     path: '/analytics',
     element: (
       <FeatureGate feature={FeatureFlag.ADVANCED_ANALYTICS}>
-        <AnalyticsPage />
-      </FeatureGate>
-    ),
-  },
-  {
-    path: '/insights',
-    element: (
-      <FeatureGate feature={FeatureFlag.INSIGHTS}>
-        <InsightsDashboardPage />
-      </FeatureGate>
-    ),
-  },
-  {
-    path: '/reports',
-    element: (
-      <FeatureGate feature={FeatureFlag.BASIC_REPORTS}>
-        <ReportsPage />
+        <CombinedAnalyticsPage />
       </FeatureGate>
     ),
   },
@@ -233,6 +226,14 @@ export const protectedRoutes: RouteObject[] = [
   {
     path: '/admin/jobs',
     element: <JobsPage />,
+  },
+  {
+    path: '/categories/:id',
+    element: <CategoryDetailPage />,
+  },
+  {
+    path: '/tags/:id',
+    element: <TagDetailPage />,
   },
   {
     path: '/settings',
