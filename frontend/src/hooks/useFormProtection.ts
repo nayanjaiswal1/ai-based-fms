@@ -12,6 +12,12 @@ export interface FormProtectionOptions {
    * @default 'You have unsaved changes. Are you sure you want to close?'
    */
   confirmMessage?: string;
+
+  /**
+   * Custom confirm function (e.g., from useConfirm hook)
+   * If not provided, will use default window.confirm (not recommended)
+   */
+  onConfirm?: (message: string) => Promise<boolean>;
 }
 
 export function useFormProtection(options: FormProtectionOptions = {}) {
@@ -38,11 +44,16 @@ export function useFormProtection(options: FormProtectionOptions = {}) {
    * Check if close action should be allowed
    * Returns true if safe to close, false if should block
    */
-  const checkBeforeClose = useCallback(() => {
+  const checkBeforeClose = useCallback(async () => {
     if (!isDirty) return true;
 
+    if (options.onConfirm) {
+      return await options.onConfirm(confirmMessageRef.current);
+    }
+
+    // Fallback to window.confirm if no custom confirm provided
     return window.confirm(confirmMessageRef.current);
-  }, [isDirty]);
+  }, [isDirty, options]);
 
   /**
    * Mark form as dirty (has unsaved changes)
