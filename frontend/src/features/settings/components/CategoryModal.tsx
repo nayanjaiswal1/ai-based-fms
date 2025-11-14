@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { categoriesApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
+import { useFormProtection } from '@hooks/useFormProtection';
 import { getCategoryFormConfig, CategoryFormData } from '../../categories/config/categoryFormConfig';
 
 interface CategoryModalProps {
@@ -21,6 +22,11 @@ export default function CategoryModal({ category, isOpen, onClose }: CategoryMod
   // Get form config
   const formConfig = getCategoryFormConfig(category, categories?.data || []);
 
+  // Form protection to prevent accidental data loss
+  const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
+    confirmMessage: 'You have unsaved changes. Are you sure you want to close this form?',
+  });
+
   // Use entity form hook
   const { handleSubmit, isLoading } = useEntityForm<CategoryFormData>({
     api: {
@@ -29,16 +35,20 @@ export default function CategoryModal({ category, isOpen, onClose }: CategoryMod
     },
     queryKey: ['categories'],
     entityId: category?.id,
-    onSuccess: onClose,
+    onSuccess: () => {
+      reset(); // Clear dirty state on successful submit
+      onClose();
+    },
   });
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
       description={formConfig.description}
       size="lg"
+      onBeforeClose={checkBeforeClose}
     >
       <ConfigurableForm
         config={formConfig}
@@ -46,7 +56,8 @@ export default function CategoryModal({ category, isOpen, onClose }: CategoryMod
         isLoading={isLoading}
         onCancel={onClose}
         submitLabel={category ? 'Update Category' : 'Add Category'}
+        onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

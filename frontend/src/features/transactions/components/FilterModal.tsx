@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { accountsApi, categoriesApi, tagsApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { DateFilters } from './filters/DateFilters';
 import { AmountFilters } from './filters/AmountFilters';
 
@@ -63,7 +63,7 @@ export default function FilterModal({ filters, isOpen, onApply, onClose }: Filte
   };
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title="Filter Transactions"
@@ -187,6 +187,6 @@ export default function FilterModal({ filters, isOpen, onApply, onClose }: Filte
           </button>
         </div>
       </div>
-    </ModernModal>
+    </Modal>
   );
 }

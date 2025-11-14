@@ -1,61 +1,98 @@
+/* Import distinctive Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700;800&family=Lexend:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Light Theme */
-    --background: 0 0% 100%; /* White */
-    --foreground: 222.2 47.4% 11.2%; /* Dark Gray/Black */
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 222.2 47.4% 11.2%; /* Dark Gray */
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 222.2 47.4% 11.2%; /* Dark Gray */
-    --primary: 217.2 91.2% 59.8%; /* Blue #3B82F6 */
-    --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 220 14.3% 95.9%; /* Light Gray #F3F4F6 */
-    --secondary-foreground: 222.2 47.4% 11.2%; /* Dark Gray */
-    --muted: 220 14.3% 95.9%; /* Light Gray */
-    --muted-foreground: 215.4 16.3% 46.9%; /* Gray #6B7280 */
-    --accent: 220 14.3% 95.9%; /* Light Gray */
-    --accent-foreground: 222.2 47.4% 11.2%; /* Dark Gray */
-    --destructive: 0 84.2% 60.2%; /* Red #EF4444 */
-    --destructive-foreground: 0 0% 100%; /* White */
-    --success: 142.1 76.2% 36.3%; /* Green #10B981 */
-    --success-foreground: 0 0% 100%; /* White */
-    --warning: 37.7 92.1% 50.2%; /* Yellow #F59E0B */
-    --warning-foreground: 0 0% 100%; /* White */
-    --border: 214.3 31.8% 91.4%; /* Light Gray #E5E7EB */
-    --input: 214.3 31.8% 91.4%; /* Light Gray */
-    --ring: 217.2 91.2% 59.8%; /* Blue */
-    --radius: 0.5rem;
+    /* Financial Dawn Theme - Light Mode */
+    /* Warm, editorial-inspired palette */
+    --background: 35 44% 97%; /* Warm cream #FAF7F2 */
+    --foreground: 0 0% 18%; /* Charcoal #2D2D2D */
+    --card: 30 40% 99%; /* Off-white with warmth */
+    --card-foreground: 0 0% 18%;
+    --popover: 30 40% 99%;
+    --popover-foreground: 0 0% 18%;
+
+    /* Primary: Deep Terracotta - bold, warm, confident */
+    --primary: 12 55% 51%; /* #C55A3A */
+    --primary-foreground: 35 44% 97%;
+
+    /* Secondary: Sage Green - growth, balance */
+    --secondary: 135 17% 49%; /* #6B8F71 */
+    --secondary-foreground: 35 44% 97%;
+
+    /* Accent: Amber Gold - highlight, prosperity */
+    --accent: 34 35% 64%; /* #D4A574 */
+    --accent-foreground: 0 0% 18%;
+
+    --muted: 35 30% 92%; /* Warm gray */
+    --muted-foreground: 35 8% 45%;
+
+    --destructive: 4 75% 55%; /* Warm red */
+    --destructive-foreground: 35 44% 97%;
+
+    --success: 135 45% 42%; /* Rich green */
+    --success-foreground: 35 44% 97%;
+
+    --warning: 35 85% 55%; /* Warm amber */
+    --warning-foreground: 0 0% 18%;
+
+    --border: 35 25% 88%;
+    --input: 35 30% 92%;
+    --ring: 12 55% 51%;
+    --radius: 0.75rem;
+
+    /* Atmospheric gradients */
+    --gradient-dawn: linear-gradient(135deg, #FAF7F2 0%, #F5E6D3 50%, #E8D5BE 100%);
+    --gradient-primary: linear-gradient(135deg, #C55A3A 0%, #A94A2F 100%);
+    --gradient-accent: linear-gradient(135deg, #D4A574 0%, #C89A5F 100%);
   }
 
   .dark {
-    /* Dark Theme */
-    --background: 222.2 84% 4.9%; /* Dark Gray/Black #111827 */
-    --foreground: 210 40% 98%; /* White/Light Gray #F9FAFB */
-    --card: 217.2 32.6% 17.5%; /* Dark Gray #1F2937 */
-    --card-foreground: 210 40% 98%; /* White */
-    --popover: 217.2 32.6% 17.5%; /* Dark Gray */
-    --popover-foreground: 210 40% 98%; /* White */
-    --primary: 217.2 91.2% 69.8%; /* Blue #60A5FA */
-    --primary-foreground: 222.2 47.4% 11.2%; /* Dark Gray */
-    --secondary: 217.2 32.6% 17.5%; /* Dark Gray #1F2937 */
-    --secondary-foreground: 210 40% 98%; /* White */
-    --muted: 215 27.9% 16.9%; /* Dark Gray #374151 */
-    --muted-foreground: 217.9 10.6% 64.9%; /* Light Gray #9CA3AF */
-    --accent: 217.2 32.6% 17.5%; /* Dark Gray */
-    --accent-foreground: 210 40% 98%; /* White */
-    --destructive: 0 72.2% 50.6%; /* Red #F87171 */
-    --destructive-foreground: 210 40% 98%; /* White */
-    --success: 142.1 70.6% 45.3%; /* Green #34D399 */
-    --success-foreground: 222.2 47.4% 11.2%; /* Dark Gray */
-    --warning: 37.7 92.1% 57.8%; /* Yellow #FBBF24 */
-    --warning-foreground: 222.2 47.4% 11.2%; /* Dark Gray */
-    --border: 215 27.9% 16.9%; /* Dark Gray #374151 */
-    --input: 215 27.9% 16.9%; /* Dark Gray */
-    --ring: 217.2 91.2% 69.8%; /* Blue */
+    /* Financial Dawn Theme - Dark Mode */
+    /* Deep, sophisticated evening palette */
+    --background: 220 30% 12%; /* Deep navy #1A1F2E */
+    --foreground: 35 25% 92%; /* Warm off-white #F5F2ED */
+    --card: 220 28% 16%; /* Darker card */
+    --card-foreground: 35 25% 92%;
+    --popover: 220 28% 16%;
+    --popover-foreground: 35 25% 92%;
+
+    /* Primary: Brighter terracotta for dark mode */
+    --primary: 12 70% 60%; /* #D97654 */
+    --primary-foreground: 220 30% 12%;
+
+    /* Secondary: Muted sage */
+    --secondary: 135 25% 55%; /* #7FA585 */
+    --secondary-foreground: 220 30% 12%;
+
+    /* Accent: Glowing gold */
+    --accent: 34 55% 68%; /* #E0B67F */
+    --accent-foreground: 220 30% 12%;
+
+    --muted: 220 22% 20%;
+    --muted-foreground: 220 12% 65%;
+
+    --destructive: 4 82% 62%;
+    --destructive-foreground: 35 25% 92%;
+
+    --success: 135 50% 48%;
+    --success-foreground: 220 30% 12%;
+
+    --warning: 35 90% 60%;
+    --warning-foreground: 220 30% 12%;
+
+    --border: 220 22% 22%;
+    --input: 220 22% 20%;
+    --ring: 12 70% 60%;
+
+    /* Atmospheric gradients for dark mode */
+    --gradient-dawn: linear-gradient(135deg, #1A1F2E 0%, #252B3D 50%, #2F3749 100%);
+    --gradient-primary: linear-gradient(135deg, #D97654 0%, #C55A3A 100%);
+    --gradient-accent: linear-gradient(135deg, #E0B67F 0%, #D4A574 100%);
   }
 }
 
@@ -63,7 +100,137 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-feature-settings: "kern" 1, "liga" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Subtle texture background */
+    background-image:
+      radial-gradient(circle at 20% 50%, hsla(12, 55%, 51%, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, hsla(135, 17%, 49%, 0.03) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* Typography hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+  }
+
+  h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+  }
+
+  h3 {
+    font-size: 2rem;
+    font-weight: 600;
+  }
+
+  h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  /* Monospace for financial data */
+  .font-mono,
+  code,
+  pre,
+  [data-financial],
+  .amount,
+  .balance,
+  .currency {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings: "zero" 1, "ss02" 1;
+  }
+
+  /* Smooth scroll behavior */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@layer components {
+  /* Atmospheric card with gradient border */
+  .card-gradient {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .card-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    padding: 1px;
+    background: var(--gradient-accent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .card-gradient:hover::before {
+    opacity: 1;
+  }
+
+  /* Text gradient effect for headings */
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Elevated surface with depth */
+  .surface-elevated {
+    background: hsl(var(--card));
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      0 10px 25px rgba(0, 0, 0, 0.03),
+      0 20px 40px rgba(0, 0, 0, 0.02);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  /* Geometric accent shapes */
+  .accent-shape {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .accent-shape::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: var(--gradient-accent);
+    opacity: 0.1;
+    transform: rotate(45deg);
+    pointer-events: none;
   }
 }

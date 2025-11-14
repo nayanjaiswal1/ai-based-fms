@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FormConfig } from '../../../lib/form/types';
+import { usePreferencesStore } from '../../../stores/preferencesStore';
 
 export const accountSchema = z.object({
   name: z.string().min(1, 'Account name is required').max(100, 'Name must be less than 100 characters'),
@@ -10,13 +11,16 @@ export const accountSchema = z.object({
     required_error: 'Initial balance is required',
     invalid_type_error: 'Balance must be a number',
   }),
-  currency: z.string().min(3).max(3),
+  currency: z.string().min(3).max(3).optional(),
   description: z.string().optional(),
 });
 
 export type AccountFormData = z.infer<typeof accountSchema>;
 
 export function getAccountFormConfig(account?: any): FormConfig<AccountFormData> {
+  // Get user's currency preference
+  const userCurrency = usePreferencesStore.getState().preferences.currency;
+
   return {
     title: account ? 'Edit Account' : 'Add Account',
     description: 'Manage your financial accounts',
@@ -56,21 +60,9 @@ export function getAccountFormConfig(account?: any): FormConfig<AccountFormData>
             step: 0.01,
             description: 'Current balance of this account',
           },
-          {
-            name: 'currency',
-            label: 'Currency',
-            type: 'select',
-            required: true,
-            options: [
-              { value: 'USD', label: 'USD ($)' },
-              { value: 'EUR', label: 'EUR (€)' },
-              { value: 'GBP', label: 'GBP (£)' },
-              { value: 'JPY', label: 'JPY (¥)' },
-              { value: 'INR', label: 'INR (₹)' },
-            ],
-          },
+          // Currency field is hidden - uses user preference
         ],
-        columns: 2,
+        columns: 1,
       },
       {
         fields: [
@@ -89,7 +81,7 @@ export function getAccountFormConfig(account?: any): FormConfig<AccountFormData>
       name: account?.name || '',
       type: account?.type || 'bank',
       balance: account?.balance || 0,
-      currency: account?.currency || 'USD',
+      currency: account?.currency || userCurrency, // Use user preference
       description: account?.description || '',
     },
   };

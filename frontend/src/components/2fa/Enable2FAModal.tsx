@@ -101,7 +101,7 @@ export default function Enable2FAModal({ isOpen, onClose, onSuccess }: Enable2FA
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Enable Two-Factor Authentication" maxWidth="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title="Enable Two-Factor Authentication" size="xl">
       {step === 'qr' && (
         <div className="space-y-6">
           {enableMutation.isPending ? (

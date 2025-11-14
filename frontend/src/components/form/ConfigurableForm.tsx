@@ -1,5 +1,6 @@
 import { useForm, FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { FormConfig } from '../../lib/form/types';
 import { FormField } from './FormField';
 import { Loader2 } from 'lucide-react';
@@ -12,6 +13,11 @@ interface ConfigurableFormProps<TFieldValues extends FieldValues> {
   cancelLabel?: string;
   onCancel?: () => void;
   className?: string;
+  /**
+   * Callback that fires when form dirty state changes
+   * Use this with useFormProtection hook to prevent accidental close
+   */
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function ConfigurableForm<TFieldValues extends FieldValues>({
@@ -22,6 +28,7 @@ export function ConfigurableForm<TFieldValues extends FieldValues>({
   cancelLabel = 'Cancel',
   onCancel,
   className = '',
+  onDirtyChange,
 }: ConfigurableFormProps<TFieldValues>) {
   const form = useForm<TFieldValues>({
     resolver: zodResolver(config.schema),
@@ -34,6 +41,13 @@ export function ConfigurableForm<TFieldValues extends FieldValues>({
     formState: { isDirty },
     watch,
   } = form;
+
+  // Notify parent of dirty state changes for form protection
+  useEffect(() => {
+    if (onDirtyChange) {
+      onDirtyChange(isDirty);
+    }
+  }, [isDirty, onDirtyChange]);
 
   const onFormSubmit = handleSubmit(async (data) => {
     try {

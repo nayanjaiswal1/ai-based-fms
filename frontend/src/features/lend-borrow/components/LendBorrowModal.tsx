@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { lendBorrowApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
+import { useFormProtection } from '@hooks/useFormProtection';
 import { getLendBorrowFormConfig, LendBorrowFormData } from '../config/lendBorrowFormConfig';
 
 interface LendBorrowModalProps {
@@ -15,6 +16,11 @@ export default function LendBorrowModal({ record, isOpen, onClose }: LendBorrowM
   const queryClient = useQueryClient();
   const formConfig = getLendBorrowFormConfig(record);
 
+  // Form protection to prevent accidental data loss
+  const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
+    confirmMessage: 'You have unsaved changes. Are you sure you want to close this form?',
+  });
+
   const { handleSubmit, isLoading } = useEntityForm<LendBorrowFormData>({
     api: {
       create: lendBorrowApi.create,
@@ -25,6 +31,7 @@ export default function LendBorrowModal({ record, isOpen, onClose }: LendBorrowM
     onSuccess: () => {
       // Also invalidate summary query
       queryClient.invalidateQueries({ queryKey: ['lend-borrow-summary'] });
+      reset(); // Clear dirty state on successful submit
       onClose();
     },
     transform: (data) => ({
@@ -35,12 +42,13 @@ export default function LendBorrowModal({ record, isOpen, onClose }: LendBorrowM
   });
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
       description={formConfig.description}
       size="lg"
+      onBeforeClose={checkBeforeClose}
     >
       <ConfigurableForm
         config={formConfig}
@@ -48,7 +56,8 @@ export default function LendBorrowModal({ record, isOpen, onClose }: LendBorrowM
         isLoading={isLoading}
         onCancel={onClose}
         submitLabel={record ? 'Update Record' : 'Add Record'}
+        onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

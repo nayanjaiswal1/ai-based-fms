@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { lendBorrowApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
+import { useFormProtection } from '@hooks/useFormProtection';
 import { getPaymentFormConfig, PaymentFormData } from '../config/paymentFormConfig';
 
 interface PaymentModalProps {
@@ -15,6 +16,11 @@ export default function PaymentModal({ record, isOpen, onClose }: PaymentModalPr
   const formConfig = getPaymentFormConfig(record);
   const remaining = record.amount - record.paidAmount;
 
+  // Form protection to prevent accidental data loss
+  const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
+    confirmMessage: 'You have unsaved changes. Are you sure you want to close this form?',
+  });
+
   const recordPaymentMutation = useMutation({
     mutationFn: (data: PaymentFormData) =>
       lendBorrowApi.recordPayment(record.id, {
@@ -24,6 +30,7 @@ export default function PaymentModal({ record, isOpen, onClose }: PaymentModalPr
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lend-borrow'] });
       queryClient.invalidateQueries({ queryKey: ['lend-borrow-summary'] });
+      reset(); // Clear dirty state on successful submit
       onClose();
     },
   });
@@ -33,12 +40,13 @@ export default function PaymentModal({ record, isOpen, onClose }: PaymentModalPr
   };
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
       description={formConfig.description}
       size="lg"
+      onBeforeClose={checkBeforeClose}
     >
       {/* Payment Info Summary */}
       <div className="mb-6 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
@@ -68,7 +76,8 @@ export default function PaymentModal({ record, isOpen, onClose }: PaymentModalPr
         isLoading={recordPaymentMutation.isPending}
         onCancel={onClose}
         submitLabel="Record Payment"
+        onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }
