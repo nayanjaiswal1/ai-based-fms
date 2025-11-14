@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote, CheckCircle, Clock, GitCompare, LayoutGrid, Layers } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote, CheckCircle, Clock, GitCompare, LayoutGrid, Layers, TrendingUp } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import AccountModal from '../components/AccountModal';
 import { AccountCardsView } from '../components/AccountCardsView';
@@ -11,6 +11,9 @@ import { accountsApi, exportApi } from '@services/api';
 import { toast } from 'react-hot-toast';
 import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
+import { StatusBar } from '@/components/ui/StatusBar';
+import { useCurrency } from '@/hooks/useCurrency';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 type ViewMode = 'grid' | 'cards';
 type ExportFormat = 'csv' | 'pdf';
@@ -20,6 +23,9 @@ export default function AccountsPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<string>('');
 
   // Detect modal state from URL path
   const isNewModal = location.pathname === '/accounts/new';
@@ -28,7 +34,29 @@ export default function AccountsPage() {
   const accountId = id;
 
   // Use the clean hook - all API logic is abstracted away
-  const { data: accounts, isLoading, delete: deleteAccount, isDeleting } = useAccounts();
+  const { data: allAccounts, isLoading, delete: deleteAccount, isDeleting } = useAccounts();
+
+  // Filter accounts based on search and filters
+  const accounts = useMemo(() => {
+    if (!allAccounts) return allAccounts;
+
+    let filtered = allAccounts;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter((acc: any) =>
+        acc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        acc.type.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply type filter
+    if (typeFilter) {
+      filtered = filtered.filter((acc: any) => acc.type === typeFilter);
+    }
+
+    return filtered;
+  }, [allAccounts, searchTerm, typeFilter]);
 
   // Fetch selected account for edit mode
   const { data: selectedAccountData } = useQuery({
@@ -122,7 +150,50 @@ export default function AccountsPage() {
     }
   };
 
+  const { formatLocale } = useCurrency();
+
   const totalBalance = accounts?.reduce((sum: number, acc: any) => sum + Number(acc.balance), 0) || 0;
+  const reconciledCount = accounts?.filter((acc: any) => acc.reconciliationStatus === 'reconciled').length || 0;
+  const inProgressCount = accounts?.filter((acc: any) => acc.reconciliationStatus === 'in_progress').length || 0;
+
+  const statusBarItems = useMemo(() => [
+    {
+      id: 'total',
+      label: 'Total Balance',
+      value: formatLocale(totalBalance),
+      icon: TrendingUp,
+      color: '#10b981',
+      details: [
+        { label: 'Total Balance', value: formatLocale(totalBalance) },
+        { label: 'Total Accounts', value: accounts?.length || 0 },
+      ],
+    },
+    {
+      id: 'accounts',
+      label: 'Accounts',
+      value: accounts?.length || 0,
+      icon: Wallet,
+      color: '#3b82f6',
+      details: [
+        { label: 'Bank Accounts', value: accounts?.filter((a: any) => a.type === 'bank').length || 0 },
+        { label: 'Cards', value: accounts?.filter((a: any) => a.type === 'card').length || 0 },
+        { label: 'Wallets', value: accounts?.filter((a: any) => a.type === 'wallet').length || 0 },
+        { label: 'Cash', value: accounts?.filter((a: any) => a.type === 'cash').length || 0 },
+      ],
+    },
+    {
+      id: 'reconciled',
+      label: 'Reconciled',
+      value: reconciledCount,
+      icon: CheckCircle,
+      color: '#10b981',
+      details: [
+        { label: 'Reconciled', value: reconciledCount },
+        { label: 'In Progress', value: inProgressCount },
+        { label: 'Not Reconciled', value: (accounts?.length || 0) - reconciledCount - inProgressCount },
+      ],
+    },
+  ], [totalBalance, accounts, reconciledCount, inProgressCount, formatLocale]);
 
   const getReconciliationBadge = (status: string, lastReconciledAt?: string) => {
     if (status === 'in_progress') {
@@ -148,6 +219,8 @@ export default function AccountsPage() {
     navigate(`/reconciliation?accountId=${account.id}&accountName=${encodeURIComponent(account.name)}`);
   };
 
+  const activeFiltersCount = typeFilter ? 1 : 0;
+
   return (
     <div className={viewMode === 'cards' ? '' : 'space-y-4 sm:space-y-6'}>
       {/* Only show header and banner in grid view */}
@@ -156,62 +229,77 @@ export default function AccountsPage() {
           {/* Usage Limit Warning */}
           <UsageLimitBanner resource="maxAccounts" />
 
-          {/* Header - Responsive */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Accounts</h1>
-              <p className="mt-1 text-xs sm:text-sm text-gray-600">
-                Manage your financial accounts and track balances
-              </p>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* View Toggle */}
-              {accounts && accounts.length > 0 && (
-                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
-                      viewMode === 'grid'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                    aria-label="Grid view"
+          {/* Page Header */}
+          <PageHeader
+            showSearch={true}
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Search accounts..."
+            showFilter={true}
+            onFilterClick={() => setShowFilters(!showFilters)}
+            activeFiltersCount={activeFiltersCount}
+            buttons={[
+              ...(accounts && accounts.length > 0
+                ? [
+                    {
+                      label: 'Grid',
+                      icon: LayoutGrid,
+                      onClick: () => setViewMode('grid'),
+                      variant: viewMode === 'grid' ? 'primary' : ('outline' as const),
+                      className: 'hidden sm:flex',
+                    },
+                    {
+                      label: 'Cards',
+                      icon: Layers,
+                      onClick: () => setViewMode('cards'),
+                      variant: viewMode === 'cards' ? 'primary' : ('outline' as const),
+                      className: 'hidden sm:flex',
+                    },
+                  ]
+                : []),
+              {
+                label: 'Add Account',
+                icon: Plus,
+                onClick: () => navigate('/accounts/new'),
+                variant: 'primary' as const,
+              },
+            ]}
+          />
+
+          {/* Filter Panel */}
+          {showFilters && (
+            <div className="rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Account Type
+                  </label>
+                  <select
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    <LayoutGrid className="h-4 w-4" />
-                    <span className="hidden sm:inline">Grid</span>
-                  </button>
+                    <option value="">All Types</option>
+                    <option value="bank">Bank</option>
+                    <option value="card">Card</option>
+                    <option value="wallet">Wallet</option>
+                    <option value="cash">Cash</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2 flex items-end gap-2">
                   <button
-                    onClick={() => setViewMode('cards')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
-                      viewMode === 'cards'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                    aria-label="Cards view"
+                    onClick={() => {
+                      setTypeFilter('');
+                      setSearchTerm('');
+                    }}
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
-                    <Layers className="h-4 w-4" />
-                    <span className="hidden sm:inline">Cards</span>
+                    Clear All
                   </button>
                 </div>
-              )}
-              <button
-                onClick={() => navigate('/accounts/new')}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"
-              >
-                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>Add Account</span>
-              </button>
+              </div>
             </div>
-          </div>
-
-          {/* Total Balance Card - Responsive */}
-          <div className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-4 sm:p-6 text-white shadow-lg">
-            <p className="text-xs sm:text-sm font-medium opacity-90">Total Balance</p>
-            <p className="mt-2 text-3xl sm:text-4xl font-bold">${totalBalance.toFixed(2)}</p>
-            <p className="mt-2 text-xs sm:text-sm opacity-75">
-              Across {accounts?.length || 0} account(s)
-            </p>
-          </div>
+          )}
         </>
       )}
 
@@ -362,6 +450,9 @@ export default function AccountsPage() {
         onClose={closeConfirm}
         isLoading={isDeleting}
       />
+
+      {/* Excel-style Status Bar */}
+      {accounts && accounts.length > 0 && <StatusBar items={statusBarItems} />}
     </div>
   );
 }

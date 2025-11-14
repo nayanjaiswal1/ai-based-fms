@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { accountsApi, categoriesApi, tagsApi, transactionsApi } from '@services/api';
 import Modal from '@components/ui/Modal';
@@ -5,6 +6,10 @@ import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
 import { useFormProtection } from '@hooks/useFormProtection';
 import { getTransactionFormConfig, TransactionFormData } from '../config/transactionFormConfig';
+import { MultiItemTransactionForm } from './MultiItemTransactionForm';
+import { Checkbox } from '@components/ui/checkbox';
+import { Label } from '@components/ui/label';
+import { toast } from 'sonner';
 
 interface TransactionModalProps {
   transaction?: any;
@@ -12,13 +17,38 @@ interface TransactionModalProps {
   onClose: () => void;
 }
 
+interface LineItem {
+  categoryId: string;
+  description: string;
+  amount: number;
+}
+
 export default function TransactionModal({ transaction, isOpen, onClose }: TransactionModalProps) {
   const queryClient = useQueryClient();
+  const [isMultiItem, setIsMultiItem] = useState(false);
+  const [lineItems, setLineItems] = useState<LineItem[]>([]);
 
   // Form protection to prevent accidental data loss
   const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
     confirmMessage: 'You have unsaved changes. Are you sure you want to close this form?',
   });
+
+  // Load existing line items when editing a transaction
+  useEffect(() => {
+    if (transaction?.lineItems?.length) {
+      setIsMultiItem(true);
+      setLineItems(
+        transaction.lineItems.map((item: any) => ({
+          categoryId: item.categoryId,
+          description: item.description,
+          amount: Number(item.amount),
+        }))
+      );
+    } else {
+      setIsMultiItem(false);
+      setLineItems([]);
+    }
+  }, [transaction]);
 
   // Fetch dropdown data using hooks
   const { data: accounts } = useQuery({
@@ -76,14 +106,46 @@ export default function TransactionModal({ transaction, isOpen, onClose }: Trans
     categories?.data || [],
     tags?.data || [],
     handleCreateCategory,
-    handleCreateTag
+    handleCreateTag,
+    isMultiItem // Pass multi-item mode to config
   );
 
-  // Use entity form hook
+  // Validate line items
+  const validateLineItems = (): boolean => {
+    if (isMultiItem && lineItems.length === 0) {
+      toast.error('Please add at least one item');
+      return false;
+    }
+
+    if (isMultiItem && lineItems.some(item => !item.categoryId || !item.amount)) {
+      toast.error('All items must have a category and amount');
+      return false;
+    }
+
+    return true;
+  };
+
+  // Use entity form hook with custom submission handler
   const { handleSubmit, isLoading } = useEntityForm<TransactionFormData>({
     api: {
-      create: transactionsApi.create,
-      update: (id, data) => transactionsApi.update(String(id), data),
+      create: async (data) => {
+        if (isMultiItem && !validateLineItems()) {
+          throw new Error('Validation failed');
+        }
+        const payload = isMultiItem
+          ? { ...data, lineItems, categoryId: undefined, amount: undefined }
+          : data;
+        return transactionsApi.create(payload);
+      },
+      update: async (id, data) => {
+        if (isMultiItem && !validateLineItems()) {
+          throw new Error('Validation failed');
+        }
+        const payload = isMultiItem
+          ? { ...data, lineItems, categoryId: undefined, amount: undefined }
+          : data;
+        return transactionsApi.update(String(id), payload);
+      },
     },
     queryKey: ['transactions'],
     entityId: transaction?.id,
@@ -102,14 +164,45 @@ export default function TransactionModal({ transaction, isOpen, onClose }: Trans
       size="xl"
       onBeforeClose={checkBeforeClose}
     >
-      <ConfigurableForm
-        config={formConfig}
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-        onCancel={onClose}
-        submitLabel={transaction ? 'Update Transaction' : 'Add Transaction'}
-        onDirtyChange={setIsDirty}
-      />
+      <div className="space-y-4">
+        {/* Multi-item toggle */}
+        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+          <Checkbox
+            id="multi-item-toggle"
+            checked={isMultiItem}
+            onCheckedChange={(checked) => {
+              setIsMultiItem(!!checked);
+              if (checked && lineItems.length === 0) {
+                // Initialize with one empty item
+                setLineItems([{ categoryId: '', description: '', amount: 0 }]);
+              }
+            }}
+          />
+          <Label htmlFor="multi-item-toggle" className="cursor-pointer">
+            Multiple items with different categories
+          </Label>
+        </div>
+
+        {/* Multi-item form or standard form */}
+        {isMultiItem ? (
+          <div className="space-y-4">
+            <MultiItemTransactionForm
+              categories={categories?.data || []}
+              value={lineItems}
+              onChange={setLineItems}
+            />
+          </div>
+        ) : null}
+
+        <ConfigurableForm
+          config={formConfig}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          onCancel={onClose}
+          submitLabel={transaction ? 'Update Transaction' : 'Add Transaction'}
+          onDirtyChange={setIsDirty}
+        />
+      </div>
     </Modal>
   );
 }

@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   ManyToMany,
+  OneToMany,
   JoinColumn,
   JoinTable,
   Index,
@@ -14,6 +15,7 @@ import { User } from './user.entity';
 import { Account } from './account.entity';
 import { Category } from './category.entity';
 import { Tag } from './tag.entity';
+import { TransactionLineItem } from './transaction-line-item.entity';
 
 export enum TransactionType {
   INCOME = 'income',
@@ -32,10 +34,18 @@ export enum TransactionSource {
   CHAT = 'chat',
 }
 
+export enum TransactionSourceType {
+  MANUAL = 'manual',
+  INVESTMENT = 'investment',
+  SHARED_EXPENSE = 'shared_expense',
+  RECURRING = 'recurring',
+}
+
 @Entity('transactions')
 @Index(['userId', 'date'])
 @Index(['userId', 'type'])
 @Index(['accountId', 'date'])
+@Index(['sourceType', 'sourceId'])
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -101,6 +111,17 @@ export class Transaction {
   @Column({ type: 'simple-array', nullable: true })
   duplicateExclusions: string[];
 
+  // Source tracking for navigation
+  @Column({
+    type: 'enum',
+    enum: TransactionSourceType,
+    default: TransactionSourceType.MANUAL,
+  })
+  sourceType: TransactionSourceType;
+
+  @Column({ nullable: true })
+  sourceId: string;
+
   @Column()
   userId: string;
 
@@ -130,8 +151,14 @@ export class Transaction {
   })
   tags: Tag[];
 
+  @OneToMany(() => TransactionLineItem, (lineItem) => lineItem.transaction)
+  lineItems: TransactionLineItem[];
+
   @Column({ default: false })
   isDeleted: boolean;
+
+  @Column({ default: true })
+  isVerified: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

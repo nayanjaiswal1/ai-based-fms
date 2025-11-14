@@ -74,21 +74,7 @@ export default function InsightsDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg">
-            <Lightbulb className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Financial Insights
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              AI-powered analysis and recommendations for your finances
-            </p>
-          </div>
-        </div>
-
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowFilters(!showFilters)}

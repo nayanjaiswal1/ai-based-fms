@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsApi, accountsApi, categoriesApi, tagsApi, exportApi } from '@services/api';
-import { Plus, Search, Filter, Download, Upload, Trash2, X, Copy } from 'lucide-react';
+import { Plus, Search, Filter, Download, Upload, Trash2, X, Copy, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import TransactionModal from '../components/TransactionModal';
 import TransactionHistoryModal from '../components/TransactionHistoryModal';
 import TransactionCards from '../components/TransactionCards';
@@ -17,6 +17,10 @@ import { toast } from 'react-hot-toast';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
+import { StatusBar } from '@/components/ui/StatusBar';
+import { useCurrency } from '@/hooks/useCurrency';
+import { useTransactionNavigation } from '../hooks/useTransactionNavigation';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
@@ -27,6 +31,7 @@ export default function TransactionsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [historyTransaction, setHistoryTransaction] = useState<any>(null);
   const isMobile = useIsMobile();
+  const { handleTransactionClick } = useTransactionNavigation();
 
   // Use the new useUrlParams hook for query parameters
   const { getParam, getParams, setParam, setParams, removeParam, removeParams } = useUrlParams();
@@ -42,7 +47,7 @@ export default function TransactionsPage() {
 
   // Parse filters from URL using the hook
   const filters = useMemo(() => {
-    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount'];
+    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount', 'isVerified'];
     return getParams(filterKeys);
   }, [getParams]);
 
@@ -131,7 +136,7 @@ export default function TransactionsPage() {
   };
 
   const handleApplyFilters = (newFilters: any) => {
-    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount'];
+    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount', 'isVerified'];
 
     // Convert filters to the right format
     const cleanedFilters: Record<string, string | null> = {};
@@ -152,7 +157,7 @@ export default function TransactionsPage() {
   };
 
   const handleClearAllFilters = () => {
-    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount'];
+    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount', 'isVerified'];
     removeParams(filterKeys);
   };
 
@@ -268,9 +273,71 @@ export default function TransactionsPage() {
     return account?.name || 'Unknown';
   };
 
+  const { formatLocale } = useCurrency();
+
   const activeFiltersCount = Object.keys(filters).filter(
     (key) => filters[key] !== undefined && filters[key] !== ''
   ).length;
+
+  // Calculate metrics for status bar
+  const transactionData = transactions?.data || [];
+  const totalIncome = transactionData
+    .filter((t: any) => t.type === 'income')
+    .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const totalExpense = transactionData
+    .filter((t: any) => t.type === 'expense')
+    .reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+  const netAmount = totalIncome - totalExpense;
+  const unverifiedCount = transactionData.filter((t: any) => !t.isVerified).length;
+
+  const statusBarItems = useMemo(() => [
+    {
+      id: 'count',
+      label: 'Transactions',
+      value: transactionData.length,
+      icon: DollarSign,
+      color: '#3b82f6',
+      details: [
+        { label: 'Total Transactions', value: transactionData.length },
+        { label: 'Income Count', value: transactionData.filter((t: any) => t.type === 'income').length },
+        { label: 'Expense Count', value: transactionData.filter((t: any) => t.type === 'expense').length },
+        { label: 'Unverified', value: unverifiedCount },
+      ],
+    },
+    {
+      id: 'income',
+      label: 'Income',
+      value: formatLocale(totalIncome),
+      icon: TrendingUp,
+      color: '#10b981',
+      details: [
+        { label: 'Total Income', value: formatLocale(totalIncome) },
+        { label: 'Average', value: transactionData.filter((t: any) => t.type === 'income').length > 0 ? formatLocale(totalIncome / transactionData.filter((t: any) => t.type === 'income').length) : formatLocale(0) },
+      ],
+    },
+    {
+      id: 'expense',
+      label: 'Expense',
+      value: formatLocale(totalExpense),
+      icon: TrendingDown,
+      color: '#ef4444',
+      details: [
+        { label: 'Total Expense', value: formatLocale(totalExpense) },
+        { label: 'Average', value: transactionData.filter((t: any) => t.type === 'expense').length > 0 ? formatLocale(totalExpense / transactionData.filter((t: any) => t.type === 'expense').length) : formatLocale(0) },
+      ],
+    },
+    {
+      id: 'net',
+      label: 'Net',
+      value: formatLocale(Math.abs(netAmount)),
+      icon: netAmount >= 0 ? TrendingUp : TrendingDown,
+      color: netAmount >= 0 ? '#10b981' : '#ef4444',
+      details: [
+        { label: 'Net Amount', value: formatLocale(netAmount) },
+        { label: 'Status', value: netAmount >= 0 ? 'Surplus' : 'Deficit' },
+      ],
+    },
+  ], [transactionData, totalIncome, totalExpense, netAmount, unverifiedCount, formatLocale]);
 
   const columns = getTransactionColumns(
     getCategoryName,
@@ -289,66 +356,44 @@ export default function TransactionsPage() {
       {/* Usage Limit Warning */}
       <UsageLimitBanner resource="maxTransactions" />
 
-      {/* Header - Responsive */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Transactions</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {/* Hide some buttons on small mobile */}
-          <button
-            onClick={() => navigate('/transactions/duplicates')}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline">Find Duplicates</span>
-            <span className="xs:hidden">Duplicates</span>
-          </button>
-
-          {/* Hide Import on very small screens */}
-          <ProtectedAction feature={FeatureFlag.ADVANCED_IMPORT} behavior="disable">
-            <button className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-              <Upload className="h-4 w-4" />
-              Import
-            </button>
-          </ProtectedAction>
-
-          <button
-            onClick={() => navigate('/transactions/new')}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline">Add Transaction</span>
-            <span className="xs:hidden">Add</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search and Filters - Responsive */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search transactions..."
-            value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-9 sm:pl-10 pr-3 sm:pr-4 text-sm sm:text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-        <button
-          onClick={handleOpenFilterModal}
-          className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"
-        >
-          <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="hidden xs:inline">Filters</span>
-          {activeFiltersCount > 0 && (
-            <span className="rounded-full bg-blue-600 px-1.5 sm:px-2 py-0.5 text-xs text-white">
-              {activeFiltersCount}
-            </span>
-          )}
-        </button>
-      </div>
+      {/* Page Header - Single Row */}
+      <PageHeader
+        showSearch={true}
+        searchValue={searchTerm || ''}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search transactions..."
+        showFilter={true}
+        onFilterClick={handleOpenFilterModal}
+        activeFiltersCount={activeFiltersCount}
+        buttons={[
+          {
+            label: 'Duplicates',
+            icon: Copy,
+            onClick: () => navigate('/transactions/duplicates'),
+            variant: 'outline' as const,
+            className: 'hidden sm:flex',
+          },
+          {
+            label: 'Unverified',
+            icon: Filter,
+            onClick: () => setParam('isVerified', 'false'),
+            variant: 'outline' as const,
+          },
+          {
+            label: 'Import',
+            icon: Upload,
+            onClick: () => navigate('/import'),
+            variant: 'outline' as const,
+            className: 'hidden sm:flex',
+          },
+          {
+            label: 'Add Transaction',
+            icon: Plus,
+            onClick: () => navigate('/transactions/new'),
+            variant: 'primary' as const,
+          },
+        ]}
+      />
 
       {/* Active Filters - Responsive */}
       {activeFiltersCount > 0 && (
@@ -417,6 +462,7 @@ export default function TransactionsPage() {
           onDelete={handleDelete}
           onHistory={handleHistory}
           onUnmerge={handleUnmerge}
+          onRowClick={(row) => handleTransactionClick(row.id, () => handleEdit(row))}
           selectable
           selectedIds={selectedIds}
           onSelectOne={handleSelectOne}
@@ -432,6 +478,7 @@ export default function TransactionsPage() {
           selectedIds={selectedIds}
           onSelectAll={handleSelectAll}
           onSelectOne={handleSelectOne}
+          onRowClick={(row) => handleTransactionClick(row.id, () => handleEdit(row))}
           rowHeight={65}
           height="calc(100vh - 400px)"
           overscan={10}
@@ -447,6 +494,7 @@ export default function TransactionsPage() {
           selectedIds={selectedIds}
           onSelectAll={handleSelectAll}
           onSelectOne={handleSelectOne}
+          onRowClick={(row) => handleTransactionClick(row.id, () => handleEdit(row))}
         />
       )}
 
@@ -473,6 +521,9 @@ export default function TransactionsPage() {
       )}
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
+
+      {/* Excel-style Status Bar */}
+      {transactionData.length > 0 && <StatusBar items={statusBarItems} />}
     </div>
   );
 }

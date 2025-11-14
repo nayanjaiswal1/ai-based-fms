@@ -9,11 +9,11 @@ export const transactionSchema = z.object({
   amount: z.number({
     required_error: 'Amount is required',
     invalid_type_error: 'Amount must be a number',
-  }).positive('Amount must be positive'),
+  }).positive('Amount must be positive').optional(),
   description: z.string().min(1, 'Description is required').max(200),
   date: z.string().min(1, 'Date is required'),
   accountId: z.string().min(1, 'Account is required'),
-  categoryId: z.string().min(1, 'Category is required'),
+  categoryId: z.string().optional(),
   tagIds: z.array(z.string()).optional(),
   notes: z.string().optional(),
 });
@@ -26,7 +26,8 @@ export function getTransactionFormConfig(
   categories?: any[],
   tags?: any[],
   onCreateCategory?: (name: string) => Promise<string>,
-  onCreateTag?: (name: string) => Promise<string>
+  onCreateTag?: (name: string) => Promise<string>,
+  isMultiItem?: boolean
 ): FormConfig<TransactionFormData> {
   return {
     title: transaction ? 'Edit Transaction' : 'Add Transaction',
@@ -49,14 +50,14 @@ export function getTransactionFormConfig(
       },
       {
         fields: [
-          {
+          ...(!isMultiItem ? [{
             name: 'amount',
             label: 'Amount',
             type: 'currency',
             required: true,
             step: 0.01,
             placeholder: '0.00',
-          },
+          }] : []),
           {
             name: 'date',
             label: 'Date',
@@ -64,7 +65,7 @@ export function getTransactionFormConfig(
             required: true,
           },
         ],
-        columns: 2,
+        columns: isMultiItem ? 1 : 2,
       },
       {
         fields: [
@@ -86,17 +87,17 @@ export function getTransactionFormConfig(
             required: true,
             options: accounts?.map(a => ({ value: a.id, label: a.name })) || [],
           },
-          {
+          ...(!isMultiItem ? [{
             name: 'categoryId',
             label: 'Category',
             type: 'searchable-select',
             required: true,
             placeholder: 'Search or create category...',
-            options: categories?.map(c => ({ value: c.id, label: c.name, color: c.color })) || [],
+            options: categories?.map((c: any) => ({ value: c.id, label: c.name, color: c.color })) || [],
             onCreateNew: onCreateCategory,
-          },
+          }] : []),
         ],
-        columns: 2,
+        columns: isMultiItem ? 1 : 2,
       },
       {
         fields: [

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { VirtualList } from '@/components/virtual';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 interface AuditLog {
   id: string;
@@ -114,6 +115,12 @@ export const ActivityLogPage: React.FC = () => {
     setEndDate('');
     setPage(1);
   };
+
+  const activeFiltersCount =
+    (selectedAction ? 1 : 0) +
+    (selectedEntityType ? 1 : 0) +
+    (startDate ? 1 : 0) +
+    (endDate ? 1 : 0);
 
   const exportToCSV = () => {
     const headers = ['Date', 'Action', 'Entity Type', 'Description', 'Changes'];
@@ -237,63 +244,34 @@ export const ActivityLogPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Activity className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Activity Log</h1>
-              <p className="text-gray-600">View all your account activity and changes</p>
-            </div>
-          </div>
-        </div>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Page Header */}
+        <PageHeader
+          showSearch={true}
+          searchValue={searchQuery}
+          onSearchChange={(value) => {
+            setSearchQuery(value);
+            setPage(1);
+          }}
+          searchPlaceholder="Search by description or ID..."
+          showFilter={true}
+          onFilterClick={() => setShowFilters(!showFilters)}
+          activeFiltersCount={activeFiltersCount}
+          buttons={[
+            {
+              label: 'Export',
+              icon: Download,
+              onClick: exportToCSV,
+              variant: 'outline' as const,
+              disabled: logs.length === 0,
+            },
+          ]}
+        />
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <form onSubmit={handleSearch} className="space-y-4">
-            {/* Search bar */}
-            <div className="flex gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by description or ID..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Search
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <Filter className="w-5 h-5" />
-                Filters
-              </button>
-              <button
-                type="button"
-                onClick={exportToCSV}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={logs.length === 0}
-              >
-                <Download className="w-5 h-5" />
-                Export
-              </button>
-            </div>
-
-            {/* Filters panel */}
-            {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Action Type
@@ -368,19 +346,18 @@ export const ActivityLogPage: React.FC = () => {
                   />
                 </div>
 
-                <div className="md:col-span-4">
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Clear all filters
-                  </button>
-                </div>
+              <div className="md:col-span-4">
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Clear All
+                </button>
               </div>
-            )}
-          </form>
-        </div>
+            </div>
+          </div>
+        )}
 
         {/* Results count */}
         {!loading && (

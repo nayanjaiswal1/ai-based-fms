@@ -73,13 +73,7 @@ export default function JobsPage() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Job Monitoring</h1>
-          <p className="text-muted-foreground">
-            Monitor and manage background jobs and queues
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => checkStuckJobs()}>
             <AlertCircle className="h-4 w-4 mr-2" />

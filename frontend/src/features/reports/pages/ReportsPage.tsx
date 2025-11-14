@@ -36,6 +36,7 @@ import ReportPreview from '../components/ReportPreview';
 import { Plus, Search, Star, FileText, Download, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function ReportsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -153,45 +154,33 @@ export default function ReportsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Reports</h1>
-          <p className="text-muted-foreground mt-1">
-            Create and manage custom financial reports
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowTemplates(true)}>
-            <FileText className="h-4 w-4 mr-2" />
-            Templates
-          </Button>
-          <Button onClick={() => setShowBuilder(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Report
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search reports..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Tabs value={filterType} onValueChange={(value: any) => setFilterType(value)}>
-          <TabsList>
-            <TabsTrigger value="all">All Reports</TabsTrigger>
-            <TabsTrigger value="favorites">
-              <Star className="h-4 w-4 mr-2" />
-              Favorites
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      {/* Page Header with Search and Buttons */}
+      <PageHeader
+        showSearch={true}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search reports..."
+        buttons={[
+          {
+            label: filterType === 'all' ? 'All Reports' : 'Favorites',
+            icon: filterType === 'favorites' ? Star : FileText,
+            onClick: () => setFilterType(filterType === 'all' ? 'favorites' : 'all'),
+            variant: 'outline' as const,
+          },
+          {
+            label: 'Templates',
+            icon: FileText,
+            onClick: () => setShowTemplates(true),
+            variant: 'outline' as const,
+          },
+          {
+            label: 'Create Report',
+            icon: Plus,
+            onClick: () => setShowBuilder(true),
+            variant: 'primary' as const,
+          },
+        ]}
+      />
 
       <ReportList
         reports={reports}
