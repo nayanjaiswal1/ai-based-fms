@@ -42,7 +42,7 @@ export default function TransactionsPage() {
 
   // Parse filters from URL using the hook
   const filters = useMemo(() => {
-    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount'];
+    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount', 'isVerified'];
     return getParams(filterKeys);
   }, [getParams]);
 
@@ -131,7 +131,7 @@ export default function TransactionsPage() {
   };
 
   const handleApplyFilters = (newFilters: any) => {
-    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount'];
+    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount', 'isVerified'];
 
     // Convert filters to the right format
     const cleanedFilters: Record<string, string | null> = {};
@@ -152,7 +152,7 @@ export default function TransactionsPage() {
   };
 
   const handleClearAllFilters = () => {
-    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount'];
+    const filterKeys = ['type', 'accountId', 'categoryId', 'tagId', 'startDate', 'endDate', 'minAmount', 'maxAmount', 'isVerified'];
     removeParams(filterKeys);
   };
 
@@ -303,6 +303,15 @@ export default function TransactionsPage() {
             <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Find Duplicates</span>
             <span className="xs:hidden">Duplicates</span>
+          </button>
+
+          <button
+            onClick={() => setParam('isVerified', 'false')}
+            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Unverified</span>
+            <span className="sm:hidden">Unver.</span>
           </button>
 
           {/* Hide Import on very small screens */}

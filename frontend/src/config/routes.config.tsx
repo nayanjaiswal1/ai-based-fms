@@ -15,6 +15,7 @@ const ReconciliationPage = lazy(() =>
 );
 const BudgetsPage = lazy(() => import('@features/budgets/pages/BudgetsPage'));
 const GroupsPage = lazy(() => import('@features/groups/pages/GroupsPage'));
+const GroupDetailPage = lazy(() => import('@features/groups/pages/GroupDetailPage'));
 const InvestmentsPage = lazy(() => import('@features/investments/pages/InvestmentsPage'));
 const LendBorrowPage = lazy(() => import('@features/lend-borrow/pages/LendBorrowPage'));
 const CombinedAnalyticsPage = lazy(() => import('@features/analytics/pages/CombinedAnalyticsPage'));
@@ -108,6 +109,14 @@ export const protectedRoutes: RouteObject[] = [
     element: (
       <FeatureGate feature={FeatureFlag.GROUPS}>
         <GroupsPage />
+      </FeatureGate>
+    ),
+  },
+  {
+    path: '/groups/:id',
+    element: (
+      <FeatureGate feature={FeatureFlag.GROUPS}>
+        <GroupDetailPage />
       </FeatureGate>
     ),
   },
