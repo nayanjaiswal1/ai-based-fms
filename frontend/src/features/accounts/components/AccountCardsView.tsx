@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Edit, Trash2, Upload, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
+import { Edit, Trash2, Upload, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Calendar, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { transactionsApi } from '@services/api';
+import { transactionsApi, reconciliationApi } from '@services/api';
 import { useCurrency } from '@/hooks/useCurrency';
 
 interface AccountCardsViewProps {
@@ -21,11 +21,13 @@ export function AccountCardsView({
   getAccountIcon
 }: AccountCardsViewProps) {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'transactions' | 'statements'>('transactions');
   const navigate = useNavigate();
   const { formatLocale } = useCurrency();
 
   const handleCardClick = (accountId: string) => {
     setSelectedAccountId(selectedAccountId === accountId ? null : accountId);
+    setActiveTab('transactions'); // Reset to transactions tab when selecting a new card
   };
 
   const selectedAccount = accounts.find(acc => acc.id === selectedAccountId);
@@ -36,7 +38,14 @@ export function AccountCardsView({
     enabled: !!selectedAccountId,
   });
 
+  const { data: reconciliationHistory } = useQuery({
+    queryKey: ['reconciliation-history', selectedAccountId],
+    queryFn: () => reconciliationApi.getHistory(selectedAccountId!),
+    enabled: !!selectedAccountId,
+  });
+
   const transactionsList = transactions?.data || [];
+  const statementsList = reconciliationHistory?.data || [];
 
   const getCardGradient = (type: string, index: number) => {
     const gradients = [
@@ -211,8 +220,25 @@ export function AccountCardsView({
             <div className="rounded-3xl overflow-hidden backdrop-blur-xl bg-white/60 border border-white/20 shadow-2xl">
               {/* Tabs */}
               <div className="flex border-b border-white/20 bg-gradient-to-r from-white/40 to-white/20">
-                <button className="flex-1 px-6 py-4 text-sm font-semibold text-slate-700 bg-white/50 border-b-2 border-blue-500">
+                <button
+                  onClick={() => setActiveTab('transactions')}
+                  className={`flex-1 px-6 py-4 text-sm font-semibold transition-colors ${
+                    activeTab === 'transactions'
+                      ? 'text-slate-700 bg-white/50 border-b-2 border-blue-500'
+                      : 'text-slate-600 hover:bg-white/30'
+                  }`}
+                >
                   Transactions
+                </button>
+                <button
+                  onClick={() => setActiveTab('statements')}
+                  className={`flex-1 px-6 py-4 text-sm font-semibold transition-colors ${
+                    activeTab === 'statements'
+                      ? 'text-slate-700 bg-white/50 border-b-2 border-blue-500'
+                      : 'text-slate-600 hover:bg-white/30'
+                  }`}
+                >
+                  Statements
                 </button>
                 <button
                   onClick={() => onReconcile(selectedAccount)}
@@ -224,67 +250,176 @@ export function AccountCardsView({
 
               {/* Content */}
               <div className="p-6 max-h-96 overflow-y-auto">
-                {transactionsList.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-slate-600 font-medium">No transactions yet</p>
-                    <button
-                      onClick={() => navigate(`/transactions?accountId=${selectedAccount.id}`)}
-                      className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full font-medium hover:shadow-lg transition-all"
-                    >
-                      Add Transaction
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {transactionsList.map((transaction: any) => (
-                      <div
-                        key={transaction.id}
-                        onClick={() => navigate(`/transactions?id=${transaction.id}`)}
-                        className="flex items-center justify-between p-4 rounded-2xl bg-white/60 backdrop-blur-sm hover:bg-white/80 transition-all cursor-pointer border border-white/20"
+                {activeTab === 'transactions' ? (
+                  // Transactions Tab Content
+                  transactionsList.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-slate-600 font-medium">No transactions yet</p>
+                      <button
+                        onClick={() => navigate(`/transactions?accountId=${selectedAccount.id}`)}
+                        className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full font-medium hover:shadow-lg transition-all"
                       >
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className={`p-2 rounded-xl ${
-                            transaction.type === 'income'
-                              ? 'bg-green-100 text-green-600'
-                              : 'bg-red-100 text-red-600'
-                          }`}>
-                            {transaction.type === 'income' ? (
-                              <TrendingUp className="h-4 w-4" />
-                            ) : (
-                              <TrendingDown className="h-4 w-4" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-slate-800 truncate">
-                              {transaction.description}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(transaction.date).toLocaleDateString()}
-                              {transaction.category && (
-                                <span>• {transaction.category.name}</span>
+                        Add Transaction
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {transactionsList.map((transaction: any) => (
+                        <div
+                          key={transaction.id}
+                          onClick={() => navigate(`/transactions?id=${transaction.id}`)}
+                          className="flex items-center justify-between p-4 rounded-2xl bg-white/60 backdrop-blur-sm hover:bg-white/80 transition-all cursor-pointer border border-white/20"
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className={`p-2 rounded-xl ${
+                              transaction.type === 'income'
+                                ? 'bg-green-100 text-green-600'
+                                : 'bg-red-100 text-red-600'
+                            }`}>
+                              {transaction.type === 'income' ? (
+                                <TrendingUp className="h-4 w-4" />
+                              ) : (
+                                <TrendingDown className="h-4 w-4" />
                               )}
                             </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-slate-800 truncate">
+                                {transaction.description}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-slate-500">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(transaction.date).toLocaleDateString()}
+                                {transaction.category && (
+                                  <span>• {transaction.category.name}</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
+                          <p className={`text-lg font-bold ${
+                            transaction.type === 'income'
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                          }`}>
+                            {transaction.type === 'income' ? '+' : '-'}
+                            {formatLocale(transaction.amount)}
+                          </p>
                         </div>
-                        <p className={`text-lg font-bold ${
-                          transaction.type === 'income'
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }`}>
-                          {transaction.type === 'income' ? '+' : '-'}
-                          {formatLocale(transaction.amount)}
-                        </p>
-                      </div>
-                    ))}
+                      ))}
 
-                    <button
-                      onClick={() => navigate(`/transactions?accountId=${selectedAccount.id}`)}
-                      className="w-full py-3 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-2xl transition-all"
-                    >
-                      View All Transactions →
-                    </button>
-                  </div>
+                      <button
+                        onClick={() => navigate(`/transactions?accountId=${selectedAccount.id}`)}
+                        className="w-full py-3 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-2xl transition-all"
+                      >
+                        View All Transactions →
+                      </button>
+                    </div>
+                  )
+                ) : (
+                  // Statements Tab Content
+                  statementsList.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileText className="h-16 w-16 mx-auto text-slate-400 mb-4" />
+                      <p className="text-slate-600 font-medium">No statements uploaded yet</p>
+                      <button
+                        onClick={() => onReconcile(selectedAccount)}
+                        className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full font-medium hover:shadow-lg transition-all"
+                      >
+                        Upload First Statement
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {statementsList.map((reconciliation: any) => {
+                        const getStatusIcon = (status: string) => {
+                          switch (status) {
+                            case 'completed':
+                              return <CheckCircle className="h-5 w-5 text-green-600" />;
+                            case 'in_progress':
+                              return <Clock className="h-5 w-5 text-blue-600" />;
+                            case 'cancelled':
+                              return <XCircle className="h-5 w-5 text-red-600" />;
+                            default:
+                              return <FileText className="h-5 w-5 text-slate-600" />;
+                          }
+                        };
+
+                        const getStatusColor = (status: string) => {
+                          switch (status) {
+                            case 'completed':
+                              return 'text-green-600 bg-green-50';
+                            case 'in_progress':
+                              return 'text-blue-600 bg-blue-50';
+                            case 'cancelled':
+                              return 'text-red-600 bg-red-50';
+                            default:
+                              return 'text-slate-600 bg-slate-50';
+                          }
+                        };
+
+                        return (
+                          <div
+                            key={reconciliation.id}
+                            onClick={() => reconciliation.status === 'in_progress' && navigate(`/reconciliation/${reconciliation.id}`)}
+                            className={`p-4 rounded-2xl bg-white/60 backdrop-blur-sm hover:bg-white/80 transition-all border border-white/20 ${
+                              reconciliation.status === 'in_progress' ? 'cursor-pointer' : 'cursor-default'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-xl ${getStatusColor(reconciliation.status)}`}>
+                                  {getStatusIcon(reconciliation.status)}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-slate-800">
+                                    Reconciliation #{reconciliation.id.slice(0, 8)}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                                    <Calendar className="h-3 w-3" />
+                                    {new Date(reconciliation.createdAt).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(reconciliation.status)}`}>
+                                  {reconciliation.status.replace('_', ' ').toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+
+                            {reconciliation.statementBalance && (
+                              <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-slate-200">
+                                <div>
+                                  <p className="text-xs text-slate-500">Statement Balance</p>
+                                  <p className="font-semibold text-slate-800">
+                                    {formatLocale(reconciliation.statementBalance)}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-slate-500">Matched</p>
+                                  <p className="font-semibold text-green-600">
+                                    {reconciliation.matchedTransactions || 0}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-slate-500">Unmatched</p>
+                                  <p className="font-semibold text-orange-600">
+                                    {reconciliation.unmatchedTransactions || 0}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      <button
+                        onClick={() => onReconcile(selectedAccount)}
+                        className="w-full py-3 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-2xl transition-all"
+                      >
+                        Upload New Statement →
+                      </button>
+                    </div>
+                  )
                 )}
               </div>
             </div>

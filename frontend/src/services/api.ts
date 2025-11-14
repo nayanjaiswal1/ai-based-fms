@@ -81,6 +81,18 @@ export const accountsApi = {
   delete: (id: string) => api.delete(`/accounts/${id}`),
 };
 
+export const reconciliationApi = {
+  startReconciliation: (data: any) => api.post('/reconciliations/start', data),
+  getReconciliation: (id: string) => api.get(`/reconciliations/${id}`),
+  getHistory: (accountId: string) => api.get(`/reconciliations/history/${accountId}`),
+  uploadStatement: (id: string, data: any) => api.post(`/reconciliations/${id}/upload-statement`, data),
+  matchTransaction: (id: string, data: any) => api.post(`/reconciliations/${id}/match`, data),
+  unmatchTransaction: (id: string, data: any) => api.post(`/reconciliations/${id}/unmatch`, data),
+  completeReconciliation: (id: string, data: any) => api.post(`/reconciliations/${id}/complete`, data),
+  cancelReconciliation: (id: string) => api.delete(`/reconciliations/${id}/cancel`),
+  adjustBalance: (id: string, data: any) => api.post(`/reconciliations/${id}/adjust-balance`, data),
+};
+
 export const transactionsApi = {
   getAll: (params?: any) => api.get('/transactions', { params }),
   getOne: (id: string) => api.get(`/transactions/${id}`),
