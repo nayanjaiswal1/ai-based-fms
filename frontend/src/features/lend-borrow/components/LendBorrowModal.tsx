@@ -36,6 +36,8 @@ export default function LendBorrowModal({ record, isOpen, onClose }: LendBorrowM
     },
     transform: (data) => ({
       ...data,
+      personEmail: data.personEmail || undefined,
+      personPhone: data.personPhone || undefined,
       dueDate: data.dueDate || undefined,
       description: data.description || undefined,
     }),

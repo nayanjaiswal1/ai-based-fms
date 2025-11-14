@@ -4,7 +4,7 @@ import { ColumnConfig } from '@components/table';
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'paid':
+    case 'settled':
       return <CheckCircle className="h-5 w-5 text-green-600" />;
     case 'partial':
       return <Clock className="h-5 w-5 text-yellow-600" />;
@@ -17,7 +17,7 @@ const getStatusIcon = (status: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'paid':
+    case 'settled':
       return 'text-green-600';
     case 'partial':
       return 'text-yellow-600';
@@ -40,12 +40,12 @@ export const getLendBorrowColumns = (
     render: (value) => (
       <span
         className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-          value === 'lent'
+          value === 'lend'
             ? 'bg-green-100 text-green-800'
             : 'bg-red-100 text-red-800'
         }`}
       >
-        {value}
+        {value === 'lend' ? 'Lend' : 'Borrow'}
       </span>
     ),
     width: '100px',
@@ -71,22 +71,21 @@ export const getLendBorrowColumns = (
     width: '120px',
   },
   {
-    key: 'paidAmount',
+    key: 'amountPaid',
     label: 'Paid',
     sortable: true,
     render: (value) => (
-      <span className="text-sm text-gray-900">${Number(value).toFixed(2)}</span>
+      <span className="text-sm text-gray-900">${Number(value || 0).toFixed(2)}</span>
     ),
     width: '120px',
   },
   {
-    key: 'remaining',
+    key: 'amountRemaining',
     label: 'Remaining',
     sortable: true,
-    render: (_, row) => {
-      const remaining = row.amount - row.paidAmount;
-      return <span className="text-sm font-semibold text-gray-900">${remaining.toFixed(2)}</span>;
-    },
+    render: (value) => (
+      <span className="text-sm font-semibold text-gray-900">${Number(value || 0).toFixed(2)}</span>
+    ),
     width: '120px',
   },
   {
@@ -120,7 +119,7 @@ export const getLendBorrowColumns = (
     align: 'right',
     render: (_, row) => (
       <div className="flex justify-end gap-2">
-        {row.status !== 'paid' && (
+        {row.status !== 'settled' && (
           <button
             onClick={() => onRecordPayment(row)}
             className="text-sm text-green-600 hover:text-green-900"

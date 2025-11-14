@@ -3,13 +3,15 @@ import { FormConfig } from '../../../lib/form/types';
 import { format } from 'date-fns';
 
 export const lendBorrowSchema = z.object({
-  type: z.enum(['lent', 'borrowed'], {
+  type: z.enum(['lend', 'borrow'], {
     required_error: 'Type is required',
   }),
   personName: z.string().min(1, 'Person name is required').max(200),
+  personEmail: z.string().email().optional().or(z.literal('')),
+  personPhone: z.string().optional(),
   amount: z.number().positive('Amount must be greater than 0'),
-  dueDate: z.string().optional(),
-  interestRate: z.number().min(0).max(100).optional(),
+  date: z.string().min(1, 'Date is required'),
+  dueDate: z.string().optional().or(z.literal('')),
   description: z.string().optional(),
 });
 
@@ -28,8 +30,8 @@ export function getLendBorrowFormConfig(record?: any): FormConfig<LendBorrowForm
             type: 'radio',
             required: true,
             options: [
-              { value: 'lent', label: 'Lent (I gave money)' },
-              { value: 'borrowed', label: 'Borrowed (I received money)' },
+              { value: 'lend', label: 'Lend (I gave money)' },
+              { value: 'borrow', label: 'Borrow (I received money)' },
             ],
           },
         ],
@@ -44,6 +46,23 @@ export function getLendBorrowFormConfig(record?: any): FormConfig<LendBorrowForm
             placeholder: 'e.g., John Doe',
           },
           {
+            name: 'personEmail',
+            label: 'Email',
+            type: 'email',
+            placeholder: 'person@example.com',
+          },
+        ],
+        columns: 2,
+      },
+      {
+        fields: [
+          {
+            name: 'personPhone',
+            label: 'Phone',
+            type: 'text',
+            placeholder: '+1234567890',
+          },
+          {
             name: 'amount',
             label: 'Amount',
             type: 'currency',
@@ -56,17 +75,17 @@ export function getLendBorrowFormConfig(record?: any): FormConfig<LendBorrowForm
       {
         fields: [
           {
+            name: 'date',
+            label: 'Date',
+            type: 'date',
+            required: true,
+            description: 'Date when money was lent/borrowed',
+          },
+          {
             name: 'dueDate',
             label: 'Due Date',
             type: 'date',
             description: 'Optional: When the money should be returned',
-          },
-          {
-            name: 'interestRate',
-            label: 'Interest Rate (%)',
-            type: 'percentage',
-            placeholder: 'e.g., 5.5',
-            description: 'Optional: Annual interest rate',
           },
         ],
         columns: 2,
@@ -77,7 +96,7 @@ export function getLendBorrowFormConfig(record?: any): FormConfig<LendBorrowForm
             name: 'description',
             label: 'Description',
             type: 'textarea',
-            placeholder: 'Add any additional details...',
+            placeholder: 'Add any additional details or notes...',
             rows: 3,
           },
         ],
@@ -85,13 +104,17 @@ export function getLendBorrowFormConfig(record?: any): FormConfig<LendBorrowForm
     ],
     schema: lendBorrowSchema,
     defaultValues: {
-      type: record?.type || 'lent',
+      type: record?.type || 'lend',
       personName: record?.personName || '',
+      personEmail: record?.personEmail || '',
+      personPhone: record?.personPhone || '',
       amount: record?.amount || 0,
+      date: record?.date
+        ? format(new Date(record.date), 'yyyy-MM-dd')
+        : format(new Date(), 'yyyy-MM-dd'),
       dueDate: record?.dueDate
         ? format(new Date(record.dueDate), 'yyyy-MM-dd')
         : '',
-      interestRate: record?.interestRate || undefined,
       description: record?.description || '',
     },
   };
