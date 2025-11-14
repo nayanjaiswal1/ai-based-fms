@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { MergeTransactionsDto, MarkNotDuplicateDto } from './dto/merge-transactions.dto';
+import { CreateTransactionDto, UpdateTransactionDto, GetStatsDto } from './dto/transaction.dto';
 
 @ApiTags('Transactions')
 @ApiBearerAuth()
@@ -13,7 +14,7 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Post()
-  create(@CurrentUser('id') userId: string, @Body() createDto: any) {
+  create(@CurrentUser('id') userId: string, @Body() createDto: CreateTransactionDto) {
     return this.transactionsService.create(userId, createDto);
   }
 
@@ -25,10 +26,21 @@ export class TransactionsController {
   @Get('stats')
   getStats(
     @CurrentUser('id') userId: string,
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
+    @Query() query: GetStatsDto,
   ) {
-    return this.transactionsService.getStats(userId, new Date(startDate), new Date(endDate));
+    const startDate = new Date(query.startDate);
+    const endDate = new Date(query.endDate);
+
+    // Validate dates
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new BadRequestException('Invalid date format. Please use ISO date strings.');
+    }
+
+    if (endDate < startDate) {
+      throw new BadRequestException('End date must be after start date');
+    }
+
+    return this.transactionsService.getStats(userId, startDate, endDate);
   }
 
   @Get(':id')
@@ -37,7 +49,7 @@ export class TransactionsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @CurrentUser('id') userId: string, @Body() updateDto: any) {
+  update(@Param('id') id: string, @CurrentUser('id') userId: string, @Body() updateDto: UpdateTransactionDto) {
     return this.transactionsService.update(id, userId, updateDto);
   }
 

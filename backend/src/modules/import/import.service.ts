@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ImportLog, Transaction, ImportStatus, ImportType } from '@database/entities';
@@ -10,6 +10,8 @@ import { Readable } from 'stream';
 
 @Injectable()
 export class ImportService {
+  private readonly logger = new Logger(ImportService.name);
+
   constructor(
     @InjectRepository(ImportLog)
     private importLogRepository: Repository<ImportLog>,
@@ -65,7 +67,15 @@ export class ImportService {
         preview: transactions.slice(0, 10),
       };
     } catch (error) {
-      throw new BadRequestException('Failed to parse file: ' + error.message);
+      this.logger.error('File parsing failed', error.stack);
+
+      if (error instanceof SyntaxError) {
+        throw new BadRequestException('Invalid file format. Please ensure the file is valid CSV/Excel.');
+      } else if (error.code === 'LIMIT_FILE_SIZE') {
+        throw new BadRequestException('File size exceeds maximum allowed (10MB).');
+      } else {
+        throw new BadRequestException('Failed to parse file. Please check the file format and try again.');
+      }
     }
   }
 
@@ -263,10 +273,18 @@ export class ImportService {
     while ((match = transactionPattern.exec(text)) !== null) {
       const [, date, description, amount] = match;
 
+      const cleanedAmount = amount.replace(/[$,]/g, '');
+      const parsedAmount = parseFloat(cleanedAmount);
+
+      if (isNaN(parsedAmount)) {
+        this.logger.warn(`Invalid amount format in PDF: ${amount}`);
+        continue; // Skip invalid transactions
+      }
+
       transactions.push({
         date: this.parseDate(date),
         description: description.trim(),
-        amount: Math.abs(parseFloat(amount.replace(/[$,]/g, ''))),
+        amount: Math.abs(parsedAmount),
         type: amount.includes('-') ? 'expense' : 'income',
       });
     }

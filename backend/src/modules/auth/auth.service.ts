@@ -343,16 +343,20 @@ export class AuthService {
       throw new UnauthorizedException('Invalid 2FA code');
     }
 
-    // Enable 2FA
+    // Generate and hash backup codes
+    const backupCodes = this.generateBackupCodes();
+    const hashedCodes = await Promise.all(
+      backupCodes.map(code => bcrypt.hash(code, 10))
+    );
+
+    // Enable 2FA and save backup codes
     user.twoFactorEnabled = true;
+    user.twoFactorBackupCodes = hashedCodes;
     await this.userRepository.save(user);
 
-    // Generate backup codes
-    const backupCodes = this.generateBackupCodes();
-
     return {
-      message: '2FA successfully enabled',
-      backupCodes,
+      message: '2FA successfully enabled. Save these backup codes in a safe place.',
+      backupCodes, // Show unhashed codes to user (only this once!)
     };
   }
 
@@ -382,6 +386,7 @@ export class AuthService {
     // Disable 2FA
     user.twoFactorEnabled = false;
     user.twoFactorSecret = null;
+    user.twoFactorBackupCodes = null;
     await this.userRepository.save(user);
 
     return {
@@ -471,15 +476,23 @@ export class AuthService {
 
     console.log(`Password reset link: ${resetUrl}`);
 
+    // Only expose sensitive data in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      return {
+        message: 'If an account with that email exists, a password reset link has been sent',
+        resetToken, // DEV ONLY
+        resetUrl, // DEV ONLY
+      };
+    }
+
     return {
       message: 'If an account with that email exists, a password reset link has been sent',
-      // TODO: Remove this in production
-      resetToken, // Only for development/testing
-      resetUrl, // Only for development/testing
     };
   }
 
   async resetPassword(passwordResetDto: PasswordResetDto) {
+    const startTime = Date.now();
+
     // Find users with non-expired reset tokens
     const users = await this.userRepository
       .createQueryBuilder('user')
@@ -500,6 +513,13 @@ export class AuthService {
         matchedUser = user;
         break;
       }
+    }
+
+    // Add constant-time delay to prevent timing attacks
+    const elapsedTime = Date.now() - startTime;
+    const minDelay = 1000; // 1 second minimum response time
+    if (elapsedTime < minDelay) {
+      await new Promise(resolve => setTimeout(resolve, minDelay - elapsedTime));
     }
 
     if (!matchedUser) {

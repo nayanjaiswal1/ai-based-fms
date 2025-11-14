@@ -21,7 +21,7 @@ export class GroupsService {
   // Helper method to safely broadcast events when WebSocket is enabled
   private async broadcastGroupEvent(groupId: string, event: string, data: any) {
     if (this.notificationsGateway) {
-      await this.broadcastGroupEvent(groupId, event, data);
+      await this.notificationsGateway.broadcastToGroup(groupId, event, data);
     }
   }
 
