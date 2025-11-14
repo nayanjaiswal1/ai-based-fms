@@ -1,19 +1,25 @@
-import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote, CheckCircle, Clock, GitCompare } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Edit, Trash2, Wallet, CreditCard, DollarSign, Banknote, CheckCircle, Clock, GitCompare, LayoutGrid, Layers } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import AccountModal from '../components/AccountModal';
+import { AccountCardsView } from '../components/AccountCardsView';
 import { useAccounts } from '../hooks/useAccounts';
 import { ConfirmDialog } from '@components/ui/ConfirmDialog';
 import { useConfirm } from '@hooks/useConfirm';
 import { useQuery } from '@tanstack/react-query';
-import { accountsApi } from '@services/api';
+import { accountsApi, exportApi } from '@services/api';
 import { toast } from 'react-hot-toast';
 import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
+
+type ViewMode = 'grid' | 'cards';
+type ExportFormat = 'csv' | 'pdf';
 
 export default function AccountsPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   // Detect modal state from URL path
   const isNewModal = location.pathname === '/accounts/new';
@@ -143,39 +149,97 @@ export default function AccountsPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Usage Limit Warning */}
-      <UsageLimitBanner resource="maxAccounts" />
+    <div className={viewMode === 'cards' ? '' : 'space-y-4 sm:space-y-6'}>
+      {/* Only show header and banner in grid view */}
+      {viewMode === 'grid' && (
+        <>
+          {/* Usage Limit Warning */}
+          <UsageLimitBanner resource="maxAccounts" />
 
-      {/* Header - Responsive */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Accounts</h1>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600">
-            Manage your financial accounts and track balances
-          </p>
+          {/* Header - Responsive */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Accounts</h1>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600">
+                Manage your financial accounts and track balances
+              </p>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* View Toggle */}
+              {accounts && accounts.length > 0 && (
+                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                      viewMode === 'grid'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    aria-label="Grid view"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    <span className="hidden sm:inline">Grid</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode('cards')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                      viewMode === 'cards'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    aria-label="Cards view"
+                  >
+                    <Layers className="h-4 w-4" />
+                    <span className="hidden sm:inline">Cards</span>
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={() => navigate('/accounts/new')}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"
+              >
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>Add Account</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Total Balance Card - Responsive */}
+          <div className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-4 sm:p-6 text-white shadow-lg">
+            <p className="text-xs sm:text-sm font-medium opacity-90">Total Balance</p>
+            <p className="mt-2 text-3xl sm:text-4xl font-bold">${totalBalance.toFixed(2)}</p>
+            <p className="mt-2 text-xs sm:text-sm opacity-75">
+              Across {accounts?.length || 0} account(s)
+            </p>
+          </div>
+        </>
+      )}
+
+      {/* View toggle for cards view */}
+      {viewMode === 'cards' && accounts && accounts.length > 0 && (
+        <div className="mb-4 flex justify-end">
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-white transition-colors"
+              aria-label="Grid view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-white text-gray-900 shadow-sm"
+              aria-label="Cards view"
+            >
+              <Layers className="h-4 w-4" />
+              <span className="hidden sm:inline">Cards</span>
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={() => navigate('/accounts/new')}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span>Add Account</span>
-          </button>
-        </div>
-      </div>
+      )}
 
-      {/* Total Balance Card - Responsive */}
-      <div className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-4 sm:p-6 text-white shadow-lg">
-        <p className="text-xs sm:text-sm font-medium opacity-90">Total Balance</p>
-        <p className="mt-2 text-3xl sm:text-4xl font-bold">${totalBalance.toFixed(2)}</p>
-        <p className="mt-2 text-xs sm:text-sm opacity-75">
-          Across {accounts?.length || 0} account(s)
-        </p>
-      </div>
-
-      {/* Accounts Grid */}
+      {/* Accounts Views */}
       {isLoading ? (
         <div className="rounded-lg bg-white p-12 text-center shadow">
           <p className="text-gray-500">Loading accounts...</p>
@@ -194,6 +258,14 @@ export default function AccountsPage() {
             Add Your First Account
           </button>
         </div>
+      ) : viewMode === 'cards' ? (
+        <AccountCardsView
+          accounts={accounts}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onReconcile={handleReconcile}
+          getAccountIcon={getAccountIcon}
+        />
       ) : (
         <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {accounts?.map((account: any) => {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Settings, Plus, RotateCcw, Save, X } from 'lucide-react';
+import { Settings, Plus, RotateCcw, Save, X, GripVertical, Eye } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { useWidgetPreferences } from '../hooks/useWidgetPreferences';
 import { WidgetGallery } from './WidgetGallery';
 
@@ -17,6 +18,11 @@ export function DashboardCustomizer({ isCustomizing, onToggleCustomizing }: Prop
     resetToDefault();
     setShowResetConfirm(false);
     onToggleCustomizing();
+  };
+
+  const handleDone = () => {
+    onToggleCustomizing();
+    toast.success('Dashboard customization saved');
   };
 
   return (
@@ -51,7 +57,7 @@ export function DashboardCustomizer({ isCustomizing, onToggleCustomizing }: Prop
             <div className="h-6 w-px bg-gray-300" />
 
             <button
-              onClick={onToggleCustomizing}
+              onClick={handleDone}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
             >
               <Save className="h-4 w-4" />
@@ -115,22 +121,44 @@ export function DashboardCustomizer({ isCustomizing, onToggleCustomizing }: Prop
 
       {/* Help Tooltip */}
       {isCustomizing && (
-        <div className="fixed top-20 right-6 z-40 bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-sm">
-          <h4 className="font-semibold text-blue-900 mb-2">Customization Mode</h4>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Drag widgets to reorder them</li>
-            <li>• Click the eye icon to show/hide widgets</li>
-            <li>• Click the gear icon to configure widgets</li>
-            <li>• Click the X icon to remove widgets</li>
-            <li>• Click "Add Widget" to add more widgets</li>
+        <div className="fixed top-20 right-6 z-40 bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-sm shadow-lg animate-fade-in-left">
+          <div className="flex items-start justify-between mb-2">
+            <h4 className="font-semibold text-blue-900">Customization Mode</h4>
+            <button
+              onClick={() => {}}
+              className="text-blue-600 hover:text-blue-800"
+              aria-label="Close help"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <ul className="text-sm text-blue-800 space-y-2">
+            <li className="flex items-start gap-2">
+              <GripVertical className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>Drag the handle to reorder widgets</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Eye className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>Toggle visibility of widgets</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Settings className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>Configure widget settings</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <X className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>Remove widgets from dashboard</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Plus className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>Add new widgets from gallery</span>
+            </li>
           </ul>
-          <button
-            onClick={onToggleCustomizing}
-            className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-          >
-            <X className="h-3 w-3" />
-            Got it
-          </button>
+          <div className="mt-4 pt-3 border-t border-blue-200">
+            <p className="text-xs text-blue-700">
+              Changes are saved automatically. Click <strong>Done</strong> when finished.
+            </p>
+          </div>
         </div>
       )}
     </>

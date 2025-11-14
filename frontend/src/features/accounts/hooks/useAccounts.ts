@@ -4,7 +4,7 @@ import { accountsApi } from '@services/api';
 export interface Account {
   id: string;
   name: string;
-  type: 'bank' | 'card' | 'wallet' | 'cash';
+  type: 'bank' | 'wallet' | 'cash' | 'card' | 'investment' | 'other';
   balance: number;
   currency: string;
   description?: string;

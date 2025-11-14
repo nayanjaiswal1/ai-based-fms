@@ -4,7 +4,7 @@ import { usePreferencesStore } from '../../../stores/preferencesStore';
 
 export const accountSchema = z.object({
   name: z.string().min(1, 'Account name is required').max(100, 'Name must be less than 100 characters'),
-  type: z.enum(['bank', 'card', 'wallet', 'cash'], {
+  type: z.enum(['bank', 'wallet', 'cash', 'card', 'investment', 'other'], {
     required_error: 'Account type is required',
   }),
   balance: z.number({
@@ -42,9 +42,11 @@ export function getAccountFormConfig(account?: any): FormConfig<AccountFormData>
             required: true,
             options: [
               { value: 'bank', label: 'Bank Account' },
-              { value: 'card', label: 'Credit/Debit Card' },
               { value: 'wallet', label: 'Digital Wallet' },
               { value: 'cash', label: 'Cash' },
+              { value: 'card', label: 'Card' },
+              { value: 'investment', label: 'Investment' },
+              { value: 'other', label: 'Other' },
             ],
           },
         ],
@@ -79,7 +81,7 @@ export function getAccountFormConfig(account?: any): FormConfig<AccountFormData>
     schema: accountSchema,
     defaultValues: {
       name: account?.name || '',
-      type: account?.type || 'bank',
+      type: (account?.type as any) || 'bank',
       balance: account?.balance || 0,
       currency: account?.currency || userCurrency, // Use user preference
       description: account?.description || '',

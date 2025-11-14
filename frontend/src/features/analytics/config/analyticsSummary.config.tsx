@@ -25,7 +25,10 @@ export const getAnalyticsSummaryCards = (
       iconBgColor: 'bg-green-100',
       iconColor: 'text-green-600',
       valueColor: 'text-green-600',
-      formatter: (value) => `$${value.toFixed(2)}`,
+      formatter: (value) => {
+        const num = Number(value ?? 0);
+        return `$${num.toFixed(2)}`;
+      },
     },
     {
       id: 'total-expense',
@@ -35,7 +38,10 @@ export const getAnalyticsSummaryCards = (
       iconBgColor: 'bg-red-100',
       iconColor: 'text-red-600',
       valueColor: 'text-red-600',
-      formatter: (value) => `$${value.toFixed(2)}`,
+      formatter: (value) => {
+        const num = Number(value ?? 0);
+        return `$${num.toFixed(2)}`;
+      },
     },
     {
       id: 'net-savings',
@@ -45,7 +51,10 @@ export const getAnalyticsSummaryCards = (
       iconBgColor: data.netSavings >= 0 ? 'bg-blue-100' : 'bg-yellow-100',
       iconColor: data.netSavings >= 0 ? 'text-blue-600' : 'text-yellow-600',
       valueColor: data.netSavings >= 0 ? 'text-blue-600' : 'text-yellow-600',
-      formatter: (value) => `$${value.toFixed(2)}`,
+      formatter: (value) => {
+        const num = Number(value ?? 0);
+        return `$${num.toFixed(2)}`;
+      },
     },
     {
       id: 'savings-rate',
@@ -55,7 +64,10 @@ export const getAnalyticsSummaryCards = (
       iconBgColor: 'bg-purple-100',
       iconColor: 'text-purple-600',
       valueColor: 'text-purple-600',
-      formatter: (value) => `${value.toFixed(1)}%`,
+      formatter: (value) => {
+        const num = Number(value ?? 0);
+        return `${num.toFixed(1)}%`;
+      },
     },
   ];
 };

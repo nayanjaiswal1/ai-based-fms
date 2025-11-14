@@ -1,15 +1,6 @@
 import { IsString, IsNumber, IsEnum, IsOptional, MaxLength, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-export enum AccountType {
-  CHECKING = 'checking',
-  SAVINGS = 'savings',
-  CREDIT_CARD = 'credit_card',
-  CASH = 'cash',
-  INVESTMENT = 'investment',
-  LOAN = 'loan',
-  OTHER = 'other',
-}
+import { AccountType } from '../../../database/entities/account.entity';
 
 export class CreateAccountDto {
   @ApiProperty({ description: 'Account name', maxLength: 100 })

@@ -41,7 +41,7 @@ export default function LendBorrowPage() {
   // Fetch selected record for edit mode
   const { data: selectedRecordData } = useQuery({
     queryKey: ['lend-borrow-record', recordId],
-    queryFn: () => lendBorrowApi.getById(recordId!),
+    queryFn: () => lendBorrowApi.getOne(recordId!),
     enabled: !!recordId && modalMode === 'edit',
   });
 
@@ -193,21 +193,7 @@ export default function LendBorrowPage() {
         data={records?.data || []}
         keyExtractor={(row) => row.id}
         loading={isLoading}
-        emptyMessage={
-          <div className="py-12 text-center">
-            <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="mt-4 text-lg font-medium text-gray-900">No records yet</p>
-            <p className="mt-2 text-sm text-gray-500">
-              Start tracking money you've lent or borrowed
-            </p>
-            <button
-              onClick={() => navigate('/lend-borrow/new')}
-              className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              Add Your First Record
-            </button>
-          </div>
-        }
+        emptyMessage="No records yet"
       />
 
       {/* Modals */}

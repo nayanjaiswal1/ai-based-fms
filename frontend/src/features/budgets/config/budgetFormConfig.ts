@@ -8,14 +8,20 @@ export const budgetSchema = z.object({
     required_error: 'Amount is required',
     invalid_type_error: 'Amount must be a number',
   }).positive('Amount must be positive'),
-  period: z.enum(['daily', 'weekly', 'monthly', 'quarterly', 'yearly'], {
+  period: z.enum(['weekly', 'monthly', 'quarterly', 'yearly', 'custom'], {
     required_error: 'Period is required',
+  }),
+  type: z.enum(['category', 'tag', 'overall', 'group'], {
+    required_error: 'Type is required',
   }),
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
   categoryId: z.string().optional(),
+  tagId: z.string().optional(),
+  groupId: z.string().optional(),
+  alertEnabled: z.boolean().optional(),
   alertThreshold: z.number().min(0).max(100).optional(),
-  description: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 export type BudgetFormData = z.infer<typeof budgetSchema>;
@@ -23,8 +29,6 @@ export type BudgetFormData = z.infer<typeof budgetSchema>;
 function calculateEndDate(startDate: string, period: string): string {
   const start = new Date(startDate);
   switch (period) {
-    case 'daily':
-      return format(start, 'yyyy-MM-dd');
     case 'weekly':
       return format(addDays(start, 6), 'yyyy-MM-dd');
     case 'monthly':
@@ -33,6 +37,8 @@ function calculateEndDate(startDate: string, period: string): string {
       return format(endOfMonth(addMonths(start, 2)), 'yyyy-MM-dd');
     case 'yearly':
       return format(endOfYear(start), 'yyyy-MM-dd');
+    case 'custom':
+      return format(start, 'yyyy-MM-dd');
     default:
       return format(start, 'yyyy-MM-dd');
   }
@@ -57,6 +63,18 @@ export function getBudgetFormConfig(budget?: any, categories?: any[]): FormConfi
       {
         fields: [
           {
+            name: 'type',
+            label: 'Type',
+            type: 'select',
+            required: true,
+            options: [
+              { value: 'overall', label: 'Overall' },
+              { value: 'category', label: 'Category' },
+              { value: 'tag', label: 'Tag' },
+              { value: 'group', label: 'Group' },
+            ],
+          },
+          {
             name: 'amount',
             label: 'Budget Amount',
             type: 'currency',
@@ -70,11 +88,11 @@ export function getBudgetFormConfig(budget?: any, categories?: any[]): FormConfi
             type: 'select',
             required: true,
             options: [
-              { value: 'daily', label: 'Daily' },
               { value: 'weekly', label: 'Weekly' },
               { value: 'monthly', label: 'Monthly' },
               { value: 'quarterly', label: 'Quarterly' },
               { value: 'yearly', label: 'Yearly' },
+              { value: 'custom', label: 'Custom' },
             ],
             onChange: (value, form) => {
               const startDate = form.getValues('startDate');
@@ -85,7 +103,7 @@ export function getBudgetFormConfig(budget?: any, categories?: any[]): FormConfi
             },
           },
         ],
-        columns: 2,
+        columns: 3,
       },
       {
         fields: [
@@ -123,6 +141,18 @@ export function getBudgetFormConfig(budget?: any, categories?: any[]): FormConfi
             options: categories?.map(c => ({ value: c.id, label: c.name })) || [],
           },
           {
+            name: 'tagId',
+            label: 'Tag',
+            type: 'text',
+            description: 'Optional: Apply budget to a specific tag (enter tag ID)',
+          },
+          {
+            name: 'groupId',
+            label: 'Group',
+            type: 'text',
+            description: 'Optional: Apply budget to a group (enter group ID)',
+          },
+          {
             name: 'alertThreshold',
             label: 'Alert Threshold (%)',
             type: 'percentage',
@@ -132,14 +162,19 @@ export function getBudgetFormConfig(budget?: any, categories?: any[]): FormConfi
             placeholder: '80',
             description: 'Get notified when you reach this %',
           },
+          {
+            name: 'alertEnabled',
+            label: 'Enable Alerts',
+            type: 'switch',
+          },
         ],
-        columns: 2,
+        columns: 4,
       },
       {
         fields: [
           {
-            name: 'description',
-            label: 'Description',
+            name: 'notes',
+            label: 'Notes',
             type: 'textarea',
             placeholder: 'Add notes about this budget...',
             rows: 2,
@@ -152,6 +187,7 @@ export function getBudgetFormConfig(budget?: any, categories?: any[]): FormConfi
       name: budget?.name || '',
       amount: budget?.amount || 0,
       period: budget?.period || 'monthly',
+      type: budget?.type || (budget?.categoryId ? 'category' : 'overall'),
       startDate: budget?.startDate
         ? format(new Date(budget.startDate), 'yyyy-MM-dd')
         : format(new Date(), 'yyyy-MM-dd'),
@@ -159,8 +195,11 @@ export function getBudgetFormConfig(budget?: any, categories?: any[]): FormConfi
         ? format(new Date(budget.endDate), 'yyyy-MM-dd')
         : calculateEndDate(format(new Date(), 'yyyy-MM-dd'), 'monthly'),
       categoryId: budget?.categoryId || '',
+      tagId: budget?.tagId || '',
+      groupId: budget?.groupId || '',
+      alertEnabled: budget?.alertEnabled ?? false,
       alertThreshold: budget?.alertThreshold || 80,
-      description: budget?.description || '',
+      notes: budget?.notes || '',
     },
   };
 }

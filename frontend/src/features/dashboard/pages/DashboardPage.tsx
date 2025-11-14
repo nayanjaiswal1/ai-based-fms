@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const { removeWidget, toggleWidgetVisibility } = useWidgetPreferences();
   const { visibleWidgets, isDragging, handleDragStart, handleDragEnd, handleDragCancel } = useDashboardLayout();
 
+  // Only enable drag sensors when in customizing mode
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -48,6 +49,23 @@ export default function DashboardPage() {
       },
     })
   );
+
+  const handleRemoveWidget = (widgetId: string) => {
+    const widget = visibleWidgets.find(w => w.id === widgetId);
+    removeWidget(widgetId);
+    const widgetDef = widget ? getWidgetDefinition(widget.type) : null;
+    toast.success(widgetDef ? `${widgetDef.name} removed from dashboard` : 'Widget removed');
+  };
+
+  const handleToggleVisibility = (widgetId: string) => {
+    const widget = visibleWidgets.find(w => w.id === widgetId);
+    toggleWidgetVisibility(widgetId);
+    const widgetDef = widget ? getWidgetDefinition(widget.type) : null;
+    const action = widget?.visible ? 'hidden' : 'shown';
+    if (widgetDef) {
+      toast.success(`${widgetDef.name} ${action}`);
+    }
+  };
 
   // Data queries
   const { data: accounts } = useQuery({
@@ -218,39 +236,61 @@ export default function DashboardPage() {
       </div>
 
       {/* Customizable Widget Grid with staggered animations */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragCancel={handleDragCancel}
-      >
-        <SortableContext items={visibleWidgets.map((w) => w.id)} strategy={rectSortingStrategy}>
-          <div
-            className={`grid gap-5 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ${
-              isDragging ? 'cursor-grabbing' : ''
-            }`}
-          >
-            {visibleWidgets.map((widget, index) => (
-              <div
-                key={widget.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${0.1 + index * 0.05}s`, animationFillMode: 'backwards' }}
-              >
-                <WidgetWrapper
-                  widget={widget}
-                  isCustomizing={isCustomizing}
-                  onRemove={() => removeWidget(widget.id)}
-                  onConfigure={() => setConfigWidget(widget)}
-                  onToggleVisibility={() => toggleWidgetVisibility(widget.id)}
+      {isCustomizing ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+        >
+          <SortableContext items={visibleWidgets.map((w) => w.id)} strategy={rectSortingStrategy}>
+            <div
+              className={`grid gap-5 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ${
+                isDragging ? 'cursor-grabbing' : ''
+              }`}
+            >
+              {visibleWidgets.map((widget, index) => (
+                <div
+                  key={widget.id}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${0.1 + index * 0.05}s`, animationFillMode: 'backwards' }}
                 >
-                  {renderWidget(widget)}
-                </WidgetWrapper>
-              </div>
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+                  <WidgetWrapper
+                    widget={widget}
+                    isCustomizing={isCustomizing}
+                    onRemove={() => handleRemoveWidget(widget.id)}
+                    onConfigure={() => setConfigWidget(widget)}
+                    onToggleVisibility={() => handleToggleVisibility(widget.id)}
+                  >
+                    {renderWidget(widget)}
+                  </WidgetWrapper>
+                </div>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <div className="grid gap-5 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {visibleWidgets.map((widget, index) => (
+            <div
+              key={widget.id}
+              className="animate-fade-in-up"
+              style={{ animationDelay: `${0.1 + index * 0.05}s`, animationFillMode: 'backwards' }}
+            >
+              <WidgetWrapper
+                widget={widget}
+                isCustomizing={isCustomizing}
+                onRemove={() => handleRemoveWidget(widget.id)}
+                onConfigure={() => setConfigWidget(widget)}
+                onToggleVisibility={() => handleToggleVisibility(widget.id)}
+              >
+                {renderWidget(widget)}
+              </WidgetWrapper>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Empty State with modern styling */}
       {visibleWidgets.length === 0 && (

@@ -33,19 +33,28 @@ export function useWidgetPreferences() {
       // Snapshot previous value
       const previousPreferences = queryClient.getQueryData([PREFERENCES_KEY]);
 
-      // Optimistically update
-      queryClient.setQueryData([PREFERENCES_KEY], (old: any) => ({
-        ...old,
-        ...newPreferences,
-      }));
+      // Optimistically update - merge widgets into existing preferences
+      queryClient.setQueryData([PREFERENCES_KEY], (old: any) => {
+        const oldData = old?.data || old;
+        return {
+          ...oldData,
+          widgets: newPreferences.widgets,
+          gridColumns: newPreferences.gridColumns ?? oldData?.gridColumns ?? 3,
+        };
+      });
 
       // Also update localStorage
       const currentCache = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (currentCache) {
         const parsed = JSON.parse(currentCache);
+        const parsedData = parsed?.data || parsed;
         localStorage.setItem(
           LOCAL_STORAGE_KEY,
-          JSON.stringify({ ...parsed, ...newPreferences })
+          JSON.stringify({
+            ...parsedData,
+            widgets: newPreferences.widgets,
+            gridColumns: newPreferences.gridColumns ?? parsedData?.gridColumns ?? 3,
+          })
         );
       }
 
@@ -83,61 +92,56 @@ export function useWidgetPreferences() {
     [updateMutation]
   );
 
+  const getWidgets = useCallback(() => {
+    const preferencesData = preferences?.data || preferences;
+    return Array.isArray(preferencesData?.widgets) ? preferencesData.widgets : [];
+  }, [preferences]);
+
   const updateWidget = useCallback(
     (widgetId: string, updates: Partial<WidgetConfig>) => {
-      if (!preferences) return;
-
-      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const currentWidgets = getWidgets();
       const updatedWidgets = currentWidgets.map((widget) =>
         widget.id === widgetId ? { ...widget, ...updates } : widget
       );
 
       updateMutation.mutate({ widgets: updatedWidgets });
     },
-    [preferences, updateMutation]
+    [getWidgets, updateMutation]
   );
 
   const addWidget = useCallback(
     (widget: WidgetConfig) => {
-      if (!preferences) return;
-
-      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const currentWidgets = getWidgets();
       const updatedWidgets = [...currentWidgets, widget];
       updateMutation.mutate({ widgets: updatedWidgets });
     },
-    [preferences, updateMutation]
+    [getWidgets, updateMutation]
   );
 
   const removeWidget = useCallback(
     (widgetId: string) => {
-      if (!preferences) return;
-
-      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const currentWidgets = getWidgets();
       const updatedWidgets = currentWidgets.filter((w) => w.id !== widgetId);
       updateMutation.mutate({ widgets: updatedWidgets });
     },
-    [preferences, updateMutation]
+    [getWidgets, updateMutation]
   );
 
   const toggleWidgetVisibility = useCallback(
     (widgetId: string) => {
-      if (!preferences) return;
-
-      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const currentWidgets = getWidgets();
       const updatedWidgets = currentWidgets.map((widget) =>
         widget.id === widgetId ? { ...widget, visible: !widget.visible } : widget
       );
 
       updateMutation.mutate({ widgets: updatedWidgets });
     },
-    [preferences, updateMutation]
+    [getWidgets, updateMutation]
   );
 
   const reorderWidgets = useCallback(
     (sourceIndex: number, destinationIndex: number) => {
-      if (!preferences) return;
-
-      const currentWidgets = Array.isArray(preferences.widgets) ? preferences.widgets : [];
+      const currentWidgets = getWidgets();
       const widgets = [...currentWidgets];
       const [removed] = widgets.splice(sourceIndex, 1);
       widgets.splice(destinationIndex, 0, removed);
@@ -150,7 +154,7 @@ export function useWidgetPreferences() {
 
       updateMutation.mutate({ widgets: reorderedWidgets });
     },
-    [preferences, updateMutation]
+    [getWidgets, updateMutation]
   );
 
   const resetToDefault = useCallback(() => {
