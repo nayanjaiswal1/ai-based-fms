@@ -2,6 +2,7 @@ import { Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, RouteObject } from 'react-router-dom';
 import { useAuthStore } from '@stores/authStore';
 import { useSubscriptionSync } from '@/hooks/useSubscriptionSync';
+import { useAuthInit } from '@/hooks/useAuthInit';
 import { ErrorBoundary } from '@/components/error-boundary';
 import Layout from '@components/layout/Layout';
 import { protectedRoutes, publicRoutes } from '@config/routes.config';
@@ -65,7 +66,15 @@ const wrapRouteWithProtection = (route: RouteObject): RouteObject => {
 };
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
+
+  // Initialize auth state from httpOnly cookie on app mount
+  useAuthInit();
+
+  // Show loading state while checking for existing session
+  if (!isInitialized) {
+    return <PageLoader />;
+  }
 
   // Wrap all protected routes with error boundaries and suspense
   const wrappedProtectedRoutes = protectedRoutes.map(wrapRouteWithProtection);

@@ -57,6 +57,7 @@ export const authApi = {
   register: (data: any) => api.post('/auth/register', data),
   login: (data: any) => api.post('/auth/login', data),
   login2FA: (data: any) => api.post('/auth/login/2fa', data),
+  getCurrentUser: () => api.get('/auth/me'),
   refresh: () => api.post('/auth/refresh', {}),
   logout: () => api.post('/auth/logout', {}),
   enable2FA: () => api.post('/auth/2fa/enable'),
