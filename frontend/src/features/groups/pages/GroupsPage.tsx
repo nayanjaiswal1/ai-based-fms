@@ -1,22 +1,42 @@
+import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { groupsApi } from '@services/api';
 import { Plus, Users, DollarSign, TrendingUp, ArrowRight } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import GroupModal from '../components/GroupModal';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function GroupsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Detect modal state from URL path
   const isNewModal = location.pathname === '/groups/new';
   const modalMode = isNewModal ? 'new' : null;
 
-  const { data: groups, isLoading } = useQuery({
+  const { data: allGroups, isLoading } = useQuery({
     queryKey: ['groups'],
     queryFn: groupsApi.getAll,
   });
+
+  // Filter groups based on search
+  const groups = useMemo(() => {
+    if (!allGroups?.data) return allGroups;
+
+    let filtered = allGroups.data;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter((group: any) =>
+        group.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        group.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return { ...allGroups, data: filtered };
+  }, [allGroups, searchTerm]);
 
   const handleGroupClick = (groupId: string) => {
     navigate(`/groups/${groupId}`);
@@ -28,22 +48,21 @@ export default function GroupsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Groups</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Share expenses with friends and family
-          </p>
-        </div>
-        <button
-          onClick={() => navigate('/groups/new')}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Create Group
-        </button>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        showSearch={true}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search groups..."
+        buttons={[
+          {
+            label: 'Create Group',
+            icon: Plus,
+            onClick: () => navigate('/groups/new'),
+            variant: 'primary' as const,
+          },
+        ]}
+      />
 
       {/* Loading/Empty States */}
       {isLoading ? (
