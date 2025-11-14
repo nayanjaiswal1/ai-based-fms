@@ -4,10 +4,11 @@ import {
   ForbiddenException,
   InternalServerErrorException,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Account } from '@database/entities';
+import { Repository, DataSource } from 'typeorm';
+import { Account, Transaction } from '@database/entities';
 import { encrypt, decrypt } from '@common/utils/encryption.util';
 
 @Injectable()
@@ -17,6 +18,9 @@ export class AccountsService {
   constructor(
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
+    @InjectRepository(Transaction)
+    private transactionRepository: Repository<Transaction>,
+    private dataSource: DataSource,
   ) {}
 
   async create(userId: string, createDto: any) {
@@ -31,9 +35,16 @@ export class AccountsService {
     return this.accountRepository.save(account);
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string, includeTemp = false) {
+    const where: any = { userId, isActive: true };
+
+    // By default, exclude temporary accounts unless explicitly requested
+    if (!includeTemp) {
+      where.isTemporary = false;
+    }
+
     const accounts = await this.accountRepository.find({
-      where: { userId, isActive: true },
+      where,
       order: { createdAt: 'DESC' },
     });
 
@@ -141,5 +152,117 @@ export class AccountsService {
     await this.accountRepository.save(account);
 
     this.logger.log(`Statement password ${password ? 'saved' : 'removed'} for account ${accountId}`);
+  }
+
+  /**
+   * Create a temporary account from email/statement parsing
+   */
+  async createTempAccount(
+    userId: string,
+    source: string,
+    accountInfo: {
+      name?: string;
+      type?: string;
+      accountNumber?: string;
+      bankName?: string;
+    },
+  ): Promise<Account> {
+    const tempAccount = this.accountRepository.create({
+      userId,
+      name: accountInfo.name || `Temp Account (${source})`,
+      type: (accountInfo.type as any) || 'bank',
+      balance: 0,
+      isTemporary: true,
+      tempAccountSource: source,
+      accountNumber: accountInfo.accountNumber,
+      bankName: accountInfo.bankName,
+      description: `Temporary account created from ${source}. Please link to an existing account or convert to permanent.`,
+    });
+
+    const saved = await this.accountRepository.save(tempAccount);
+    this.logger.log(`Created temporary account ${saved.id} from source: ${source}`);
+    return saved;
+  }
+
+  /**
+   * Link a temporary account to a real account and move all transactions
+   */
+  async linkTempAccount(
+    userId: string,
+    tempAccountId: string,
+    targetAccountId: string,
+  ): Promise<{ movedTransactions: number }> {
+    return await this.dataSource.transaction(async (manager) => {
+      // Verify temp account exists and belongs to user
+      const tempAccount = await manager.findOne(Account, {
+        where: { id: tempAccountId, userId, isTemporary: true },
+      });
+
+      if (!tempAccount) {
+        throw new NotFoundException('Temporary account not found');
+      }
+
+      // Verify target account exists and belongs to user
+      const targetAccount = await manager.findOne(Account, {
+        where: { id: targetAccountId, userId },
+      });
+
+      if (!targetAccount) {
+        throw new NotFoundException('Target account not found');
+      }
+
+      // Move all transactions from temp account to target account
+      const result = await manager.update(
+        Transaction,
+        { accountId: tempAccountId },
+        { accountId: targetAccountId },
+      );
+
+      const movedCount = result.affected || 0;
+
+      // Mark temp account as linked and inactive
+      tempAccount.linkedToAccountId = targetAccountId;
+      tempAccount.isActive = false;
+      await manager.save(tempAccount);
+
+      this.logger.log(
+        `Linked temp account ${tempAccountId} to ${targetAccountId}, moved ${movedCount} transactions`,
+      );
+
+      return { movedTransactions: movedCount };
+    });
+  }
+
+  /**
+   * Convert a temporary account to a permanent account
+   */
+  async convertTempToPermanent(userId: string, tempAccountId: string): Promise<Account> {
+    const tempAccount = await this.accountRepository.findOne({
+      where: { id: tempAccountId, userId, isTemporary: true },
+    });
+
+    if (!tempAccount) {
+      throw new NotFoundException('Temporary account not found');
+    }
+
+    tempAccount.isTemporary = false;
+    tempAccount.description = tempAccount.description?.replace(
+      /Temporary account created from.*Please link to an existing account or convert to permanent\./,
+      'Account converted from temporary to permanent.',
+    );
+
+    const saved = await this.accountRepository.save(tempAccount);
+    this.logger.log(`Converted temporary account ${tempAccountId} to permanent`);
+    return saved;
+  }
+
+  /**
+   * Get all temporary accounts for a user
+   */
+  async getTempAccounts(userId: string): Promise<Account[]> {
+    return this.accountRepository.find({
+      where: { userId, isTemporary: true, isActive: true },
+      order: { createdAt: 'DESC' },
+    });
   }
 }
