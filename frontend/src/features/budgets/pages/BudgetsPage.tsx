@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { budgetsApi, categoriesApi } from '@services/api';
@@ -10,6 +11,7 @@ import { getBudgetProgressColor, getBudgetProgressTextColor, formatBudgetPeriod 
 import { toast } from 'react-hot-toast';
 import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function BudgetsPage() {
   const navigate = useNavigate();
@@ -17,6 +19,9 @@ export default function BudgetsPage() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [periodFilter, setPeriodFilter] = useState<string>('');
 
   // Detect modal state from URL path
   const isNewModal = location.pathname === '/budgets/new';
@@ -24,10 +29,32 @@ export default function BudgetsPage() {
   const modalMode = isNewModal ? 'new' : isEditModal ? 'edit' : null;
   const budgetId = id;
 
-  const { data: budgets, isLoading } = useQuery({
+  const { data: allBudgets, isLoading } = useQuery({
     queryKey: ['budgets'],
     queryFn: () => budgetsApi.getAll(),
   });
+
+  // Filter budgets based on search and filters
+  const budgets = useMemo(() => {
+    if (!allBudgets?.data) return allBudgets;
+
+    let filtered = allBudgets.data;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter((budget: any) =>
+        budget.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        budget.category?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply period filter
+    if (periodFilter) {
+      filtered = filtered.filter((budget: any) => budget.period === periodFilter);
+    }
+
+    return { ...allBudgets, data: filtered };
+  }, [allBudgets, searchTerm, periodFilter]);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -112,29 +139,66 @@ export default function BudgetsPage() {
     return category?.name || 'All Categories';
   };
 
+  const activeFiltersCount = periodFilter ? 1 : 0;
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Usage Limit Warning */}
       <UsageLimitBanner resource="maxBudgets" />
 
-      {/* Header - Responsive */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Budgets</h1>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600">
-            Set spending limits and track your progress
-          </p>
+      {/* Page Header */}
+      <PageHeader
+        showSearch={true}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search budgets..."
+        showFilter={true}
+        onFilterClick={() => setShowFilters(!showFilters)}
+        activeFiltersCount={activeFiltersCount}
+        buttons={[
+          {
+            label: 'Create Budget',
+            icon: Plus,
+            onClick: () => navigate('/budgets/new'),
+            variant: 'primary' as const,
+          },
+        ]}
+      />
+
+      {/* Filter Panel */}
+      {showFilters && (
+        <div className="rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Period
+              </label>
+              <select
+                value={periodFilter}
+                onChange={(e) => setPeriodFilter(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="">All Periods</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2 flex items-end gap-2">
+              <button
+                onClick={() => {
+                  setPeriodFilter('');
+                  setSearchTerm('');
+                }}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={() => navigate('/budgets/new')}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span>Create Budget</span>
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Loading/Empty States */}
       {isLoading ? (

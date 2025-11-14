@@ -133,6 +133,9 @@ export class Transaction {
   @Column({ default: false })
   isDeleted: boolean;
 
+  @Column({ default: true })
+  isVerified: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

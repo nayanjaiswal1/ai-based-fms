@@ -3,6 +3,7 @@ import { useAuthStore } from '@stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { Bell, LogOut, User, Menu, Settings, CreditCard } from 'lucide-react';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -11,6 +12,7 @@ interface HeaderProps {
 export default function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const pageTitle = usePageTitle();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -55,8 +57,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <Menu className="h-5 w-5 transition-transform group-hover:scale-110" aria-hidden="true" />
         </button>
 
-        <h1 className="font-serif text-2xl font-bold tracking-tight text-gradient" aria-label="Finance Management System">
-          FMS
+        <h1 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-foreground" aria-label={pageTitle}>
+          {pageTitle}
         </h1>
       </div>
 

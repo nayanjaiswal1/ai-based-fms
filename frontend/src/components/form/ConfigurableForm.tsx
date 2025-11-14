@@ -18,6 +18,10 @@ interface ConfigurableFormProps<TFieldValues extends FieldValues> {
    * Use this with useFormProtection hook to prevent accidental close
    */
   onDirtyChange?: (isDirty: boolean) => void;
+  /**
+   * If true, buttons will not be rendered (useful when modal footer handles them)
+   */
+  hideButtons?: boolean;
 }
 
 export function ConfigurableForm<TFieldValues extends FieldValues>({
@@ -29,6 +33,7 @@ export function ConfigurableForm<TFieldValues extends FieldValues>({
   onCancel,
   className = '',
   onDirtyChange,
+  hideButtons = false,
 }: ConfigurableFormProps<TFieldValues>) {
   const form = useForm<TFieldValues>({
     resolver: zodResolver(config.schema),
@@ -114,27 +119,29 @@ export function ConfigurableForm<TFieldValues extends FieldValues>({
         );
       })}
 
-      {/* Form Actions */}
-      <div className="flex items-center justify-end gap-3 pt-4">
-        {onCancel && (
+      {/* Form Actions - only render if not hidden */}
+      {!hideButtons && (
+        <div className="flex items-center justify-end gap-3 pt-4 border-t mt-6">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isLoading}
+              className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {cancelLabel}
+            </button>
+          )}
           <button
-            type="button"
-            onClick={onCancel}
-            disabled={isLoading}
-            className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            type="submit"
+            disabled={isLoading || !isDirty}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {cancelLabel}
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isLoading ? 'Saving...' : submitLabel}
           </button>
-        )}
-        <button
-          type="submit"
-          disabled={isLoading || !isDirty}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-          {isLoading ? 'Saving...' : submitLabel}
-        </button>
-      </div>
+        </div>
+      )}
     </form>
   );
 }

@@ -26,4 +26,12 @@ export class UploadStatementDto {
   @ValidateNested({ each: true })
   @Type(() => StatementTransactionDto)
   transactions: StatementTransactionDto[];
+
+  @IsOptional()
+  @IsString()
+  statementPassword?: string; // Password for password-protected statements
+
+  @IsOptional()
+  @IsString()
+  rememberPassword?: string; // 'true' if user wants to save password for future use
 }

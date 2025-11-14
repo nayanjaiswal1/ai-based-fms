@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Edit, Trash2, List, FileText, TrendingUp, Plus } from 'lucide-react';
+import { Edit, Trash2, Upload, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Calendar, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { transactionsApi, reconciliationApi } from '@services/api';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface AccountCardsViewProps {
   accounts: any[];
@@ -10,8 +13,6 @@ interface AccountCardsViewProps {
   getAccountIcon: (type: string) => any;
 }
 
-type TabType = 'transactions' | 'statement' | 'history';
-
 export function AccountCardsView({
   accounts,
   onEdit,
@@ -19,281 +20,411 @@ export function AccountCardsView({
   onReconcile,
   getAccountIcon
 }: AccountCardsViewProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<TabType>('transactions');
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'transactions' | 'statements'>('transactions');
   const navigate = useNavigate();
+  const { formatLocale } = useCurrency();
 
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : accounts.length - 1));
+  const handleCardClick = (accountId: string) => {
+    setSelectedAccountId(selectedAccountId === accountId ? null : accountId);
+    setActiveTab('transactions'); // Reset to transactions tab when selecting a new card
   };
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev < accounts.length - 1 ? prev + 1 : 0));
-  };
+  const selectedAccount = accounts.find(acc => acc.id === selectedAccountId);
+
+  const { data: transactions } = useQuery({
+    queryKey: ['transactions', { accountId: selectedAccountId }],
+    queryFn: () => transactionsApi.getAll({ accountId: selectedAccountId, limit: 10 }),
+    enabled: !!selectedAccountId,
+  });
+
+  const { data: reconciliationHistory } = useQuery({
+    queryKey: ['reconciliation-history', selectedAccountId],
+    queryFn: () => reconciliationApi.getHistory(selectedAccountId!),
+    enabled: !!selectedAccountId,
+  });
+
+  const transactionsList = transactions?.data || [];
+  const statementsList = reconciliationHistory?.data || [];
 
   const getCardGradient = (type: string, index: number) => {
     const gradients = [
-      'from-slate-700 to-slate-800',
-      'from-blue-700 to-indigo-800',
-      'from-purple-700 to-purple-800',
-      'from-teal-700 to-cyan-800',
-      'from-emerald-700 to-green-800',
-      'from-orange-700 to-amber-800',
-      'from-rose-700 to-pink-800',
-      'from-indigo-700 to-blue-800',
+      'from-blue-500/90 via-blue-600/90 to-indigo-700/90',
+      'from-purple-500/90 via-purple-600/90 to-pink-600/90',
+      'from-emerald-500/90 via-teal-600/90 to-cyan-700/90',
+      'from-orange-500/90 via-red-600/90 to-pink-700/90',
+      'from-indigo-500/90 via-purple-600/90 to-blue-700/90',
+      'from-rose-500/90 via-pink-600/90 to-fuchsia-700/90',
+      'from-teal-500/90 via-emerald-600/90 to-green-700/90',
+      'from-amber-500/90 via-orange-600/90 to-red-700/90',
     ];
     return gradients[index % gradients.length];
   };
 
-  const currentAccount = accounts[currentIndex];
-  const Icon = getAccountIcon(currentAccount?.type);
-  const gradient = getCardGradient(currentAccount?.type, currentIndex);
-
   return (
-    <div className="w-full min-h-[calc(100vh-8rem)] bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 rounded-xl p-4 md:p-8">
-      <div className="flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Stacked Cards Container */}
+        <div className="relative flex items-center justify-center min-h-[500px] mb-8">
+          {accounts.map((account, index) => {
+            const Icon = getAccountIcon(account.type);
+            const gradient = getCardGradient(account.type, index);
+            const isSelected = selectedAccountId === account.id;
+            const totalCards = accounts.length;
 
-        {/* Main Card Display */}
-        <div className="relative w-full max-w-5xl">
+            // Calculate stacking position
+            let transform = '';
+            let zIndex = totalCards - index;
 
-          {/* Large Featured Card */}
-          <div className="relative mb-8">
-            <div className={`w-full h-[280px] md:h-[340px] rounded-2xl shadow-2xl p-8 md:p-10 bg-gradient-to-br ${gradient} text-white relative overflow-hidden transform hover:scale-[1.02] transition-transform duration-300`}>
+            if (isSelected) {
+              // Selected card: center and larger
+              transform = 'translateX(0%) translateY(0%) scale(1.05)';
+              zIndex = 100;
+            } else if (selectedAccountId) {
+              // When another card is selected, stack others to the side
+              const selectedIndex = accounts.findIndex(a => a.id === selectedAccountId);
+              if (index < selectedIndex) {
+                transform = `translateX(-${(selectedIndex - index) * 120}%) translateY(${(selectedIndex - index) * 10}px) scale(0.85) rotate(-3deg)`;
+              } else {
+                transform = `translateX(${(index - selectedIndex) * 120}%) translateY(${(index - selectedIndex) * 10}px) scale(0.85) rotate(3deg)`;
+              }
+              zIndex = index < selectedIndex ? index : totalCards - index;
+            } else {
+              // Default stacked position
+              const offset = (index - Math.floor(totalCards / 2)) * 40;
+              transform = `translateX(${offset}px) translateY(${index * 15}px) rotate(${(index - Math.floor(totalCards / 2)) * 2}deg)`;
+            }
 
-              {/* Background Decorative Elements */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
-                <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-              </div>
-
-              {/* Card Content */}
-              <div className="relative z-10 h-full flex flex-col justify-between">
-
-                {/* Top Section */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon className="h-8 w-8 opacity-90" />
-                      <span className="text-sm font-medium opacity-90 uppercase tracking-wider">{currentAccount?.type}</span>
-                    </div>
-                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{currentAccount?.name}</h2>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => onEdit(currentAccount)}
-                      className="p-2.5 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition-all hover:scale-110"
-                      aria-label="Edit account"
-                    >
-                      <Edit className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(currentAccount.id, currentAccount.name)}
-                      className="p-2.5 bg-white/20 hover:bg-red-500/30 rounded-lg backdrop-blur-sm transition-all hover:scale-110"
-                      aria-label="Delete account"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Middle - Balance */}
-                <div className="my-6">
-                  <p className="text-sm md:text-base opacity-80 mb-2">Current Balance</p>
-                  <p className="text-5xl md:text-6xl font-bold tracking-tight">
-                    ${Number(currentAccount?.balance).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
-                  </p>
-                </div>
-
-                {/* Bottom Section */}
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-sm opacity-70 mb-1">Account Number</p>
-                    <p className="text-lg font-mono tracking-wider">•••• •••• •••• {currentAccount?.id.slice(-4)}</p>
-                  </div>
-                  {currentAccount?.currency && currentAccount.currency !== 'USD' && (
-                    <div className="text-right">
-                      <p className="text-sm opacity-70 mb-1">Currency</p>
-                      <p className="text-xl font-bold">{currentAccount.currency}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation Arrows */}
-            <button
-              onClick={handlePrevious}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 z-30 p-3 md:p-4 bg-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 border border-gray-200"
-              aria-label="Previous card"
-            >
-              <ChevronLeft className="h-6 w-6 md:h-7 md:w-7 text-gray-700" />
-            </button>
-            <button
-              onClick={handleNext}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 z-30 p-3 md:p-4 bg-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 border border-gray-200"
-              aria-label="Next card"
-            >
-              <ChevronRight className="h-6 w-6 md:h-7 md:w-7 text-gray-700" />
-            </button>
-          </div>
-
-          {/* Pagination Indicators */}
-          <div className="flex justify-center gap-3 mb-8">
-            {accounts.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`h-2 rounded-full transition-all ${
-                  index === currentIndex
-                    ? 'w-12 bg-gradient-to-r from-blue-600 to-indigo-600'
-                    : 'w-2 bg-gray-400 hover:bg-gray-500'
+            return (
+              <div
+                key={account.id}
+                className={`absolute w-96 cursor-pointer transition-all duration-500 ease-out ${
+                  isSelected ? 'cursor-default' : 'hover:scale-105'
                 }`}
-                aria-label={`Go to card ${index + 1}`}
-              />
-            ))}
-          </div>
-
-          {/* Detail Panel */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 bg-gray-50">
-              <button
-                onClick={() => setActiveTab('transactions')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
-                  activeTab === 'transactions'
-                    ? 'text-blue-600 bg-white border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
+                style={{
+                  transform,
+                  zIndex,
+                }}
+                onClick={() => !isSelected && handleCardClick(account.id)}
               >
-                <List className="h-5 w-5 inline-block mr-2" />
-                Transactions
-              </button>
-              <button
-                onClick={() => setActiveTab('statement')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
-                  activeTab === 'statement'
-                    ? 'text-blue-600 bg-white border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <FileText className="h-5 w-5 inline-block mr-2" />
-                Statement
-              </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
-                  activeTab === 'history'
-                    ? 'text-blue-600 bg-white border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <TrendingUp className="h-5 w-5 inline-block mr-2" />
-                History
-              </button>
-            </div>
+                {/* Glass Card */}
+                <div
+                  className={`relative rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl border border-white/20 ${
+                    isSelected ? 'ring-4 ring-white/50' : ''
+                  }`}
+                  style={{
+                    background: `linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))`,
+                  }}
+                >
+                  {/* Gradient Background */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-80`} />
 
-            {/* Tab Content */}
-            <div className="p-8">
-              {activeTab === 'transactions' && (
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-50 mb-4">
-                    <List className="h-10 w-10 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">All Transactions</h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    View all transactions for <span className="font-semibold">{currentAccount?.name}</span>
-                  </p>
-                  {currentAccount?.description && (
-                    <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-                      {currentAccount.description}
-                    </p>
-                  )}
-                  <button
-                    onClick={() => navigate(`/transactions?accountId=${currentAccount?.id}`)}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all transform hover:scale-105"
-                  >
-                    View All Transactions
-                  </button>
-                </div>
-              )}
+                  {/* Glass Effect Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10" />
 
-              {activeTab === 'statement' && (
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-50 mb-4">
-                    <FileText className="h-10 w-10 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Account Statement</h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Generate or download statement for <span className="font-semibold">{currentAccount?.name}</span>
-                  </p>
-                  <div className="flex gap-3 justify-center">
-                    <button
-                      onClick={() => onReconcile(currentAccount)}
-                      className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all transform hover:scale-105"
-                    >
-                      Reconcile Account
-                    </button>
-                  </div>
-                </div>
-              )}
+                  {/* Decorative Blur Circles */}
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
+                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-black/10 rounded-full blur-3xl" />
 
-              {activeTab === 'history' && (
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-purple-50 mb-4">
-                    <TrendingUp className="h-10 w-10 text-purple-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Balance History</h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Track balance changes for <span className="font-semibold">{currentAccount?.name}</span>
-                  </p>
-                  <div className="bg-gray-50 rounded-lg p-6 max-w-md mx-auto">
-                    <div className="space-y-3 text-left">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Current Balance:</span>
-                        <span className="text-lg font-bold text-gray-900">
-                          ${Number(currentAccount?.balance).toFixed(2)}
-                        </span>
+                  {/* Card Content */}
+                  <div className="relative p-8 text-white">
+                    {/* Top Section */}
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+                          <Icon className="h-7 w-7 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium opacity-80 uppercase tracking-wider">
+                            {account.type}
+                          </p>
+                        </div>
                       </div>
-                      {currentAccount?.lastReconciledAt && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Last Reconciled:</span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {new Date(currentAccount.lastReconciledAt).toLocaleDateString()}
-                          </span>
+
+                      {isSelected && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(account);
+                            }}
+                            className="p-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl transition-all"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(account.id, account.name);
+                            }}
+                            className="p-2 bg-white/20 hover:bg-red-500/30 backdrop-blur-sm rounded-xl transition-all"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedAccountId(null);
+                            }}
+                            className="p-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl transition-all"
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </button>
                         </div>
                       )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Account Type:</span>
-                        <span className="text-sm font-medium text-gray-900 capitalize">
-                          {currentAccount?.type}
-                        </span>
-                      </div>
                     </div>
+
+                    {/* Account Name */}
+                    <h3 className="text-2xl font-bold mb-4 drop-shadow-lg">
+                      {account.name}
+                    </h3>
+
+                    {/* Balance */}
+                    <div className="mb-4">
+                      <p className="text-sm opacity-80 mb-1">Current Balance</p>
+                      <p className="text-4xl font-bold drop-shadow-lg">
+                        {formatLocale(account.balance)}
+                      </p>
+                    </div>
+
+                    {/* Card Number */}
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-mono tracking-wider opacity-80">
+                        •••• •••• •••• {account.id.slice(-4)}
+                      </p>
+                      {account.currency && account.currency !== 'USD' && (
+                        <p className="text-sm font-bold opacity-90">{account.currency}</p>
+                      )}
+                    </div>
+
+                    {/* Tap to expand hint */}
+                    {!isSelected && (
+                      <div className="mt-4 text-center">
+                        <p className="text-xs opacity-60 flex items-center justify-center gap-1">
+                          <ChevronDown className="h-3 w-3" />
+                          Tap to view details
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Transaction Details Panel (appears when card is selected) */}
+        {selectedAccount && (
+          <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Glass Panel */}
+            <div className="rounded-3xl overflow-hidden backdrop-blur-xl bg-white/60 border border-white/20 shadow-2xl">
+              {/* Tabs */}
+              <div className="flex border-b border-white/20 bg-gradient-to-r from-white/40 to-white/20">
+                <button
+                  onClick={() => setActiveTab('transactions')}
+                  className={`flex-1 px-6 py-4 text-sm font-semibold transition-colors ${
+                    activeTab === 'transactions'
+                      ? 'text-slate-700 bg-white/50 border-b-2 border-blue-500'
+                      : 'text-slate-600 hover:bg-white/30'
+                  }`}
+                >
+                  Transactions
+                </button>
+                <button
+                  onClick={() => setActiveTab('statements')}
+                  className={`flex-1 px-6 py-4 text-sm font-semibold transition-colors ${
+                    activeTab === 'statements'
+                      ? 'text-slate-700 bg-white/50 border-b-2 border-blue-500'
+                      : 'text-slate-600 hover:bg-white/30'
+                  }`}
+                >
+                  Statements
+                </button>
+                <button
+                  onClick={() => onReconcile(selectedAccount)}
+                  className="flex-1 px-6 py-4 text-sm font-semibold text-slate-600 hover:bg-white/30 transition-colors"
+                >
+                  Upload Statement
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 max-h-96 overflow-y-auto">
+                {activeTab === 'transactions' ? (
+                  // Transactions Tab Content
+                  transactionsList.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-slate-600 font-medium">No transactions yet</p>
+                      <button
+                        onClick={() => navigate(`/transactions?accountId=${selectedAccount.id}`)}
+                        className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full font-medium hover:shadow-lg transition-all"
+                      >
+                        Add Transaction
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {transactionsList.map((transaction: any) => (
+                        <div
+                          key={transaction.id}
+                          onClick={() => navigate(`/transactions?id=${transaction.id}`)}
+                          className="flex items-center justify-between p-4 rounded-2xl bg-white/60 backdrop-blur-sm hover:bg-white/80 transition-all cursor-pointer border border-white/20"
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className={`p-2 rounded-xl ${
+                              transaction.type === 'income'
+                                ? 'bg-green-100 text-green-600'
+                                : 'bg-red-100 text-red-600'
+                            }`}>
+                              {transaction.type === 'income' ? (
+                                <TrendingUp className="h-4 w-4" />
+                              ) : (
+                                <TrendingDown className="h-4 w-4" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-slate-800 truncate">
+                                {transaction.description}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-slate-500">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(transaction.date).toLocaleDateString()}
+                                {transaction.category && (
+                                  <span>• {transaction.category.name}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <p className={`text-lg font-bold ${
+                            transaction.type === 'income'
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                          }`}>
+                            {transaction.type === 'income' ? '+' : '-'}
+                            {formatLocale(transaction.amount)}
+                          </p>
+                        </div>
+                      ))}
+
+                      <button
+                        onClick={() => navigate(`/transactions?accountId=${selectedAccount.id}`)}
+                        className="w-full py-3 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-2xl transition-all"
+                      >
+                        View All Transactions →
+                      </button>
+                    </div>
+                  )
+                ) : (
+                  // Statements Tab Content
+                  statementsList.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileText className="h-16 w-16 mx-auto text-slate-400 mb-4" />
+                      <p className="text-slate-600 font-medium">No statements uploaded yet</p>
+                      <button
+                        onClick={() => onReconcile(selectedAccount)}
+                        className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full font-medium hover:shadow-lg transition-all"
+                      >
+                        Upload First Statement
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {statementsList.map((reconciliation: any) => {
+                        const getStatusIcon = (status: string) => {
+                          switch (status) {
+                            case 'completed':
+                              return <CheckCircle className="h-5 w-5 text-green-600" />;
+                            case 'in_progress':
+                              return <Clock className="h-5 w-5 text-blue-600" />;
+                            case 'cancelled':
+                              return <XCircle className="h-5 w-5 text-red-600" />;
+                            default:
+                              return <FileText className="h-5 w-5 text-slate-600" />;
+                          }
+                        };
+
+                        const getStatusColor = (status: string) => {
+                          switch (status) {
+                            case 'completed':
+                              return 'text-green-600 bg-green-50';
+                            case 'in_progress':
+                              return 'text-blue-600 bg-blue-50';
+                            case 'cancelled':
+                              return 'text-red-600 bg-red-50';
+                            default:
+                              return 'text-slate-600 bg-slate-50';
+                          }
+                        };
+
+                        return (
+                          <div
+                            key={reconciliation.id}
+                            onClick={() => reconciliation.status === 'in_progress' && navigate(`/reconciliation/${reconciliation.id}`)}
+                            className={`p-4 rounded-2xl bg-white/60 backdrop-blur-sm hover:bg-white/80 transition-all border border-white/20 ${
+                              reconciliation.status === 'in_progress' ? 'cursor-pointer' : 'cursor-default'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-xl ${getStatusColor(reconciliation.status)}`}>
+                                  {getStatusIcon(reconciliation.status)}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-slate-800">
+                                    Reconciliation #{reconciliation.id.slice(0, 8)}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                                    <Calendar className="h-3 w-3" />
+                                    {new Date(reconciliation.createdAt).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(reconciliation.status)}`}>
+                                  {reconciliation.status.replace('_', ' ').toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+
+                            {reconciliation.statementBalance && (
+                              <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-slate-200">
+                                <div>
+                                  <p className="text-xs text-slate-500">Statement Balance</p>
+                                  <p className="font-semibold text-slate-800">
+                                    {formatLocale(reconciliation.statementBalance)}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-slate-500">Matched</p>
+                                  <p className="font-semibold text-green-600">
+                                    {reconciliation.matchedTransactions || 0}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-slate-500">Unmatched</p>
+                                  <p className="font-semibold text-orange-600">
+                                    {reconciliation.unmatchedTransactions || 0}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      <button
+                        onClick={() => onReconcile(selectedAccount)}
+                        className="w-full py-3 text-center text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-2xl transition-all"
+                      >
+                        Upload New Statement →
+                      </button>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
           </div>
-
-          {/* Add New Account Button */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => navigate('/accounts/new')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 font-medium rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200"
-            >
-              <Plus className="h-5 w-5" />
-              Add New Account
-            </button>
-          </div>
-
-        </div>
+        )}
       </div>
     </div>
   );

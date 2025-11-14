@@ -77,6 +77,18 @@ export class Account {
   @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true })
   lastReconciledBalance: number;
 
+  @Column({ type: 'text', nullable: true })
+  statementPassword: string; // Encrypted password for password-protected statements
+
+  @Column({ default: false })
+  isTemporary: boolean; // True if account was auto-created from email/statement
+
+  @Column({ type: 'text', nullable: true })
+  tempAccountSource: string; // Source of temp account (e.g., 'email:sender@example.com', 'statement:filename.pdf')
+
+  @Column({ type: 'uuid', nullable: true })
+  linkedToAccountId: string; // If temp account, which real account it's linked to
+
   @Column()
   userId: string;
 

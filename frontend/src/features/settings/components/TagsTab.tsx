@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { tagsApi } from '@services/api';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import TagModal from './TagModal';
@@ -8,6 +9,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function TagsTab() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<any>(null);
@@ -61,30 +63,46 @@ export default function TagsTab() {
       </div>
 
       {isLoading ? (
-        <p className="py-8 text-center text-gray-500">Loading tags...</p>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading tags...</p>
+          </div>
+        </div>
       ) : tags?.data?.length === 0 ? (
-        <p className="py-8 text-center text-gray-500">No tags yet. Add your first tag!</p>
+        <div className="rounded-lg border border-dashed border-border bg-muted/50 p-12 text-center">
+          <p className="text-muted-foreground">No tags yet. Add your first tag!</p>
+        </div>
       ) : (
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {tags?.data?.map((tag: any) => (
             <div
               key={tag.id}
-              className="group relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white"
+              onClick={() => navigate(`/tags/${tag.id}`)}
+              className="group relative flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-sm hover:shadow-md transition-all cursor-pointer"
               style={{ backgroundColor: tag.color }}
             >
-              <span>{tag.name}</span>
-              <div className="ml-2 hidden items-center gap-1 group-hover:flex">
+              <span className="truncate flex-1">{tag.name}</span>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => handleEdit(tag)}
-                  className="rounded p-1 hover:bg-white hover:bg-opacity-20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(tag);
+                  }}
+                  className="rounded p-1.5 hover:bg-white hover:bg-opacity-20 transition-colors"
+                  aria-label="Edit tag"
                 >
-                  <Edit className="h-3 w-3" />
+                  <Edit className="h-3.5 w-3.5" />
                 </button>
                 <button
-                  onClick={() => handleDelete(tag.id, tag.name)}
-                  className="rounded p-1 hover:bg-white hover:bg-opacity-20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(tag.id, tag.name);
+                  }}
+                  className="rounded p-1.5 hover:bg-white hover:bg-opacity-20 transition-colors"
+                  aria-label="Delete tag"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>

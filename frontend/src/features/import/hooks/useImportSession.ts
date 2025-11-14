@@ -1,37 +1,52 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { importApi } from '@services/api';
 
 export function useImportSession() {
   const queryClient = useQueryClient();
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null); // stores importId
   const [step, setStep] = useState<'upload' | 'preview' | 'mapping' | 'confirm'>('upload');
-
-  const { data: preview } = useQuery({
-    queryKey: ['import-preview', sessionId],
-    queryFn: () => importApi.preview(sessionId!),
-    enabled: !!sessionId && step === 'preview',
-  });
+  const [preview, setPreview] = useState<any | null>(null);
 
   const uploadMutation = useMutation({
-    mutationFn: (formData: FormData) => importApi.uploadFile(formData),
-    onSuccess: (response) => {
-      setSessionId(response.data.sessionId);
+    mutationFn: async (file: File) => {
+      // Determine file type
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      const fileType = ext === 'csv' ? 'CSV' : ext === 'pdf' ? 'PDF' : 'EXCEL';
+
+      // Create import log
+      const createResp = await importApi.createLog({ type: fileType, fileName: file.name });
+
+      // Read file as base64
+      const fileContent = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Parse file
+      const parseResp = await importApi.parse({ fileContent, fileType });
+
+      // Maintain shape similar to axios response for ImportPage consumption
+      setPreview({ data: parseResp.data });
+      setSessionId(createResp.data.id);
       setStep('preview');
+
+      return parseResp;
     },
   });
 
   const confirmMutation = useMutation({
-    mutationFn: (sessionId: string) => importApi.confirm(sessionId),
+    mutationFn: async () => {
+      if (!sessionId || !preview?.data?.transactions) return;
+      await importApi.confirm({
+        importId: sessionId,
+        transactions: preview.data.transactions,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      resetSession();
-    },
-  });
-
-  const cancelMutation = useMutation({
-    mutationFn: (sessionId: string) => importApi.cancel(sessionId),
-    onSuccess: () => {
       resetSession();
     },
   });
@@ -39,24 +54,20 @@ export function useImportSession() {
   const resetSession = () => {
     setStep('upload');
     setSessionId(null);
+    setPreview(null);
   };
 
   const handleUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    await uploadMutation.mutateAsync(formData);
+    await uploadMutation.mutateAsync(file);
+    return true;
   };
 
   const handleConfirm = async () => {
-    if (sessionId) {
-      await confirmMutation.mutateAsync(sessionId);
-    }
+    await confirmMutation.mutateAsync();
   };
 
   const handleCancel = async () => {
-    if (sessionId) {
-      await cancelMutation.mutateAsync(sessionId);
-    }
+    resetSession();
   };
 
   return {
@@ -65,7 +76,7 @@ export function useImportSession() {
     preview,
     uploadMutation,
     confirmMutation,
-    cancelMutation,
+    cancelMutation: { isPending: false },
     handleUpload,
     handleConfirm,
     handleCancel,
