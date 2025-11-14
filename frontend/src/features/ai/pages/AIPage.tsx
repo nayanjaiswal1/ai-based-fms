@@ -61,21 +61,6 @@ export default function AIPage() {
 
   return (
     <div className="flex h-[calc(100vh-12rem)] flex-col space-y-6">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-purple-600">
-            <Sparkles className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">AI Assistant</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Natural language transactions and financial insights
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Chat Container */}
       <div className="flex flex-1 flex-col overflow-hidden rounded-lg bg-white shadow">
         {/* Messages */}

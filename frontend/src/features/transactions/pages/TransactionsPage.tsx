@@ -19,6 +19,7 @@ import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
 import { StatusBar } from '@/components/ui/StatusBar';
 import { useCurrency } from '@/hooks/useCurrency';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
@@ -353,78 +354,44 @@ export default function TransactionsPage() {
       {/* Usage Limit Warning */}
       <UsageLimitBanner resource="maxTransactions" />
 
-      {/* Header - Responsive */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Transactions</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {/* Hide some buttons on small mobile */}
-          <button
-            onClick={() => navigate('/transactions/duplicates')}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline">Find Duplicates</span>
-            <span className="xs:hidden">Duplicates</span>
-          </button>
-
-          <button
-            onClick={() => setParam('isVerified', 'false')}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Unverified</span>
-            <span className="sm:hidden">Unver.</span>
-          </button>
-
-          {/* Hide Import on very small screens */}
-          <ProtectedAction feature={FeatureFlag.ADVANCED_IMPORT} behavior="disable">
-            <button
-              onClick={() => navigate('/import')}
-              className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <Upload className="h-4 w-4" />
-              Import
-            </button>
-          </ProtectedAction>
-
-          <button
-            onClick={() => navigate('/transactions/new')}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline">Add Transaction</span>
-            <span className="xs:hidden">Add</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search and Filters - Responsive */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search transactions..."
-            value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-9 sm:pl-10 pr-3 sm:pr-4 text-sm sm:text-base focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-        <button
-          onClick={handleOpenFilterModal}
-          className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap"
-        >
-          <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="hidden xs:inline">Filters</span>
-          {activeFiltersCount > 0 && (
-            <span className="rounded-full bg-blue-600 px-1.5 sm:px-2 py-0.5 text-xs text-white">
-              {activeFiltersCount}
-            </span>
-          )}
-        </button>
-      </div>
+      {/* Page Header - Single Row */}
+      <PageHeader
+        showSearch={true}
+        searchValue={searchTerm || ''}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search transactions..."
+        showFilter={true}
+        onFilterClick={handleOpenFilterModal}
+        activeFiltersCount={activeFiltersCount}
+        buttons={[
+          {
+            label: 'Duplicates',
+            icon: Copy,
+            onClick: () => navigate('/transactions/duplicates'),
+            variant: 'outline' as const,
+            className: 'hidden sm:flex',
+          },
+          {
+            label: 'Unverified',
+            icon: Filter,
+            onClick: () => setParam('isVerified', 'false'),
+            variant: 'outline' as const,
+          },
+          {
+            label: 'Import',
+            icon: Upload,
+            onClick: () => navigate('/import'),
+            variant: 'outline' as const,
+            className: 'hidden sm:flex',
+          },
+          {
+            label: 'Add Transaction',
+            icon: Plus,
+            onClick: () => navigate('/transactions/new'),
+            variant: 'primary' as const,
+          },
+        ]}
+      />
 
       {/* Active Filters - Responsive */}
       {activeFiltersCount > 0 && (

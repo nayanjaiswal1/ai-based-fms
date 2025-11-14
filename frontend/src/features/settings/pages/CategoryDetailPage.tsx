@@ -101,7 +101,6 @@ export default function CategoryDetailPage() {
             )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{categoryData.name}</h1>
             <p className="text-sm text-muted-foreground capitalize">
               {categoryData.type} Category
             </p>
