@@ -1,5 +1,10 @@
 import { ReactNode } from 'react';
-import { X } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from './dialog';
 
 interface ModalProps {
   isOpen: boolean;
@@ -18,35 +23,16 @@ const maxWidthClasses = {
 };
 
 export default function Modal({ isOpen, onClose, title, children, maxWidth = 'lg' }: ModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Modal content */}
-      <div
-        className={`relative z-10 w-full ${maxWidthClasses[maxWidth]} rounded-lg bg-card p-6 shadow-xl transition-colors m-4`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-card-foreground">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring rounded-lg p-1"
-            type="button"
-            aria-label="Close modal"
-          >
-            <X className="h-6 w-6" />
-          </button>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className={`${maxWidthClasses[maxWidth]}`}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          {children}
         </div>
-        {children}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
