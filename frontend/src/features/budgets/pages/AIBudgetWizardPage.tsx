@@ -161,39 +161,39 @@ export default function AIBudgetWizardPage() {
   const remaining = generatedBudgets ? generatedBudgets.availableForBudgets - totalAllocated : 0;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-5">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <button
           onClick={() => (step > 1 ? setStep(step - 1) : navigate('/budgets'))}
-          className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-blue-600" />
-            AI Budget Creation Wizard
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+            AI Budget Wizard
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Let AI help you create a personalized budget plan
+          <p className="mt-0.5 text-xs sm:text-sm text-gray-600">
+            Create a personalized budget with AI assistance
           </p>
         </div>
       </div>
 
       {/* Progress Steps */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-5">
         <div className="flex items-center justify-between">
           {[1, 2, 3].map((stepNum) => (
             <div key={stepNum} className="flex items-center flex-1">
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold ${
+                className={`flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full font-semibold text-sm ${
                   step >= stepNum
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-500'
                 }`}
               >
-                {step > stepNum ? <Check className="h-5 w-5" /> : stepNum}
+                {step > stepNum ? <Check className="h-4 w-4" /> : stepNum}
               </div>
               {stepNum < 3 && (
                 <div
@@ -205,7 +205,7 @@ export default function AIBudgetWizardPage() {
             </div>
           ))}
         </div>
-        <div className="flex justify-between mt-2 text-sm">
+        <div className="flex justify-between mt-2 text-xs sm:text-sm">
           <span className={step >= 1 ? 'text-blue-600 font-medium' : 'text-gray-500'}>
             Financial Info
           </span>
@@ -220,12 +220,12 @@ export default function AIBudgetWizardPage() {
 
       {/* Step 1: Financial Information */}
       {step === 1 && (
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-5 space-y-4 sm:space-y-5">
+          <h2 className="text-lg font-semibold text-gray-900">
             Tell us about your finances
           </h2>
 
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {/* Monthly Income */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -356,16 +356,16 @@ export default function AIBudgetWizardPage() {
           <button
             onClick={handleGenerate}
             disabled={generateMutation.isPending}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 sm:py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-400 shadow-md hover:shadow-lg transition-all font-medium text-sm sm:text-base"
           >
             {generateMutation.isPending ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                 Generating Budget...
               </>
             ) : (
               <>
-                <Sparkles className="h-5 w-5" />
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
                 Generate AI Budget
               </>
             )}
@@ -375,79 +375,81 @@ export default function AIBudgetWizardPage() {
 
       {/* Step 2: Review & Edit */}
       {step === 2 && generatedBudgets && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Summary Card */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Budget Summary</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Monthly Income</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  ${generatedBudgets.income.toFixed(2)}
+          <div className="bg-white rounded-lg shadow p-4 sm:p-5">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Budget Summary</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-600 mb-1">Monthly Income</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-900">
+                  ${generatedBudgets.income.toFixed(0)}
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Fixed Expenses</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  ${generatedBudgets.fixedExpenses.total.toFixed(2)}
+              <div className="bg-orange-50 rounded-lg p-3">
+                <p className="text-xs text-gray-600 mb-1">Fixed Expenses</p>
+                <p className="text-lg sm:text-xl font-bold text-orange-600">
+                  ${generatedBudgets.fixedExpenses.total.toFixed(0)}
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Allocated</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  ${totalAllocated.toFixed(2)}
+              <div className="bg-blue-50 rounded-lg p-3">
+                <p className="text-xs text-gray-600 mb-1">Total Allocated</p>
+                <p className="text-lg sm:text-xl font-bold text-blue-600">
+                  ${totalAllocated.toFixed(0)}
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Remaining</p>
+              <div className={`${remaining >= 0 ? 'bg-green-50' : 'bg-red-50'} rounded-lg p-3`}>
+                <p className="text-xs text-gray-600 mb-1">Remaining</p>
                 <p
-                  className={`text-2xl font-bold ${
+                  className={`text-lg sm:text-xl font-bold ${
                     remaining >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}
                 >
-                  ${remaining.toFixed(2)}
+                  ${remaining.toFixed(0)}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Budget Categories */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Budget Distribution
+          <div className="bg-white rounded-lg shadow p-4 sm:p-5">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">
+              Budget Distribution ({editedBudgets.length} categories)
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {editedBudgets.map((budget, index) => (
                 <div
                   key={index}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+                  className="border border-gray-200 rounded-lg p-3 hover:border-blue-400 hover:shadow-sm transition-all"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">
-                        {budget.categoryName}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">{budget.reasoning}</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-gray-900 text-sm">
+                          {budget.categoryName}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-gray-600 line-clamp-2">{budget.reasoning}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
                         {budget.suggestedTags.map((tag, tagIndex) => (
                           <span
                             key={tagIndex}
-                            className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+                            className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
                           >
                             {tag}
                           </span>
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-gray-400" />
+                    <div className="flex items-center gap-2 sm:flex-shrink-0">
+                      <DollarSign className="h-4 w-4 text-gray-400" />
                       <input
                         type="number"
                         value={budget.amount}
                         onChange={(e) =>
                           handleUpdateBudgetAmount(index, parseFloat(e.target.value) || 0)
                         }
-                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-28 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -458,14 +460,14 @@ export default function AIBudgetWizardPage() {
 
           {/* AI Recommendations */}
           {generatedBudgets.recommendations.length > 0 && (
-            <div className="bg-blue-50 rounded-lg p-6">
-              <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+              <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2 text-sm">
+                <TrendingUp className="h-4 w-4" />
                 AI Recommendations
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-1.5">
                 {generatedBudgets.recommendations.map((rec, index) => (
-                  <li key={index} className="text-sm text-blue-800">
+                  <li key={index} className="text-xs text-blue-800 leading-relaxed">
                     • {rec}
                   </li>
                 ))}
@@ -473,28 +475,28 @@ export default function AIBudgetWizardPage() {
             </div>
           )}
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button
               onClick={() => setStep(1)}
-              className="flex-1 flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300"
+              className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm border border-gray-300"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
               Back
             </button>
             <button
               onClick={handleSaveBudgets}
               disabled={saveBudgetsMutation.isPending || remaining < 0}
-              className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-lg hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-400 transition-all font-medium text-sm shadow-md hover:shadow-lg"
             >
               {saveBudgetsMutation.isPending ? (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Saving...
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving Budgets...
                 </>
               ) : (
                 <>
-                  <Save className="h-5 w-5" />
-                  Save All Budgets
+                  <Save className="h-4 w-4" />
+                  Save All Budgets ({editedBudgets.length})
                 </>
               )}
             </button>
