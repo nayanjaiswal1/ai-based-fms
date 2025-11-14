@@ -57,14 +57,6 @@ export default function ImportPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Import Transactions</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Import transactions from CSV, Excel, or PDF files
-        </p>
-      </div>
-
       {/* Progress Steps */}
       <div className="flex items-center justify-between rounded-lg bg-white p-6 shadow">
         <StepIndicator
