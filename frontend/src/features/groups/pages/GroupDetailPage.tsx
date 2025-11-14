@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { groupsApi } from '@services/api';
@@ -13,6 +13,8 @@ import {
   User,
   Calendar,
 } from 'lucide-react';
+import { StatusBar } from '@/components/ui/StatusBar';
+import { useCurrency } from '@/hooks/useCurrency';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'react-hot-toast';
@@ -79,10 +81,48 @@ export default function GroupDetailPage() {
     );
   }
 
+  const { formatLocale } = useCurrency();
+
   const groupData = group.data;
   const totalMembers = groupData.members?.length || 0;
   const totalExpenses = groupData.totalExpenses || 0;
   const yourBalance = groupData.yourBalance || 0;
+
+  const statusBarItems = useMemo(() => [
+    {
+      id: 'members',
+      label: 'Members',
+      value: totalMembers.toString(),
+      icon: Users,
+      color: '#3b82f6',
+      details: [
+        { label: 'Total Members', value: totalMembers },
+        { label: 'Active Members', value: groupData.members?.filter((m: any) => m.isActive)?.length || 0 },
+      ],
+    },
+    {
+      id: 'expenses',
+      label: 'Total Expenses',
+      value: formatLocale(totalExpenses),
+      icon: DollarSign,
+      color: '#10b981',
+      details: [
+        { label: 'Total Amount', value: formatLocale(totalExpenses) },
+        { label: 'Number of Expenses', value: groupData.expenseCount || 0 },
+      ],
+    },
+    {
+      id: 'balance',
+      label: yourBalance >= 0 ? 'You are owed' : 'You owe',
+      value: formatLocale(Math.abs(yourBalance)),
+      icon: TrendingUp,
+      color: yourBalance >= 0 ? '#10b981' : '#ef4444',
+      details: [
+        { label: 'Your Balance', value: formatLocale(yourBalance) },
+        { label: 'Status', value: yourBalance >= 0 ? 'Owed to you' : 'You owe' },
+      ],
+    },
+  ], [totalMembers, totalExpenses, yourBalance, groupData, formatLocale]);
 
   return (
     <div className="space-y-6">
@@ -123,68 +163,6 @@ export default function GroupDetailPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{totalMembers}</p>
-              <p className="text-sm text-muted-foreground">Members</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/20">
-              <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                ${Number(totalExpenses).toFixed(2)}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Expenses</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex h-12 w-12 items-center justify-center rounded-lg ${
-                yourBalance >= 0
-                  ? 'bg-green-100 dark:bg-green-900/20'
-                  : 'bg-red-100 dark:bg-red-900/20'
-              }`}
-            >
-              <TrendingUp
-                className={`h-6 w-6 ${
-                  yourBalance >= 0
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
-                }`}
-              />
-            </div>
-            <div>
-              <p
-                className={`text-2xl font-bold ${
-                  yourBalance >= 0
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
-                }`}
-              >
-                ${Math.abs(yourBalance).toFixed(2)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {yourBalance >= 0 ? 'You are owed' : 'You owe'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Tabs */}
       <div className="border-b border-border">
@@ -351,6 +329,9 @@ export default function GroupDetailPage() {
       </div>
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
+
+      {/* Excel-style Status Bar */}
+      <StatusBar items={statusBarItems} />
     </div>
   );
 }

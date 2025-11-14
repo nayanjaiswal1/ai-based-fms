@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { lendBorrowApi } from '@services/api';
-import { Plus, DollarSign } from 'lucide-react';
+import { Plus, DollarSign, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { StatusBar } from '@/components/ui/StatusBar';
+import { useCurrency } from '@/hooks/useCurrency';
 import LendBorrowModal from '../components/LendBorrowModal';
 import PaymentModal from '../components/PaymentModal';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -78,6 +80,8 @@ export default function LendBorrowPage() {
     setIsPaymentModalOpen(true);
   };
 
+  const { formatLocale } = useCurrency();
+
   const rawSummary = summary?.data || {};
   const summaryData = {
     totalLent: Number(rawSummary.totalLent ?? 0),
@@ -85,6 +89,45 @@ export default function LendBorrowPage() {
     totalOwed: Number(rawSummary.totalOwed ?? 0),
     totalOwing: Number(rawSummary.totalOwing ?? 0),
   };
+
+  const statusBarItems = useMemo(() => [
+    {
+      id: 'lent',
+      label: 'Lent',
+      value: formatLocale(summaryData.totalLent),
+      icon: TrendingUp,
+      color: '#10b981',
+      details: [
+        { label: 'Total Amount Lent', value: formatLocale(summaryData.totalLent) },
+        { label: 'Amount Owed to You', value: formatLocale(summaryData.totalOwed) },
+      ],
+    },
+    {
+      id: 'borrowed',
+      label: 'Borrowed',
+      value: formatLocale(summaryData.totalBorrowed),
+      icon: TrendingDown,
+      color: '#ef4444',
+      details: [
+        { label: 'Total Amount Borrowed', value: formatLocale(summaryData.totalBorrowed) },
+        { label: 'Amount You Owe', value: formatLocale(summaryData.totalOwing) },
+      ],
+    },
+    {
+      id: 'owed',
+      label: 'Owed to You',
+      value: formatLocale(summaryData.totalOwed),
+      icon: DollarSign,
+      color: '#3b82f6',
+    },
+    {
+      id: 'owing',
+      label: 'You Owe',
+      value: formatLocale(summaryData.totalOwing),
+      icon: AlertCircle,
+      color: '#f59e0b',
+    },
+  ], [summaryData, formatLocale]);
 
   const columns = getLendBorrowColumns(handleEdit, handleDelete, handleRecordPayment);
   const filterConfigs = getLendBorrowFilters();
@@ -116,64 +159,6 @@ export default function LendBorrowPage() {
         </button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-              <DollarSign className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Lent</p>
-              <p className="text-2xl font-bold text-gray-900">
-                ${summaryData.totalLent.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
-              <DollarSign className="h-5 w-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Borrowed</p>
-              <p className="text-2xl font-bold text-gray-900">
-                ${summaryData.totalBorrowed.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-              <DollarSign className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Owed to You</p>
-              <p className="text-2xl font-bold text-green-600">
-                ${summaryData.totalOwed.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100">
-              <DollarSign className="h-5 w-5 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">You Owe</p>
-              <p className="text-2xl font-bold text-red-600">
-                ${summaryData.totalOwing.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Filters */}
       <div className="rounded-lg bg-white p-4 shadow">
@@ -213,6 +198,9 @@ export default function LendBorrowPage() {
       />
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
+
+      {/* Excel-style Status Bar */}
+      <StatusBar items={statusBarItems} />
     </div>
   );
 }
