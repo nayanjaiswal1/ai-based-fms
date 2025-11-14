@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Edit, Trash2, GitMerge, Undo, History } from 'lucide-react';
+import { Edit, Trash2, GitMerge, Undo, History, ExternalLink } from 'lucide-react';
 import { ColumnConfig } from '@components/table';
 
 export const getTransactionColumns = (
@@ -26,6 +26,20 @@ export const getTransactionColumns = (
       <div>
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium text-gray-900">{value}</div>
+          {row.sourceType && row.sourceType !== 'manual' && row.sourceId && (
+            <ExternalLink
+              className="w-3 h-3 text-blue-500"
+              title="Click to view source"
+            />
+          )}
+          {row.lineItems && row.lineItems.length > 0 && (
+            <span
+              className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
+              title={`${row.lineItems.length} items`}
+            >
+              {row.lineItems.length} items
+            </span>
+          )}
           {row.isMerged && (
             <span
               className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"

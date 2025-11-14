@@ -27,6 +27,7 @@ import { BudgetsModule } from '@modules/budgets/budgets.module';
 import { GroupsModule } from '@modules/groups/groups.module';
 import { InvestmentsModule } from '@modules/investments/investments.module';
 import { LendBorrowModule } from '@modules/lend-borrow/lend-borrow.module';
+import { SharedExpensesModule } from '@modules/shared-expenses/shared-expenses.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
 import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { AiModule } from '@modules/ai/ai.module';
@@ -95,6 +96,7 @@ import { DashboardPreferencesModule } from '@modules/dashboard-preferences/dashb
     TagsModule,
     BudgetsModule,
     GroupsModule,
+    SharedExpensesModule,
     InvestmentsModule,
     LendBorrowModule,
     NotificationsModule.forRoot(),
