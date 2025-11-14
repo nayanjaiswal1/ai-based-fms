@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Search, Plus, Check } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { getAllWidgets, WidgetCategory, WidgetDefinition } from '../config/widgetRegistry';
 import { useWidgetPreferences } from '../hooks/useWidgetPreferences';
 import { WidgetConfig } from '../api/dashboard-preferences.api';
@@ -46,6 +47,7 @@ export function WidgetGallery({ isOpen, onClose }: Props) {
       config: {},
     };
     addWidget(newWidget);
+    toast.success(`${definition.name} added to dashboard`);
   };
 
   if (!isOpen) return null;

@@ -78,11 +78,12 @@ export default function LendBorrowPage() {
     setIsPaymentModalOpen(true);
   };
 
-  const summaryData = summary?.data || {
-    totalLent: 0,
-    totalBorrowed: 0,
-    totalOwed: 0,
-    totalOwing: 0,
+  const rawSummary = summary?.data || {};
+  const summaryData = {
+    totalLent: Number(rawSummary.totalLent ?? 0),
+    totalBorrowed: Number(rawSummary.totalBorrowed ?? 0),
+    totalOwed: Number(rawSummary.totalOwed ?? 0),
+    totalOwing: Number(rawSummary.totalOwing ?? 0),
   };
 
   const columns = getLendBorrowColumns(handleEdit, handleDelete, handleRecordPayment);

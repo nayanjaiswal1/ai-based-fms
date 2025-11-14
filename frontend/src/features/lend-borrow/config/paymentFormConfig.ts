@@ -11,11 +11,13 @@ export const paymentSchema = z.object({
 export type PaymentFormData = z.infer<typeof paymentSchema>;
 
 export function getPaymentFormConfig(record: any): FormConfig<PaymentFormData> {
-  const remaining = record.amount - record.paidAmount;
+  const total = Number(record?.amount ?? 0);
+  const paid = Number(record?.paidAmount ?? 0);
+  const remaining = Math.max(0, total - paid);
 
   return {
     title: 'Record Payment',
-    description: `Record a payment for ${record.personName}`,
+    description: `Record a payment for ${record?.personName ?? 'this record'}`,
     sections: [
       {
         fields: [

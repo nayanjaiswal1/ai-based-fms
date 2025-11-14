@@ -14,7 +14,9 @@ interface PaymentModalProps {
 export default function PaymentModal({ record, isOpen, onClose }: PaymentModalProps) {
   const queryClient = useQueryClient();
   const formConfig = getPaymentFormConfig(record);
-  const remaining = record.amount - record.paidAmount;
+  const total = Number(record?.amount ?? 0);
+  const paid = Number(record?.paidAmount ?? 0);
+  const remaining = Math.max(0, total - paid);
 
   // Form protection to prevent accidental data loss
   const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
@@ -53,15 +55,15 @@ export default function PaymentModal({ record, isOpen, onClose }: PaymentModalPr
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">Person:</span>
-            <span className="font-medium text-gray-900">{record.personName}</span>
+            <span className="font-medium text-gray-900">{record?.personName ?? '—'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Total Amount:</span>
-            <span className="font-medium text-gray-900">${record.amount.toFixed(2)}</span>
+            <span className="font-medium text-gray-900">${Number(record?.amount ?? 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Already Paid:</span>
-            <span className="font-medium text-gray-900">${record.paidAmount.toFixed(2)}</span>
+            <span className="font-medium text-gray-900">${Number(record?.paidAmount ?? 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between border-t border-blue-200 pt-2">
             <span className="font-semibold text-gray-900">Remaining:</span>

@@ -157,10 +157,14 @@ export function useWidgetPreferences() {
     resetMutation.mutate();
   }, [resetMutation]);
 
+  // Extract widgets array - handle both direct and nested data structures
+  const preferencesData = preferences?.data || preferences;
+  const widgetsArray = Array.isArray(preferencesData?.widgets) ? preferencesData.widgets : [];
+
   return {
-    preferences,
-    widgets: preferences?.widgets || [],
-    visibleWidgets: preferences?.widgets?.filter((w) => w.visible) || [],
+    preferences: preferencesData,
+    widgets: widgetsArray,
+    visibleWidgets: widgetsArray.filter((w) => w.visible),
     isLoading,
     error,
     updateWidgets,
