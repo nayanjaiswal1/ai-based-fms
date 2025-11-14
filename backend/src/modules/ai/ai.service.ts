@@ -18,14 +18,19 @@ import {
  *
  * Configurable via environment variables:
  * - OPENAI_API_KEY: Your OpenAI API key (required)
- * - OPENAI_MODEL: The model to use (optional, default: gpt-3.5-turbo)
+ * - OPENAI_MODEL: The model to use (optional, default: gpt-4o-mini)
  *
- * Supported models:
- * - gpt-3.5-turbo: Fast and cost-effective (default)
- * - gpt-4o-mini: Latest GPT-4 mini, faster and cheaper than gpt-4
+ * Supported models (ordered by recommendation):
+ * - gpt-4o-mini: 60% cheaper than GPT-3.5, better performance, 128K context (RECOMMENDED)
  * - gpt-4o: Latest GPT-4 optimized model, best quality
  * - gpt-4-turbo: GPT-4 Turbo, faster than gpt-4
+ * - gpt-3.5-turbo: Legacy model, being phased out by OpenAI
  * - gpt-4: Original GPT-4, highest quality but slower/expensive
+ *
+ * Pricing (as of 2025):
+ * - gpt-4o-mini: $0.15/1M input, $0.60/1M output tokens
+ * - gpt-3.5-turbo: $0.50/1M input, $1.50/1M output tokens
+ * - gpt-4o: More expensive but highest quality
  */
 @Injectable()
 export class AiService {
@@ -47,8 +52,8 @@ export class AiService {
     if (apiKey) {
       this.openai = new OpenAI({ apiKey });
     }
-    // Get configurable model, default to gpt-3.5-turbo if not set
-    this.model = this.configService.get<string>('OPENAI_MODEL', 'gpt-3.5-turbo');
+    // Get configurable model, default to gpt-4o-mini (best cost/performance balance)
+    this.model = this.configService.get<string>('OPENAI_MODEL', 'gpt-4o-mini');
   }
 
   /**
