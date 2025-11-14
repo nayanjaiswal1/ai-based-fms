@@ -17,6 +17,7 @@ const BudgetsPage = lazy(() => import('@features/budgets/pages/BudgetsPage'));
 const AIBudgetWizardPage = lazy(() => import('@features/budgets/pages/AIBudgetWizardPage'));
 const GroupsPage = lazy(() => import('@features/groups/pages/GroupsPage'));
 const GroupDetailPage = lazy(() => import('@features/groups/pages/GroupDetailPage'));
+const SharedExpensesPage = lazy(() => import('@features/shared-expenses/pages/SharedExpensesPage'));
 const InvestmentsPage = lazy(() => import('@features/investments/pages/InvestmentsPage'));
 const LendBorrowPage = lazy(() => import('@features/lend-borrow/pages/LendBorrowPage'));
 const CombinedAnalyticsPage = lazy(() => import('@features/analytics/pages/CombinedAnalyticsPage'));
@@ -134,6 +135,14 @@ export const protectedRoutes: RouteObject[] = [
         <GroupsPage />
       </FeatureGate>
     ),
+  },
+  {
+    path: '/shared-expenses',
+    element: <SharedExpensesPage />,
+  },
+  {
+    path: '/shared-expenses/:id',
+    element: <SharedExpensesPage />,
   },
   {
     path: '/investments',

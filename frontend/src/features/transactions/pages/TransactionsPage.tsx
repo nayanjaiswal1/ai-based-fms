@@ -19,6 +19,7 @@ import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
 import { StatusBar } from '@/components/ui/StatusBar';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useTransactionNavigation } from '../hooks/useTransactionNavigation';
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function TransactionsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [historyTransaction, setHistoryTransaction] = useState<any>(null);
   const isMobile = useIsMobile();
+  const { handleTransactionClick } = useTransactionNavigation();
 
   // Use the new useUrlParams hook for query parameters
   const { getParam, getParams, setParam, setParams, removeParam, removeParams } = useUrlParams();
@@ -493,6 +495,7 @@ export default function TransactionsPage() {
           onDelete={handleDelete}
           onHistory={handleHistory}
           onUnmerge={handleUnmerge}
+          onRowClick={(row) => handleTransactionClick(row.id, () => handleEdit(row))}
           selectable
           selectedIds={selectedIds}
           onSelectOne={handleSelectOne}
@@ -508,6 +511,7 @@ export default function TransactionsPage() {
           selectedIds={selectedIds}
           onSelectAll={handleSelectAll}
           onSelectOne={handleSelectOne}
+          onRowClick={(row) => handleTransactionClick(row.id, () => handleEdit(row))}
           rowHeight={65}
           height="calc(100vh - 400px)"
           overscan={10}
@@ -523,6 +527,7 @@ export default function TransactionsPage() {
           selectedIds={selectedIds}
           onSelectAll={handleSelectAll}
           onSelectOne={handleSelectOne}
+          onRowClick={(row) => handleTransactionClick(row.id, () => handleEdit(row))}
         />
       )}
 
