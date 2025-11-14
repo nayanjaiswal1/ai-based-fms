@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Edit, Trash2, List, FileText, TrendingUp, Plus } from 'lucide-react';
+import { Edit, Trash2, Upload, ChevronDown, ChevronUp, Check, FileText, TrendingUp, TrendingDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { transactionsApi } from '@services/api';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface AccountCardsViewProps {
   accounts: any[];
@@ -10,8 +13,6 @@ interface AccountCardsViewProps {
   getAccountIcon: (type: string) => any;
 }
 
-type TabType = 'transactions' | 'statement' | 'history';
-
 export function AccountCardsView({
   accounts,
   onEdit,
@@ -19,282 +20,324 @@ export function AccountCardsView({
   onReconcile,
   getAccountIcon
 }: AccountCardsViewProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<TabType>('transactions');
+  const [selectedAccounts, setSelectedAccounts] = useState<Set<string>>(new Set());
+  const [expandedAccount, setExpandedAccount] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { formatLocale } = useCurrency();
 
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : accounts.length - 1));
+  const toggleSelect = (accountId: string) => {
+    const newSelected = new Set(selectedAccounts);
+    if (newSelected.has(accountId)) {
+      newSelected.delete(accountId);
+      if (expandedAccount === accountId) {
+        setExpandedAccount(null);
+      }
+    } else {
+      newSelected.add(accountId);
+      setExpandedAccount(accountId);
+    }
+    setSelectedAccounts(newSelected);
   };
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev < accounts.length - 1 ? prev + 1 : 0));
+  const toggleExpand = (accountId: string) => {
+    if (expandedAccount === accountId) {
+      setExpandedAccount(null);
+    } else {
+      setExpandedAccount(accountId);
+      if (!selectedAccounts.has(accountId)) {
+        const newSelected = new Set(selectedAccounts);
+        newSelected.add(accountId);
+        setSelectedAccounts(newSelected);
+      }
+    }
   };
 
   const getCardGradient = (type: string, index: number) => {
     const gradients = [
-      'from-slate-700 to-slate-800',
-      'from-blue-700 to-indigo-800',
-      'from-purple-700 to-purple-800',
-      'from-teal-700 to-cyan-800',
-      'from-emerald-700 to-green-800',
-      'from-orange-700 to-amber-800',
-      'from-rose-700 to-pink-800',
-      'from-indigo-700 to-blue-800',
+      'from-slate-600 to-slate-700',
+      'from-blue-600 to-indigo-700',
+      'from-purple-600 to-purple-700',
+      'from-teal-600 to-cyan-700',
+      'from-emerald-600 to-green-700',
+      'from-orange-600 to-amber-700',
+      'from-rose-600 to-pink-700',
+      'from-indigo-600 to-blue-700',
     ];
     return gradients[index % gradients.length];
   };
 
-  const currentAccount = accounts[currentIndex];
-  const Icon = getAccountIcon(currentAccount?.type);
-  const gradient = getCardGradient(currentAccount?.type, currentIndex);
+  return (
+    <div className="w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 rounded-xl p-6">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Your Accounts</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {selectedAccounts.size > 0 ? `${selectedAccounts.size} selected` : 'Select accounts to view details'}
+          </p>
+        </div>
+        {selectedAccounts.size > 0 && (
+          <button
+            onClick={() => {
+              setSelectedAccounts(new Set());
+              setExpandedAccount(null);
+            }}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-300"
+          >
+            Clear Selection
+          </button>
+        )}
+      </div>
+
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {accounts.map((account, index) => {
+          const Icon = getAccountIcon(account.type);
+          const gradient = getCardGradient(account.type, index);
+          const isSelected = selectedAccounts.has(account.id);
+          const isExpanded = expandedAccount === account.id;
+
+          return (
+            <AccountCard
+              key={account.id}
+              account={account}
+              Icon={Icon}
+              gradient={gradient}
+              isSelected={isSelected}
+              isExpanded={isExpanded}
+              onToggleSelect={toggleSelect}
+              onToggleExpand={toggleExpand}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onReconcile={onReconcile}
+              formatLocale={formatLocale}
+              navigate={navigate}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+interface AccountCardProps {
+  account: any;
+  Icon: any;
+  gradient: string;
+  isSelected: boolean;
+  isExpanded: boolean;
+  onToggleSelect: (id: string) => void;
+  onToggleExpand: (id: string) => void;
+  onEdit: (account: any) => void;
+  onDelete: (id: string, name: string) => void;
+  onReconcile: (account: any) => void;
+  formatLocale: (amount: number) => string;
+  navigate: any;
+}
+
+function AccountCard({
+  account,
+  Icon,
+  gradient,
+  isSelected,
+  isExpanded,
+  onToggleSelect,
+  onToggleExpand,
+  onEdit,
+  onDelete,
+  onReconcile,
+  formatLocale,
+  navigate,
+}: AccountCardProps) {
+  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['transactions', { accountId: account.id }],
+    queryFn: () => transactionsApi.getAll({ accountId: account.id, limit: 5 }),
+    enabled: isExpanded,
+  });
+
+  const transactionsList = transactions?.data || [];
 
   return (
-    <div className="w-full min-h-[calc(100vh-8rem)] bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 rounded-xl p-4 md:p-8">
-      <div className="flex flex-col items-center justify-center">
-
-        {/* Main Card Display */}
-        <div className="relative w-full max-w-5xl">
-
-          {/* Large Featured Card */}
-          <div className="relative mb-8">
-            <div className={`w-full h-[280px] md:h-[340px] rounded-2xl shadow-2xl p-8 md:p-10 bg-gradient-to-br ${gradient} text-white relative overflow-hidden transform hover:scale-[1.02] transition-transform duration-300`}>
-
-              {/* Background Decorative Elements */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
-                <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-              </div>
-
-              {/* Card Content */}
-              <div className="relative z-10 h-full flex flex-col justify-between">
-
-                {/* Top Section */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon className="h-8 w-8 opacity-90" />
-                      <span className="text-sm font-medium opacity-90 uppercase tracking-wider">{currentAccount?.type}</span>
-                    </div>
-                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{currentAccount?.name}</h2>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => onEdit(currentAccount)}
-                      className="p-2.5 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition-all hover:scale-110"
-                      aria-label="Edit account"
-                    >
-                      <Edit className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(currentAccount.id, currentAccount.name)}
-                      className="p-2.5 bg-white/20 hover:bg-red-500/30 rounded-lg backdrop-blur-sm transition-all hover:scale-110"
-                      aria-label="Delete account"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Middle - Balance */}
-                <div className="my-6">
-                  <p className="text-sm md:text-base opacity-80 mb-2">Current Balance</p>
-                  <p className="text-5xl md:text-6xl font-bold tracking-tight">
-                    ${Number(currentAccount?.balance).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
-                  </p>
-                </div>
-
-                {/* Bottom Section */}
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-sm opacity-70 mb-1">Account Number</p>
-                    <p className="text-lg font-mono tracking-wider">•••• •••• •••• {currentAccount?.id.slice(-4)}</p>
-                  </div>
-                  {currentAccount?.currency && currentAccount.currency !== 'USD' && (
-                    <div className="text-right">
-                      <p className="text-sm opacity-70 mb-1">Currency</p>
-                      <p className="text-xl font-bold">{currentAccount.currency}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+    <div
+      className={`relative transition-all duration-300 ${
+        isSelected ? 'transform scale-105 z-10' : 'z-0'
+      }`}
+    >
+      {/* Main Card */}
+      <div
+        className={`relative rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${
+          isSelected ? 'ring-4 ring-blue-500 ring-offset-2' : ''
+        }`}
+      >
+        {/* Card Header */}
+        <div
+          className={`relative bg-gradient-to-br ${gradient} text-white p-4 cursor-pointer`}
+          onClick={() => onToggleSelect(account.id)}
+        >
+          {/* Selection Checkbox */}
+          <div className="absolute top-3 right-3 z-20">
+            <div
+              className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                isSelected
+                  ? 'bg-white border-white'
+                  : 'bg-transparent border-white/60 hover:border-white'
+              }`}
+            >
+              {isSelected && <Check className="h-4 w-4 text-blue-600" />}
             </div>
-
-            {/* Navigation Arrows */}
-            <button
-              onClick={handlePrevious}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 z-30 p-3 md:p-4 bg-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 border border-gray-200"
-              aria-label="Previous card"
-            >
-              <ChevronLeft className="h-6 w-6 md:h-7 md:w-7 text-gray-700" />
-            </button>
-            <button
-              onClick={handleNext}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 z-30 p-3 md:p-4 bg-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 border border-gray-200"
-              aria-label="Next card"
-            >
-              <ChevronRight className="h-6 w-6 md:h-7 md:w-7 text-gray-700" />
-            </button>
           </div>
 
-          {/* Pagination Indicators */}
-          <div className="flex justify-center gap-3 mb-8">
-            {accounts.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`h-2 rounded-full transition-all ${
-                  index === currentIndex
-                    ? 'w-12 bg-gradient-to-r from-blue-600 to-indigo-600'
-                    : 'w-2 bg-gray-400 hover:bg-gray-500'
-                }`}
-                aria-label={`Go to card ${index + 1}`}
-              />
-            ))}
+          {/* Background Decoration */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
           </div>
 
-          {/* Detail Panel */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 bg-gray-50">
-              <button
-                onClick={() => setActiveTab('transactions')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
-                  activeTab === 'transactions'
-                    ? 'text-blue-600 bg-white border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <List className="h-5 w-5 inline-block mr-2" />
-                Transactions
-              </button>
-              <button
-                onClick={() => setActiveTab('statement')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
-                  activeTab === 'statement'
-                    ? 'text-blue-600 bg-white border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <FileText className="h-5 w-5 inline-block mr-2" />
-                Statement
-              </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
-                  activeTab === 'history'
-                    ? 'text-blue-600 bg-white border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <TrendingUp className="h-5 w-5 inline-block mr-2" />
-                History
-              </button>
+          {/* Card Content */}
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon className="h-6 w-6" />
+              <span className="text-xs uppercase tracking-wider opacity-90">{account.type}</span>
             </div>
+            <h3 className="text-xl font-bold mb-2 truncate">{account.name}</h3>
+            <p className="text-2xl font-bold tracking-tight">{formatLocale(account.balance)}</p>
+          </div>
 
-            {/* Tab Content */}
-            <div className="p-8">
-              {activeTab === 'transactions' && (
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-50 mb-4">
-                    <List className="h-10 w-10 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">All Transactions</h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    View all transactions for <span className="font-semibold">{currentAccount?.name}</span>
-                  </p>
-                  {currentAccount?.description && (
-                    <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-                      {currentAccount.description}
-                    </p>
-                  )}
+          {/* Action Buttons - Always Visible */}
+          <div className="relative z-20 flex gap-2 mt-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(account);
+              }}
+              className="flex-1 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition-all text-sm font-medium"
+            >
+              <Edit className="h-4 w-4 inline mr-1" />
+              Edit
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(account.id, account.name);
+              }}
+              className="px-3 py-2 bg-white/20 hover:bg-red-500/30 rounded-lg backdrop-blur-sm transition-all"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Expandable Section */}
+        {isSelected && (
+          <div className="bg-white">
+            {/* Expand/Collapse Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpand(account.id);
+              }}
+              className="w-full px-4 py-3 flex items-center justify-between text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-200"
+            >
+              <span>{isExpanded ? 'Hide Details' : 'Show Details'}</span>
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+
+            {/* Expanded Content */}
+            {isExpanded && (
+              <div className="p-4 border-t border-gray-200 space-y-4">
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => navigate(`/transactions?accountId=${currentAccount?.id}`)}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all transform hover:scale-105"
+                    onClick={() => navigate(`/transactions?accountId=${account.id}`)}
+                    className="px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                   >
-                    View All Transactions
+                    <FileText className="h-3.5 w-3.5 inline mr-1" />
+                    All Transactions
+                  </button>
+                  <button
+                    onClick={() => onReconcile(account)}
+                    className="px-3 py-2 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                  >
+                    <Upload className="h-3.5 w-3.5 inline mr-1" />
+                    Upload Statement
                   </button>
                 </div>
-              )}
 
-              {activeTab === 'statement' && (
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-50 mb-4">
-                    <FileText className="h-10 w-10 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Account Statement</h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Generate or download statement for <span className="font-semibold">{currentAccount?.name}</span>
-                  </p>
-                  <div className="flex gap-3 justify-center">
-                    <button
-                      onClick={() => onReconcile(currentAccount)}
-                      className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all transform hover:scale-105"
-                    >
-                      Reconcile Account
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'history' && (
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-purple-50 mb-4">
-                    <TrendingUp className="h-10 w-10 text-purple-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Balance History</h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Track balance changes for <span className="font-semibold">{currentAccount?.name}</span>
-                  </p>
-                  <div className="bg-gray-50 rounded-lg p-6 max-w-md mx-auto">
-                    <div className="space-y-3 text-left">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Current Balance:</span>
-                        <span className="text-lg font-bold text-gray-900">
-                          ${Number(currentAccount?.balance).toFixed(2)}
-                        </span>
-                      </div>
-                      {currentAccount?.lastReconciledAt && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Last Reconciled:</span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {new Date(currentAccount.lastReconciledAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Account Type:</span>
-                        <span className="text-sm font-medium text-gray-900 capitalize">
-                          {currentAccount?.type}
-                        </span>
-                      </div>
+                {/* Recent Transactions */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Recent Transactions</h4>
+                  {transactionsLoading ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
                     </div>
-                  </div>
+                  ) : transactionsList.length === 0 ? (
+                    <p className="text-xs text-gray-500 text-center py-3">No transactions yet</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {transactionsList.slice(0, 5).map((transaction: any) => (
+                        <div
+                          key={transaction.id}
+                          className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/transactions?id=${transaction.id}`)}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {transaction.type === 'income' ? (
+                              <TrendingUp className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                            ) : (
+                              <TrendingDown className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-gray-900 truncate">
+                                {transaction.description}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {new Date(transaction.date).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <p
+                            className={`text-xs font-semibold flex-shrink-0 ${
+                              transaction.type === 'income'
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }`}
+                          >
+                            {transaction.type === 'income' ? '+' : '-'}
+                            {formatLocale(transaction.amount)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Add New Account Button */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => navigate('/accounts/new')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 font-medium rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 border border-gray-200"
-            >
-              <Plus className="h-5 w-5" />
-              Add New Account
-            </button>
+                {/* Account Info */}
+                {account.description && (
+                  <div className="pt-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-600">{account.description}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-
-        </div>
+        )}
       </div>
+
+      {/* Overlapping Card Effect for Selected */}
+      {isSelected && (
+        <>
+          <div
+            className={`absolute inset-0 bg-gradient-to-br ${gradient} rounded-xl -z-10 transform translate-x-1 translate-y-1 opacity-40`}
+          />
+          <div
+            className={`absolute inset-0 bg-gradient-to-br ${gradient} rounded-xl -z-20 transform translate-x-2 translate-y-2 opacity-20`}
+          />
+        </>
+      )}
     </div>
   );
 }
