@@ -13,9 +13,24 @@ import {
   GenerateBudgetDto,
 } from './dto/ai.dto';
 
+/**
+ * AI Service for OpenAI-powered features
+ *
+ * Configurable via environment variables:
+ * - OPENAI_API_KEY: Your OpenAI API key (required)
+ * - OPENAI_MODEL: The model to use (optional, default: gpt-3.5-turbo)
+ *
+ * Supported models:
+ * - gpt-3.5-turbo: Fast and cost-effective (default)
+ * - gpt-4o-mini: Latest GPT-4 mini, faster and cheaper than gpt-4
+ * - gpt-4o: Latest GPT-4 optimized model, best quality
+ * - gpt-4-turbo: GPT-4 Turbo, faster than gpt-4
+ * - gpt-4: Original GPT-4, highest quality but slower/expensive
+ */
 @Injectable()
 export class AiService {
   private openai: OpenAI;
+  private model: string;
 
   constructor(
     @InjectRepository(Transaction)
@@ -32,6 +47,8 @@ export class AiService {
     if (apiKey) {
       this.openai = new OpenAI({ apiKey });
     }
+    // Get configurable model, default to gpt-3.5-turbo if not set
+    this.model = this.configService.get<string>('OPENAI_MODEL', 'gpt-3.5-turbo');
   }
 
   /**
@@ -63,7 +80,7 @@ Return ONLY the exact category name that best matches this transaction. If no ca
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
         max_tokens: 50,
@@ -109,7 +126,7 @@ If a field cannot be determined, use null.`;
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
         max_tokens: 500,
@@ -394,7 +411,7 @@ Keep insights concise, actionable, and personalized.`;
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 500,
@@ -471,7 +488,7 @@ Provide a clear, concise answer to the user's question. If you need to calculate
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.5,
         max_tokens: 300,
@@ -561,7 +578,7 @@ Focus on high-impact, realistic changes.`;
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 400,
@@ -673,7 +690,7 @@ Use only categories and tags from the provided lists. Ensure all category names 
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.6,
         max_tokens: 2000,
