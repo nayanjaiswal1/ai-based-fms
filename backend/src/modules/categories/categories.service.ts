@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, TreeRepository, IsNull, DataSource } from 'typeorm';
 import { Category, CategoryType, Transaction } from '@database/entities';
@@ -145,7 +151,7 @@ export class CategoriesService {
 
     // Validate all secondary categories
     const secondaryCategories = await Promise.all(
-      secondaryIds.map(id => this.findOne(id, userId))
+      secondaryIds.map((id) => this.findOne(id, userId)),
     );
 
     // Check all categories belong to user
@@ -240,7 +246,7 @@ export class CategoriesService {
           isArchived: category.isArchived,
           createdAt: category.createdAt,
         };
-      })
+      }),
     );
 
     // Sort by usage count descending
@@ -250,9 +256,7 @@ export class CategoriesService {
   // NEW: Get archived categories
   async getArchived(userId: string) {
     return this.categoryRepository.find({
-      where: [
-        { userId, isArchived: true, isActive: true },
-      ],
+      where: [{ userId, isArchived: true, isActive: true }],
       relations: ['parent', 'children'],
       order: { name: 'ASC' },
     });

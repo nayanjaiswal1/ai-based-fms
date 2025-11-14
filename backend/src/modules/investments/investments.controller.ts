@@ -44,7 +44,10 @@ export class InvestmentsController {
 
   @Get('performance')
   @ApiOperation({ summary: 'Get performance metrics' })
-  @ApiResponse({ status: 200, description: 'Returns performance metrics and best/worst performers' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns performance metrics and best/worst performers',
+  })
   getPerformance(@CurrentUser('id') userId: string) {
     return this.investmentsService.getPerformanceMetrics(userId);
   }

@@ -11,11 +11,11 @@ import { Reconciliation } from './reconciliation.entity';
 import { Transaction } from './transaction.entity';
 
 export enum MatchConfidence {
-  EXACT = 'exact',      // 100%
-  HIGH = 'high',        // 80-99%
-  MEDIUM = 'medium',    // 60-79%
-  LOW = 'low',          // <60%
-  MANUAL = 'manual',    // Manually matched
+  EXACT = 'exact', // 100%
+  HIGH = 'high', // 80-99%
+  MEDIUM = 'medium', // 60-79%
+  LOW = 'low', // <60%
+  MANUAL = 'manual', // Manually matched
 }
 
 @Entity('reconciliation_transactions')

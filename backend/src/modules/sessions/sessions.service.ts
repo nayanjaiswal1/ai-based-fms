@@ -54,9 +54,7 @@ export class SessionsService {
       order: { lastActive: 'DESC' },
     });
 
-    return sessions.map((session) =>
-      this.toResponseDto(session, session.id === currentSessionId),
-    );
+    return sessions.map((session) => this.toResponseDto(session, session.id === currentSessionId));
   }
 
   /**
@@ -100,17 +98,12 @@ export class SessionsService {
   /**
    * Revoke all sessions except the current one
    */
-  async revokeAllSessions(
-    userId: string,
-    exceptSessionId?: string,
-  ): Promise<number> {
+  async revokeAllSessions(userId: string, exceptSessionId?: string): Promise<number> {
     const sessions = await this.sessionRepository.find({
       where: { userId, isActive: true },
     });
 
-    const sessionsToRevoke = sessions.filter(
-      (session) => session.id !== exceptSessionId,
-    );
+    const sessionsToRevoke = sessions.filter((session) => session.id !== exceptSessionId);
 
     for (const session of sessionsToRevoke) {
       session.isActive = false;
@@ -133,10 +126,7 @@ export class SessionsService {
   /**
    * Update session refresh token
    */
-  async updateSessionRefreshToken(
-    sessionId: string,
-    refreshToken: string,
-  ): Promise<void> {
+  async updateSessionRefreshToken(sessionId: string, refreshToken: string): Promise<void> {
     await this.sessionRepository.update(sessionId, {
       refreshToken,
     });
@@ -184,9 +174,7 @@ export class SessionsService {
   /**
    * Determine device type from UAParser device type
    */
-  private determineDeviceType(
-    deviceType?: string,
-  ): 'Desktop' | 'Mobile' | 'Tablet' {
+  private determineDeviceType(deviceType?: string): 'Desktop' | 'Mobile' | 'Tablet' {
     if (!deviceType) return 'Desktop';
 
     if (deviceType === 'mobile') return 'Mobile';
@@ -198,10 +186,7 @@ export class SessionsService {
   /**
    * Convert Session entity to response DTO
    */
-  private toResponseDto(
-    session: Session,
-    isCurrent: boolean = false,
-  ): SessionResponseDto {
+  private toResponseDto(session: Session, isCurrent: boolean = false): SessionResponseDto {
     return {
       id: session.id,
       deviceInfo: session.deviceInfo,

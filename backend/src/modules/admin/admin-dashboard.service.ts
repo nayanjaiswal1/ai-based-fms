@@ -30,9 +30,9 @@ export class AdminDashboardService {
 
     return {
       memory: {
-        total: Math.round(totalMem / 1024 / 1024 / 1024 * 100) / 100, // GB
-        used: Math.round(usedMem / 1024 / 1024 / 1024 * 100) / 100,
-        free: Math.round(freeMem / 1024 / 1024 / 1024 * 100) / 100,
+        total: Math.round((totalMem / 1024 / 1024 / 1024) * 100) / 100, // GB
+        used: Math.round((usedMem / 1024 / 1024 / 1024) * 100) / 100,
+        free: Math.round((freeMem / 1024 / 1024 / 1024) * 100) / 100,
         usagePercentage: Math.round((usedMem / totalMem) * 100),
       },
       cpu: {
@@ -131,7 +131,8 @@ export class AdminDashboardService {
     };
 
     const userCount = await this.userRepository.count();
-    transactionStats.avgPerUser = userCount > 0 ? Math.round(transactionStats.total / userCount) : 0;
+    transactionStats.avgPerUser =
+      userCount > 0 ? Math.round(transactionStats.total / userCount) : 0;
 
     // Most used features (based on audit logs)
     const featureUsage = await this.auditLogRepository
@@ -166,7 +167,7 @@ export class AdminDashboardService {
       tables.map(async ({ name, repository }) => ({
         name,
         count: await repository.count(),
-      }))
+      })),
     );
 
     return {
@@ -191,7 +192,7 @@ export class AdminDashboardService {
       .addOrderBy('hour', 'ASC')
       .getRawMany();
 
-    return activities.map(activity => ({
+    return activities.map((activity) => ({
       date: activity.date,
       hour: parseInt(activity.hour, 10),
       count: parseInt(activity.count, 10),

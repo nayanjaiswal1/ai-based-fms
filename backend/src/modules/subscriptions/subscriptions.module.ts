@@ -10,15 +10,7 @@ import { Addon } from '../../database/entities/addon.entity';
 import { User } from '../../database/entities/user.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Subscription,
-      UsageTracking,
-      Invoice,
-      Addon,
-      User,
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([Subscription, UsageTracking, Invoice, Addon, User])],
   controllers: [SubscriptionsController],
   providers: [SubscriptionsService, AddonsService],
   exports: [SubscriptionsService, AddonsService],

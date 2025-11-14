@@ -1,4 +1,15 @@
-import { IsString, IsNotEmpty, IsNumber, IsEnum, IsOptional, IsBoolean, IsInt, IsDateString, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsEnum,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  IsDateString,
+  Min,
+  Max,
+} from 'class-validator';
 import { GroupBudgetPeriod } from '@database/entities';
 
 export class CreateGroupBudgetDto {

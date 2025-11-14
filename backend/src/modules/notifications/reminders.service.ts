@@ -150,10 +150,10 @@ export class RemindersService {
       overdue: overdue.length,
       upcomingWeek: upcoming.length,
       byType: {
-        bill: active.filter(r => r.type === 'bill').length,
-        repayment: active.filter(r => r.type === 'repayment').length,
-        goal: active.filter(r => r.type === 'goal').length,
-        custom: active.filter(r => r.type === 'custom').length,
+        bill: active.filter((r) => r.type === 'bill').length,
+        repayment: active.filter((r) => r.type === 'repayment').length,
+        goal: active.filter((r) => r.type === 'goal').length,
+        custom: active.filter((r) => r.type === 'custom').length,
       },
     };
   }

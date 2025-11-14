@@ -41,7 +41,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     // Remove client from user sockets map
     if (client.userId) {
       const sockets = this.userSockets.get(client.userId) || [];
-      const filtered = sockets.filter(id => id !== client.id);
+      const filtered = sockets.filter((id) => id !== client.id);
 
       if (filtered.length > 0) {
         this.userSockets.set(client.userId, filtered);
@@ -80,13 +80,13 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     const socketIds = this.userSockets.get(userId);
 
     if (socketIds && socketIds.length > 0) {
-      socketIds.forEach(socketId => {
+      socketIds.forEach((socketId) => {
         this.server.to(socketId).emit('notification', notification);
       });
 
       // Also send updated unread count
       const count = await this.notificationsService.getUnreadCount(userId);
-      socketIds.forEach(socketId => {
+      socketIds.forEach((socketId) => {
         this.server.to(socketId).emit('unreadCount', { count });
       });
     }

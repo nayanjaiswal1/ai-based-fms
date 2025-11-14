@@ -11,7 +11,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
-import { CreateNotificationDto, UpdateNotificationDto, MarkAsReadDto } from './dto/notification.dto';
+import {
+  CreateNotificationDto,
+  UpdateNotificationDto,
+  MarkAsReadDto,
+} from './dto/notification.dto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { NotificationStatus } from '@database/entities';
@@ -33,10 +37,7 @@ export class NotificationsController {
   @Get()
   @ApiOperation({ summary: 'Get all notifications' })
   @ApiQuery({ name: 'status', enum: NotificationStatus, required: false })
-  findAll(
-    @CurrentUser('id') userId: string,
-    @Query('status') status?: NotificationStatus,
-  ) {
+  findAll(@CurrentUser('id') userId: string, @Query('status') status?: NotificationStatus) {
     return this.notificationsService.findAll(userId, status);
   }
 

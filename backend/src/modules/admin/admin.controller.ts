@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Param,
-  Body,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { AdminDashboardService } from './admin-dashboard.service';
@@ -59,10 +50,7 @@ export class AdminController {
   @Patch('users/:userId/subscription')
   @ApiOperation({ summary: 'Update user subscription (Admin only)' })
   @ApiResponse({ status: 200, description: 'Subscription updated' })
-  updateSubscription(
-    @Param('userId') userId: string,
-    @Body() updateDto: UpdateSubscriptionDto,
-  ) {
+  updateSubscription(@Param('userId') userId: string, @Body() updateDto: UpdateSubscriptionDto) {
     return this.adminService.updateSubscription(userId, updateDto);
   }
 

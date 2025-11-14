@@ -114,7 +114,7 @@ export class AddonsService {
 
     // Get addon details from available addons
     const availableAddons = await this.getAvailableAddons();
-    const addonDetails = availableAddons.find(a => a.id === dto.addonId);
+    const addonDetails = availableAddons.find((a) => a.id === dto.addonId);
 
     if (!addonDetails) {
       throw new NotFoundException('Addon not found');

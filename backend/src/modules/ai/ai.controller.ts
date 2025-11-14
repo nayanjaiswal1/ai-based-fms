@@ -1,14 +1,10 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  UseGuards,
-  Query,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AiService } from './ai.service';
-import { AiCategorizationFeedbackService, SubmitFeedbackDto } from './ai-categorization-feedback.service';
+import {
+  AiCategorizationFeedbackService,
+  SubmitFeedbackDto,
+} from './ai-categorization-feedback.service';
 import {
   AutoCategorizeDto,
   ParseReceiptDto,
@@ -48,7 +44,10 @@ export class AiController {
 
   @Get('detect-duplicates')
   @ApiOperation({ summary: 'Detect duplicate transactions with multi-factor matching' })
-  @ApiResponse({ status: 200, description: 'Returns grouped potential duplicates with confidence scores' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns grouped potential duplicates with confidence scores',
+  })
   detectDuplicates(@CurrentUser('id') userId: string, @Query() dto: DetectDuplicatesDto) {
     return this.aiService.detectDuplicates(userId, dto);
   }
@@ -70,10 +69,7 @@ export class AiController {
   @Get('suggestions')
   @ApiOperation({ summary: 'Get smart saving and budgeting suggestions' })
   @ApiResponse({ status: 200, description: 'Returns AI-generated suggestions' })
-  getSmartSuggestions(
-    @CurrentUser('id') userId: string,
-    @Query() dto: SmartSuggestionsDto,
-  ) {
+  getSmartSuggestions(@CurrentUser('id') userId: string, @Query() dto: SmartSuggestionsDto) {
     return this.aiService.getSmartSuggestions(userId, dto.limit || 3);
   }
 
@@ -81,20 +77,14 @@ export class AiController {
   @Post('categorize/feedback')
   @ApiOperation({ summary: 'Submit feedback on AI categorization' })
   @ApiResponse({ status: 201, description: 'Feedback recorded successfully' })
-  submitCategorizationFeedback(
-    @CurrentUser('id') userId: string,
-    @Body() dto: SubmitFeedbackDto,
-  ) {
+  submitCategorizationFeedback(@CurrentUser('id') userId: string, @Body() dto: SubmitFeedbackDto) {
     return this.feedbackService.submitFeedback(userId, dto);
   }
 
   @Get('categorize/feedback')
   @ApiOperation({ summary: 'Get user categorization feedback history' })
   @ApiResponse({ status: 200, description: 'Returns feedback history' })
-  getCategorizationFeedback(
-    @CurrentUser('id') userId: string,
-    @Query('limit') limit?: number,
-  ) {
+  getCategorizationFeedback(@CurrentUser('id') userId: string, @Query('limit') limit?: number) {
     return this.feedbackService.getUserFeedback(userId, limit);
   }
 

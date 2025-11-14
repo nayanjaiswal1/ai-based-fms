@@ -1,8 +1,22 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual } from 'typeorm';
-import { RecurringGroupTransaction, RecurrenceFrequency, RecurrenceStatus, GroupMember, GroupTransaction } from '@database/entities';
-import { CreateRecurringGroupTransactionDto, UpdateRecurringGroupTransactionDto } from './dto/recurring-group-transaction.dto';
+import {
+  RecurringGroupTransaction,
+  RecurrenceFrequency,
+  RecurrenceStatus,
+  GroupMember,
+  GroupTransaction,
+} from '@database/entities';
+import {
+  CreateRecurringGroupTransactionDto,
+  UpdateRecurringGroupTransactionDto,
+} from './dto/recurring-group-transaction.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
@@ -25,7 +39,10 @@ export class RecurringGroupTransactionsService {
       throw new BadRequestException('Split amounts must equal transaction amount');
     }
 
-    const nextProcessDate = this.calculateNextProcessDate(new Date(createDto.startDate), createDto.frequency);
+    const nextProcessDate = this.calculateNextProcessDate(
+      new Date(createDto.startDate),
+      createDto.frequency,
+    );
 
     const recurring = this.recurringRepository.create({
       ...createDto,
@@ -150,7 +167,9 @@ export class RecurringGroupTransactionsService {
 
         await this.recurringRepository.save(recurring);
 
-        console.log(`✅ Processed recurring transaction ${recurring.id} for group ${recurring.groupId}`);
+        console.log(
+          `✅ Processed recurring transaction ${recurring.id} for group ${recurring.groupId}`,
+        );
       } catch (error) {
         console.error(`❌ Failed to process recurring transaction ${recurring.id}:`, error);
       }

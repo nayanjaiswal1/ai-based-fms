@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, ForbiddenException, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Account } from '@database/entities';
@@ -60,11 +66,7 @@ export class AccountsService {
     }
 
     // Update balance atomically
-    const result = await this.accountRepository.increment(
-      { id: accountId },
-      'balance',
-      amount,
-    );
+    const result = await this.accountRepository.increment({ id: accountId }, 'balance', amount);
 
     if (result.affected === 0) {
       throw new InternalServerErrorException('Failed to update balance');

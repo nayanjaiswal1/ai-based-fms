@@ -101,17 +101,17 @@ export class LendBorrowService {
   async getSummary(userId: string) {
     const records = await this.findAll(userId);
 
-    const lentRecords = records.filter(r => r.type === 'lend');
-    const borrowedRecords = records.filter(r => r.type === 'borrow');
+    const lentRecords = records.filter((r) => r.type === 'lend');
+    const borrowedRecords = records.filter((r) => r.type === 'borrow');
 
     const totalLent = lentRecords.reduce((sum, r) => sum + Number(r.amount), 0);
     const totalLentOutstanding = lentRecords
-      .filter(r => r.status !== LendBorrowStatus.SETTLED)
+      .filter((r) => r.status !== LendBorrowStatus.SETTLED)
       .reduce((sum, r) => sum + Number(r.amountRemaining), 0);
 
     const totalBorrowed = borrowedRecords.reduce((sum, r) => sum + Number(r.amount), 0);
     const totalBorrowedOutstanding = borrowedRecords
-      .filter(r => r.status !== LendBorrowStatus.SETTLED)
+      .filter((r) => r.status !== LendBorrowStatus.SETTLED)
       .reduce((sum, r) => sum + Number(r.amountRemaining), 0);
 
     return {
@@ -120,14 +120,14 @@ export class LendBorrowService {
         outstanding: Number(totalLentOutstanding.toFixed(2)),
         settled: Number((totalLent - totalLentOutstanding).toFixed(2)),
         count: lentRecords.length,
-        pendingCount: lentRecords.filter(r => r.status === LendBorrowStatus.PENDING).length,
+        pendingCount: lentRecords.filter((r) => r.status === LendBorrowStatus.PENDING).length,
       },
       borrowing: {
         total: Number(totalBorrowed.toFixed(2)),
         outstanding: Number(totalBorrowedOutstanding.toFixed(2)),
         settled: Number((totalBorrowed - totalBorrowedOutstanding).toFixed(2)),
         count: borrowedRecords.length,
-        pendingCount: borrowedRecords.filter(r => r.status === LendBorrowStatus.PENDING).length,
+        pendingCount: borrowedRecords.filter((r) => r.status === LendBorrowStatus.PENDING).length,
       },
       netPosition: Number((totalLentOutstanding - totalBorrowedOutstanding).toFixed(2)),
     };
@@ -145,7 +145,7 @@ export class LendBorrowService {
       .limit(10)
       .getMany();
 
-    return upcoming.map(record => ({
+    return upcoming.map((record) => ({
       id: record.id,
       type: record.type,
       personName: record.personName,
@@ -169,7 +169,7 @@ export class LendBorrowService {
       .orderBy('lendBorrow.dueDate', 'ASC')
       .getMany();
 
-    return overdue.map(record => ({
+    return overdue.map((record) => ({
       id: record.id,
       type: record.type,
       personName: record.personName,

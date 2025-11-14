@@ -146,12 +146,9 @@ export class AuthService {
       const { access_token } = tokenResponse.data;
 
       // Get user info from Google
-      const userInfoResponse = await axios.get(
-        'https://www.googleapis.com/oauth2/v2/userinfo',
-        {
-          headers: { Authorization: `Bearer ${access_token}` },
-        }
-      );
+      const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
 
       const { email, name, given_name, family_name, picture } = userInfoResponse.data;
 
@@ -187,7 +184,7 @@ export class AuthService {
       };
     } catch (error: any) {
       throw new BadRequestException(
-        error.response?.data?.error_description || 'Google OAuth failed'
+        error.response?.data?.error_description || 'Google OAuth failed',
       );
     }
   }
@@ -235,11 +232,7 @@ export class AuthService {
     }
   }
 
-  private async generateTokens(
-    user: User,
-    userAgent?: string,
-    ipAddress?: string,
-  ) {
+  private async generateTokens(user: User, userAgent?: string, ipAddress?: string) {
     // Generate refresh token first
     const refreshTokenPayload = { sub: user.id, email: user.email };
     const refreshToken = this.jwtService.sign(refreshTokenPayload, {
@@ -345,9 +338,7 @@ export class AuthService {
 
     // Generate and hash backup codes
     const backupCodes = this.generateBackupCodes();
-    const hashedCodes = await Promise.all(
-      backupCodes.map(code => bcrypt.hash(code, 10))
-    );
+    const hashedCodes = await Promise.all(backupCodes.map((code) => bcrypt.hash(code, 10)));
 
     // Enable 2FA and save backup codes
     user.twoFactorEnabled = true;
@@ -504,10 +495,7 @@ export class AuthService {
 
     // Check if token matches any user
     for (const user of users) {
-      const isTokenValid = await bcrypt.compare(
-        passwordResetDto.token,
-        user.passwordResetToken,
-      );
+      const isTokenValid = await bcrypt.compare(passwordResetDto.token, user.passwordResetToken);
 
       if (isTokenValid) {
         matchedUser = user;
@@ -519,7 +507,7 @@ export class AuthService {
     const elapsedTime = Date.now() - startTime;
     const minDelay = 1000; // 1 second minimum response time
     if (elapsedTime < minDelay) {
-      await new Promise(resolve => setTimeout(resolve, minDelay - elapsedTime));
+      await new Promise((resolve) => setTimeout(resolve, minDelay - elapsedTime));
     }
 
     if (!matchedUser) {

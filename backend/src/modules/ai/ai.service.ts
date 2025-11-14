@@ -43,7 +43,7 @@ export class AiService {
     });
 
     const categoryList = categories
-      .map(c => `- ${c.name}: ${c.description || 'No description'}`)
+      .map((c) => `- ${c.name}: ${c.description || 'No description'}`)
       .join('\n');
 
     const prompt = `You are a financial categorization assistant. Categorize the following transaction into one of the available categories.
@@ -68,7 +68,7 @@ Return ONLY the exact category name that best matches this transaction. If no ca
 
       const suggestedCategoryName = completion.choices[0]?.message?.content?.trim();
       const matchedCategory = categories.find(
-        c => c.name.toLowerCase() === suggestedCategoryName?.toLowerCase(),
+        (c) => c.name.toLowerCase() === suggestedCategoryName?.toLowerCase(),
       );
 
       return {
@@ -265,9 +265,7 @@ If a field cannot be determined, use null.`;
     // Date matching (30 points)
     const date1 = new Date(t1.date);
     const date2 = new Date(t2.date);
-    const daysDiff = Math.abs(
-      (date1.getTime() - date2.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const daysDiff = Math.abs((date1.getTime() - date2.getTime()) / (1000 * 60 * 60 * 24));
     let dateMatch = 0;
     if (daysDiff === 0) dateMatch = 100;
     else if (daysDiff === 1) dateMatch = 66;
@@ -336,27 +334,30 @@ If a field cannot be determined, use null.`;
 
     // Calculate summary statistics
     const income = transactions
-      .filter(t => t.type === 'income')
+      .filter((t) => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const expenses = transactions
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const categoryBreakdown = transactions
-      .filter(t => t.type === 'expense')
-      .reduce((acc, t) => {
-        const catName = t.category?.name || 'Uncategorized';
-        acc[catName] = (acc[catName] || 0) + Number(t.amount);
-        return acc;
-      }, {} as Record<string, number>);
+      .filter((t) => t.type === 'expense')
+      .reduce(
+        (acc, t) => {
+          const catName = t.category?.name || 'Uncategorized';
+          acc[catName] = (acc[catName] || 0) + Number(t.amount);
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
     const topCategories = Object.entries(categoryBreakdown)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([name, amount]) => `${name}: $${amount.toFixed(2)}`);
 
-    const budgetStatus = budgets.map(b => ({
+    const budgetStatus = budgets.map((b) => ({
       name: b.name,
       spent: b.spent,
       budget: b.amount,
@@ -371,13 +372,13 @@ Financial Summary:
 - Total Income: $${income.toFixed(2)}
 - Total Expenses: $${expenses.toFixed(2)}
 - Net Cash Flow: $${(income - expenses).toFixed(2)}
-- Savings Rate: ${income > 0 ? ((income - expenses) / income * 100).toFixed(1) : 0}%
+- Savings Rate: ${income > 0 ? (((income - expenses) / income) * 100).toFixed(1) : 0}%
 
 Top Spending Categories:
 ${topCategories.join('\n')}
 
 Budget Status:
-${budgetStatus.map(b => `- ${b.name}: ${b.percentage}% used ($${b.spent}/$${b.budget})`).join('\n')}
+${budgetStatus.map((b) => `- ${b.name}: ${b.percentage}% used ($${b.spent}/$${b.budget})`).join('\n')}
 
 Provide insights in the following format:
 1. [Insight about spending patterns]
@@ -407,9 +408,9 @@ Keep insights concise, actionable, and personalized.`;
           income: Number(income.toFixed(2)),
           expenses: Number(expenses.toFixed(2)),
           netCashFlow: Number((income - expenses).toFixed(2)),
-          savingsRate: income > 0 ? Number(((income - expenses) / income * 100).toFixed(2)) : 0,
+          savingsRate: income > 0 ? Number((((income - expenses) / income) * 100).toFixed(2)) : 0,
         },
-        insights: insights.split('\n').filter(line => line.trim().length > 0),
+        insights: insights.split('\n').filter((line) => line.trim().length > 0),
         generatedAt: new Date().toISOString(),
       };
     } catch (error) {
@@ -437,11 +438,11 @@ Keep insights concise, actionable, and personalized.`;
 
     // Build context
     const income = recentTransactions
-      .filter(t => t.type === 'income')
+      .filter((t) => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const expenses = recentTransactions
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const prompt = `You are a financial assistant AI with access to the user's transaction data. Answer the following question based on the provided financial data.
@@ -452,12 +453,16 @@ Available Data Summary:
 - Total Recent Transactions: ${recentTransactions.length}
 - Total Income: $${income.toFixed(2)}
 - Total Expenses: $${expenses.toFixed(2)}
-- Available Categories: ${categories.map(c => c.name).join(', ')}
+- Available Categories: ${categories.map((c) => c.name).join(', ')}
 
 Transaction Sample (last 10):
-${recentTransactions.slice(0, 10).map(t =>
-  `- ${t.date.toISOString().split('T')[0]}: ${t.description} - $${t.amount} (${t.type}) [${t.category?.name || 'Uncategorized'}]`
-).join('\n')}
+${recentTransactions
+  .slice(0, 10)
+  .map(
+    (t) =>
+      `- ${t.date.toISOString().split('T')[0]}: ${t.description} - $${t.amount} (${t.type}) [${t.category?.name || 'Uncategorized'}]`,
+  )
+  .join('\n')}
 
 Provide a clear, concise answer to the user's question. If you need to calculate something, show your work. If the data is insufficient, explain what additional information would be helpful.`;
 
@@ -477,7 +482,9 @@ Provide a clear, concise answer to the user's question. If you need to calculate
         contextUsed: {
           transactionCount: recentTransactions.length,
           dateRange: {
-            from: recentTransactions[recentTransactions.length - 1]?.date.toISOString().split('T')[0],
+            from: recentTransactions[recentTransactions.length - 1]?.date
+              .toISOString()
+              .split('T')[0],
             to: recentTransactions[0]?.date.toISOString().split('T')[0],
           },
         },
@@ -513,27 +520,34 @@ Provide a clear, concise answer to the user's question. If you need to calculate
 
     // Analyze spending patterns
     const categorySpending = transactions
-      .filter(t => t.type === 'expense')
-      .reduce((acc, t) => {
-        const catName = t.category?.name || 'Uncategorized';
-        if (!acc[catName]) {
-          acc[catName] = { total: 0, count: 0, transactions: [] };
-        }
-        acc[catName].total += Number(t.amount);
-        acc[catName].count += 1;
-        acc[catName].transactions.push(t);
-        return acc;
-      }, {} as Record<string, { total: number; count: number; transactions: any[] }>);
+      .filter((t) => t.type === 'expense')
+      .reduce(
+        (acc, t) => {
+          const catName = t.category?.name || 'Uncategorized';
+          if (!acc[catName]) {
+            acc[catName] = { total: 0, count: 0, transactions: [] };
+          }
+          acc[catName].total += Number(t.amount);
+          acc[catName].count += 1;
+          acc[catName].transactions.push(t);
+          return acc;
+        },
+        {} as Record<string, { total: number; count: number; transactions: any[] }>,
+      );
 
     const prompt = `You are a financial optimization AI. Based on the spending patterns, provide ${limit} smart, actionable suggestions for saving money or improving financial habits.
 
 Spending Analysis (Last 3 Months):
-${Object.entries(categorySpending).slice(0, 10).map(([cat, data]) =>
-  `- ${cat}: $${data.total.toFixed(2)} (${data.count} transactions, avg $${(data.total / data.count).toFixed(2)})`
-).join('\n')}
+${Object.entries(categorySpending)
+  .slice(0, 10)
+  .map(
+    ([cat, data]) =>
+      `- ${cat}: $${data.total.toFixed(2)} (${data.count} transactions, avg $${(data.total / data.count).toFixed(2)})`,
+  )
+  .join('\n')}
 
 Current Budgets:
-${budgets.map(b => `- ${b.name}: $${b.amount} ${b.period}`).join('\n')}
+${budgets.map((b) => `- ${b.name}: $${b.amount} ${b.period}`).join('\n')}
 
 Provide ${limit} specific suggestions in this format:
 1. [Category]: [Actionable suggestion with estimated savings]
@@ -553,7 +567,7 @@ Focus on high-impact, realistic changes.`;
       const suggestions = completion.choices[0]?.message?.content
         ?.trim()
         .split('\n')
-        .filter(line => line.trim().length > 0);
+        .filter((line) => line.trim().length > 0);
 
       return {
         suggestions,

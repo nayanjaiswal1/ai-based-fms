@@ -58,7 +58,7 @@ async function createAdminUser() {
             }
           } else {
             const upgrade = await question(
-              '⚠️  This email exists as a regular user. Upgrade to admin? (yes/no): '
+              '⚠️  This email exists as a regular user. Upgrade to admin? (yes/no): ',
             );
             if (upgrade.toLowerCase() !== 'yes') {
               email = '';
@@ -70,15 +70,17 @@ async function createAdminUser() {
     }
 
     // Get first name
-    const firstName = await question('Enter first name (default: Admin): ') || 'Admin';
+    const firstName = (await question('Enter first name (default: Admin): ')) || 'Admin';
 
     // Get last name
-    const lastName = await question('Enter last name (default: User): ') || 'User';
+    const lastName = (await question('Enter last name (default: User): ')) || 'User';
 
     // Get password
     let password = '';
     while (!password) {
-      password = await question('Enter password (min 8 chars, 1 upper, 1 lower, 1 number, 1 special): ');
+      password = await question(
+        'Enter password (min 8 chars, 1 upper, 1 lower, 1 number, 1 special): ',
+      );
       if (!validatePassword(password)) {
         console.log('❌ Password does not meet requirements. Please try again.');
         console.log('   - At least 8 characters');
@@ -143,7 +145,6 @@ async function createAdminUser() {
     console.log(`💎 Tier:       ENTERPRISE`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('\n🎉 You can now login with these credentials!\n');
-
   } catch (error) {
     console.error('\n❌ Error creating admin user:', error.message);
     process.exit(1);

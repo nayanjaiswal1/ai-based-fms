@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Param,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Query, Param, UseGuards, Request } from '@nestjs/common';
 import { AuditService } from './audit.service';
 import { AuditFiltersDto } from './dto/audit-filters.dto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -32,25 +25,15 @@ export class AuditController {
     @Param('entity') entityType: string,
     @Param('entityId') entityId: string,
   ) {
-    return this.auditService.getEntityAuditLogs(
-      req.user.userId,
-      entityType,
-      entityId,
-    );
+    return this.auditService.getEntityAuditLogs(req.user.userId, entityType, entityId);
   }
 
   /**
    * GET /audit/transaction/:transactionId/history - Get transaction history
    */
   @Get('transaction/:transactionId/history')
-  async getTransactionHistory(
-    @Request() req,
-    @Param('transactionId') transactionId: string,
-  ) {
-    return this.auditService.getTransactionHistory(
-      req.user.userId,
-      transactionId,
-    );
+  async getTransactionHistory(@Request() req, @Param('transactionId') transactionId: string) {
+    return this.auditService.getTransactionHistory(req.user.userId, transactionId);
   }
 
   /**

@@ -6,10 +6,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { OpenAI } from 'openai';
 import { Transaction, TransactionType, Budget, Category } from '@database/entities';
-import {
-  InsightsOptionsDto,
-  InsightType,
-} from './dto/insights-options.dto';
+import { InsightsOptionsDto, InsightType } from './dto/insights-options.dto';
 import {
   InsightsResponseDto,
   InsightDto,
@@ -111,12 +108,7 @@ export class InsightsService {
 
     // Use AI for enhanced insights if requested
     if (options.useAI && this.openai) {
-      const aiInsights = await this.generateAIInsights(
-        userId,
-        startDate,
-        endDate,
-        insights,
-      );
+      const aiInsights = await this.generateAIInsights(userId, startDate, endDate, insights);
       insights.push(...aiInsights);
     }
 
@@ -159,11 +151,7 @@ export class InsightsService {
   /**
    * Get spending pattern insights
    */
-  async getSpendingInsights(
-    userId: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<InsightDto[]> {
+  async getSpendingInsights(userId: string, startDate: Date, endDate: Date): Promise<InsightDto[]> {
     const insights: InsightDto[] = [];
 
     const transactions = await this.transactionRepository.find({
@@ -249,10 +237,7 @@ export class InsightsService {
       return day >= 25;
     });
 
-    const endOfMonthSpending = endOfMonthTransactions.reduce(
-      (sum, t) => sum + Number(t.amount),
-      0,
-    );
+    const endOfMonthSpending = endOfMonthTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
     const totalSpending = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
 
     if (endOfMonthSpending > totalSpending * 0.4) {
@@ -291,9 +276,7 @@ export class InsightsService {
       const totalDays = Math.ceil(
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
       );
-      const daysElapsed = Math.ceil(
-        (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
+      const daysElapsed = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const daysRemaining = totalDays - daysElapsed;
 
       const percentageUsed = (Number(budget.spent) / Number(budget.amount)) * 100;
@@ -318,15 +301,13 @@ export class InsightsService {
       }
       // Budget at risk
       else if (percentageUsed > percentageTimeElapsed + 10) {
-        const projectedSpending =
-          (Number(budget.spent) / daysElapsed) * totalDays;
+        const projectedSpending = (Number(budget.spent) / daysElapsed) * totalDays;
         const overspend = projectedSpending - Number(budget.amount);
 
         insights.push({
           id: uuidv4(),
           type: 'budget',
-          severity:
-            percentageUsed > 90 ? InsightSeverity.ERROR : InsightSeverity.WARNING,
+          severity: percentageUsed > 90 ? InsightSeverity.ERROR : InsightSeverity.WARNING,
           title: `${budget.name} Budget Will Exceed Limit`,
           description: `At current pace, you'll spend $${projectedSpending.toFixed(2)} (${overspend > 0 ? '+$' + overspend.toFixed(2) : ''} over budget)`,
           actionable: `Reduce ${budget.name} spending by $${(overspend / daysRemaining).toFixed(2)}/day to stay on budget`,
@@ -354,9 +335,7 @@ export class InsightsService {
     }
 
     // Check for consistent budget adherence
-    const budgetsOverLimit = budgets.filter(
-      (b) => Number(b.spent) > Number(b.amount),
-    ).length;
+    const budgetsOverLimit = budgets.filter((b) => Number(b.spent) > Number(b.amount)).length;
 
     if (budgets.length >= 3 && budgetsOverLimit === 0) {
       insights.push({
@@ -377,11 +356,7 @@ export class InsightsService {
   /**
    * Get savings opportunity insights
    */
-  async getSavingsInsights(
-    userId: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<InsightDto[]> {
+  async getSavingsInsights(userId: string, startDate: Date, endDate: Date): Promise<InsightDto[]> {
     const insights: InsightDto[] = [];
 
     const transactions = await this.transactionRepository.find({
@@ -438,10 +413,7 @@ export class InsightsService {
 
     // Subscription analysis
     const recurringTransactions = this.findRecurringTransactions(transactions);
-    const subscriptionTotal = recurringTransactions.reduce(
-      (sum, t) => sum + Number(t.amount),
-      0,
-    );
+    const subscriptionTotal = recurringTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
 
     if (subscriptionTotal > totalExpenses * 0.1) {
       insights.push({
@@ -463,11 +435,7 @@ export class InsightsService {
   /**
    * Detect anomalies and unusual patterns
    */
-  async getAnomalyDetection(
-    userId: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<InsightDto[]> {
+  async getAnomalyDetection(userId: string, startDate: Date, endDate: Date): Promise<InsightDto[]> {
     const insights: InsightDto[] = [];
 
     const transactions = await this.transactionRepository.find({
@@ -563,10 +531,7 @@ export class InsightsService {
         insights.push({
           id: uuidv4(),
           type: 'trend',
-          severity:
-            trend.trend === 'increasing'
-              ? InsightSeverity.WARNING
-              : InsightSeverity.INFO,
+          severity: trend.trend === 'increasing' ? InsightSeverity.WARNING : InsightSeverity.INFO,
           title: `${trend.category} Spending Trend`,
           description: `${trend.category} expenses have ${trend.trend === 'increasing' ? 'increased' : 'decreased'} by ${Math.abs(trend.changePercentage).toFixed(1)}% over the past 3 months`,
           actionable:
@@ -624,9 +589,7 @@ export class InsightsService {
     // 2. Budget Adherence (0-25 points)
     let budgetAdherenceScore = 0;
     if (budgets.length > 0) {
-      const budgetsOnTrack = budgets.filter(
-        (b) => Number(b.spent) <= Number(b.amount),
-      ).length;
+      const budgetsOnTrack = budgets.filter((b) => Number(b.spent) <= Number(b.amount)).length;
       budgetAdherenceScore = (budgetsOnTrack / budgets.length) * 25;
     } else {
       budgetAdherenceScore = 15; // Default score if no budgets set
@@ -637,9 +600,7 @@ export class InsightsService {
     const expenseRatioScore = Math.max(0, 25 - (expenseRatio / 100) * 25);
 
     // 4. Financial Stability (0-25 points) - based on consistency
-    const monthlyExpenses = this.groupByMonth(
-      transactions.filter((t) => t.type === 'expense'),
-    );
+    const monthlyExpenses = this.groupByMonth(transactions.filter((t) => t.type === 'expense'));
     const expenseVariance = this.calculateVariance(
       Object.values(monthlyExpenses).map((txs) =>
         txs.reduce((sum, t) => sum + Number(t.amount), 0),
@@ -660,31 +621,17 @@ export class InsightsService {
     else status = 'needs_improvement';
 
     // Get previous month score for trend (simplified)
-    const previousScore = await this.cacheManager.get<number>(
-      `health_score:${userId}:previous`,
-    );
-    const currentScoreCache = await this.cacheManager.get<number>(
-      `health_score:${userId}:current`,
-    );
+    const previousScore = await this.cacheManager.get<number>(`health_score:${userId}:previous`);
+    const currentScoreCache = await this.cacheManager.get<number>(`health_score:${userId}:current`);
 
     // Store current as previous, and new as current
     if (currentScoreCache !== null && currentScoreCache !== undefined) {
-      await this.cacheManager.set(
-        `health_score:${userId}:previous`,
-        currentScoreCache,
-        86400000,
-      );
+      await this.cacheManager.set(`health_score:${userId}:previous`, currentScoreCache, 86400000);
     }
-    await this.cacheManager.set(
-      `health_score:${userId}:current`,
-      totalScore,
-      86400000,
-    );
+    await this.cacheManager.set(`health_score:${userId}:current`, totalScore, 86400000);
 
     const change =
-      previousScore !== null && previousScore !== undefined
-        ? totalScore - previousScore
-        : 0;
+      previousScore !== null && previousScore !== undefined ? totalScore - previousScore : 0;
 
     const recommendations: string[] = [];
     if (savingsRateScore < 15) {
@@ -865,10 +812,7 @@ export class InsightsService {
         .filter((t) => new Date(t.date).getMonth() === months[1].getMonth())
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      const threeMonthSum = categoryTransactions.reduce(
-        (sum, t) => sum + Number(t.amount),
-        0,
-      );
+      const threeMonthSum = categoryTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
       const threeMonthAvg = threeMonthSum / 3;
 
       const change = currentMonth - lastMonth;
@@ -914,8 +858,7 @@ export class InsightsService {
     const income = transactions.filter((t) => t.type === 'income');
 
     // Calculate monthly averages
-    const monthlyExpenses =
-      expenses.reduce((sum, t) => sum + Number(t.amount), 0) / 3;
+    const monthlyExpenses = expenses.reduce((sum, t) => sum + Number(t.amount), 0) / 3;
     const monthlyIncome = income.reduce((sum, t) => sum + Number(t.amount), 0) / 3;
 
     // Category predictions
@@ -926,16 +869,11 @@ export class InsightsService {
       const categoryExpenses = expenses.filter(
         (t) => (t.category?.name || 'Uncategorized') === category,
       );
-      const avgAmount =
-        categoryExpenses.reduce((sum, t) => sum + Number(t.amount), 0) / 3;
+      const avgAmount = categoryExpenses.reduce((sum, t) => sum + Number(t.amount), 0) / 3;
 
       // Simple linear trend
-      const recent = categoryExpenses
-        .slice(-10)
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-      const older = categoryExpenses
-        .slice(0, 10)
-        .reduce((sum, t) => sum + Number(t.amount), 0);
+      const recent = categoryExpenses.slice(-10).reduce((sum, t) => sum + Number(t.amount), 0);
+      const older = categoryExpenses.slice(0, 10).reduce((sum, t) => sum + Number(t.amount), 0);
       const trend = recent > older ? 1.1 : 0.9;
 
       byCategory.push({
@@ -1017,14 +955,17 @@ export class InsightsService {
       const topCategories = Object.entries(categoryBreakdown)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5)
-        .map(([name, amount]) => `${name}: $${amount.toFixed(2)} (${((amount / expenses) * 100).toFixed(1)}%)`);
+        .map(
+          ([name, amount]) =>
+            `${name}: $${amount.toFixed(2)} (${((amount / expenses) * 100).toFixed(1)}%)`,
+        );
 
       const prompt = `Analyze this user's financial data and provide 3 unique, actionable insights in JSON format.
 
 Income: $${income.toFixed(2)}
 Expenses: $${expenses.toFixed(2)}
 Net: $${(income - expenses).toFixed(2)}
-Savings Rate: ${income > 0 ? ((income - expenses) / income * 100).toFixed(1) : 0}%
+Savings Rate: ${income > 0 ? (((income - expenses) / income) * 100).toFixed(1) : 0}%
 
 Top Spending Categories:
 ${topCategories.join('\n')}
@@ -1184,8 +1125,7 @@ Focus on unique insights not covered in existing analysis. Be specific and actio
 
     for (const [category, amounts] of Object.entries(byCategory)) {
       const mean = amounts.reduce((sum, a) => sum + a, 0) / amounts.length;
-      const variance =
-        amounts.reduce((sum, a) => sum + Math.pow(a - mean, 2), 0) / amounts.length;
+      const variance = amounts.reduce((sum, a) => sum + Math.pow(a - mean, 2), 0) / amounts.length;
       const stdDev = Math.sqrt(variance);
 
       stats[category] = { mean, stdDev };
@@ -1197,8 +1137,7 @@ Focus on unique insights not covered in existing analysis. Be specific and actio
   private calculateVariance(values: number[]): number {
     if (values.length === 0) return 0;
     const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
-    const variance =
-      values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+    const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
     return Math.sqrt(variance);
   }
 }

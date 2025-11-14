@@ -50,9 +50,9 @@ export class AiCategorizationFeedbackService {
     });
 
     const total = allFeedback.length;
-    const accepted = allFeedback.filter(f => f.feedbackType === FeedbackType.ACCEPT).length;
-    const rejected = allFeedback.filter(f => f.feedbackType === FeedbackType.REJECT).length;
-    const corrected = allFeedback.filter(f => f.feedbackType === FeedbackType.CORRECT).length;
+    const accepted = allFeedback.filter((f) => f.feedbackType === FeedbackType.ACCEPT).length;
+    const rejected = allFeedback.filter((f) => f.feedbackType === FeedbackType.REJECT).length;
+    const corrected = allFeedback.filter((f) => f.feedbackType === FeedbackType.CORRECT).length;
 
     // Calculate accuracy
     const accuracy = total > 0 ? Math.round((accepted / total) * 100) : 0;
@@ -107,7 +107,7 @@ export class AiCategorizationFeedbackService {
       const words = item.transactionDescription
         .toLowerCase()
         .split(/\s+/)
-        .filter(w => w.length > 3); // Only consider words longer than 3 chars
+        .filter((w) => w.length > 3); // Only consider words longer than 3 chars
 
       for (const word of words) {
         if (!patterns.has(word)) {

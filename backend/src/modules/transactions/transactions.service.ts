@@ -97,14 +97,16 @@ export class TransactionsService {
       const oldValues = this.serializeTransaction(transaction);
 
       // Calculate balance changes atomically
-      const oldBalanceChange = transaction.type === 'expense' ? -transaction.amount : transaction.amount;
+      const oldBalanceChange =
+        transaction.type === 'expense' ? -transaction.amount : transaction.amount;
       const newAmount = updateDto.amount !== undefined ? updateDto.amount : transaction.amount;
       const newType = updateDto.type !== undefined ? updateDto.type : transaction.type;
       const newBalanceChange = newType === 'expense' ? -newAmount : newAmount;
       const balanceDelta = newBalanceChange - oldBalanceChange;
 
       // Handle account changes
-      const newAccountId = updateDto.accountId !== undefined ? updateDto.accountId : transaction.accountId;
+      const newAccountId =
+        updateDto.accountId !== undefined ? updateDto.accountId : transaction.accountId;
 
       if (newAccountId !== transaction.accountId) {
         // Moving to different account: reverse from old, apply to new
@@ -193,7 +195,11 @@ export class TransactionsService {
   /**
    * Merge duplicate transactions
    */
-  async mergeTransactions(userId: string, primaryTransactionId: string, duplicateTransactionIds: string[]) {
+  async mergeTransactions(
+    userId: string,
+    primaryTransactionId: string,
+    duplicateTransactionIds: string[],
+  ) {
     return await this.dataSource.transaction(async (manager) => {
       const transactionRepo = manager.getRepository(Transaction);
       const accountRepo = manager.getRepository(Account);
@@ -221,11 +227,13 @@ export class TransactionsService {
       });
 
       if (duplicateTransactions.length !== duplicateTransactionIds.length) {
-        throw new BadRequestException('Some duplicate transactions not found or do not belong to user');
+        throw new BadRequestException(
+          'Some duplicate transactions not found or do not belong to user',
+        );
       }
 
       // Check if any duplicate is already merged
-      const alreadyMerged = duplicateTransactions.find(t => t.isMerged);
+      const alreadyMerged = duplicateTransactions.find((t) => t.isMerged);
       if (alreadyMerged) {
         throw new BadRequestException('Cannot merge already merged transactions');
       }
@@ -253,7 +261,11 @@ export class TransactionsService {
             entityType: 'Transaction',
             entityId: duplicate.id,
             oldValues: this.serializeTransaction(duplicate),
-            newValues: { ...this.serializeTransaction(duplicate), isMerged: true, mergedIntoId: primaryTransactionId },
+            newValues: {
+              ...this.serializeTransaction(duplicate),
+              isMerged: true,
+              mergedIntoId: primaryTransactionId,
+            },
             description: `Merged transaction into ${primaryTransaction.description || primaryTransactionId}`,
           });
         }
@@ -286,7 +298,7 @@ export class TransactionsService {
 
     // Check if merge was within last 30 days (safety measure)
     const daysSinceMerge = Math.floor(
-      (Date.now() - transaction.mergedAt.getTime()) / (1000 * 60 * 60 * 24)
+      (Date.now() - transaction.mergedAt.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     if (daysSinceMerge > 30) {
@@ -385,18 +397,23 @@ export class TransactionsService {
       description: transaction.description,
       type: transaction.type,
       date: transaction.date,
-      category: transaction.category ? {
-        id: transaction.categoryId,
-        name: transaction.category.name,
-      } : { id: transaction.categoryId },
-      account: transaction.account ? {
-        id: transaction.accountId,
-        name: transaction.account.name,
-      } : { id: transaction.accountId },
-      tags: transaction.tags?.map(tag => ({
-        id: tag.id,
-        name: tag.name,
-      })) || [],
+      category: transaction.category
+        ? {
+            id: transaction.categoryId,
+            name: transaction.category.name,
+          }
+        : { id: transaction.categoryId },
+      account: transaction.account
+        ? {
+            id: transaction.accountId,
+            name: transaction.account.name,
+          }
+        : { id: transaction.accountId },
+      tags:
+        transaction.tags?.map((tag) => ({
+          id: tag.id,
+          name: tag.name,
+        })) || [],
       notes: transaction.notes,
       location: transaction.location,
     };

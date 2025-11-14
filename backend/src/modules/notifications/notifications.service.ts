@@ -62,10 +62,10 @@ export class NotificationsService {
 
   async markAsRead(notificationIds: string[], userId: string) {
     const notifications = await this.notificationRepository.find({
-      where: notificationIds.map(id => ({ id, userId })),
+      where: notificationIds.map((id) => ({ id, userId })),
     });
 
-    notifications.forEach(notification => {
+    notifications.forEach((notification) => {
       notification.status = NotificationStatus.READ;
       notification.readAt = new Date();
     });

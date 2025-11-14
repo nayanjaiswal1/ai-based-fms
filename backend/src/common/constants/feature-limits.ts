@@ -48,10 +48,7 @@ export const TIER_LIMITS: Record<string, FeatureLimits> = {
     maxGroups: 1,
     maxBudgets: 5,
     maxCustomCategories: 10,
-    enabledFeatures: [
-      Feature.EXPORT_DATA,
-      Feature.EMAIL_NOTIFICATIONS,
-    ],
+    enabledFeatures: [Feature.EXPORT_DATA, Feature.EMAIL_NOTIFICATIONS],
   },
 
   PRO: {
@@ -96,7 +93,11 @@ export function isFeatureEnabled(tier: string, feature: Feature): boolean {
   return limits.enabledFeatures.includes(feature);
 }
 
-export function canExceedLimit(tier: string, limitType: keyof FeatureLimits, currentCount: number): boolean {
+export function canExceedLimit(
+  tier: string,
+  limitType: keyof FeatureLimits,
+  currentCount: number,
+): boolean {
   const limits = getFeatureLimits(tier);
   const limit = limits[limitType];
 

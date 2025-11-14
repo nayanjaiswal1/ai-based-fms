@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
@@ -24,10 +35,7 @@ export class TransactionsController {
   }
 
   @Get('stats')
-  getStats(
-    @CurrentUser('id') userId: string,
-    @Query() query: GetStatsDto,
-  ) {
+  getStats(@CurrentUser('id') userId: string, @Query() query: GetStatsDto) {
     const startDate = new Date(query.startDate);
     const endDate = new Date(query.endDate);
 
@@ -49,7 +57,11 @@ export class TransactionsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @CurrentUser('id') userId: string, @Body() updateDto: UpdateTransactionDto) {
+  update(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Body() updateDto: UpdateTransactionDto,
+  ) {
     return this.transactionsService.update(id, userId, updateDto);
   }
 

@@ -29,11 +29,7 @@ export class InsightsProcessor {
       const insights = await this.insightsService.generateInsights(job.data.userId, {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        types: [
-          InsightType.SPENDING,
-          InsightType.BUDGET,
-          InsightType.ANOMALY,
-        ],
+        types: [InsightType.SPENDING, InsightType.BUDGET, InsightType.ANOMALY],
         useAI: true,
       });
 
@@ -148,16 +144,12 @@ export class InsightsProcessor {
 
   @OnQueueActive()
   onActive(job: Job<InsightsJobData>) {
-    this.logger.debug(
-      `Processing job ${job.id} of type ${job.name} for user ${job.data.userId}`,
-    );
+    this.logger.debug(`Processing job ${job.id} of type ${job.name} for user ${job.data.userId}`);
   }
 
   @OnQueueCompleted()
   onComplete(job: Job<InsightsJobData>, result: any) {
-    this.logger.log(
-      `Completed job ${job.id} of type ${job.name} for user ${job.data.userId}`,
-    );
+    this.logger.log(`Completed job ${job.id} of type ${job.name} for user ${job.data.userId}`);
     this.logger.debug(`Result: ${JSON.stringify(result)}`);
   }
 

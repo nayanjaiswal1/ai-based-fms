@@ -97,10 +97,7 @@ export class InsightsController {
     return {
       insights,
       opportunities,
-      totalPotentialSavings: opportunities.reduce(
-        (sum, opp) => sum + opp.potentialSavings,
-        0,
-      ),
+      totalPotentialSavings: opportunities.reduce((sum, opp) => sum + opp.potentialSavings, 0),
       count: {
         insights: insights.length,
         opportunities: opportunities.length,

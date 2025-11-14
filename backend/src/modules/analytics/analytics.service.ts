@@ -38,13 +38,7 @@ export class AnalyticsService {
   async getFinancialOverview(userId: string, queryDto: DateRangeQueryDto) {
     const { startDate, endDate } = this.getDateRange(queryDto);
 
-    const [
-      transactions,
-      accounts,
-      budgets,
-      investments,
-      lendBorrowRecords,
-    ] = await Promise.all([
+    const [transactions, accounts, budgets, investments, lendBorrowRecords] = await Promise.all([
       this.transactionRepository.find({
         where: {
           userId,
@@ -62,11 +56,11 @@ export class AnalyticsService {
 
     // Calculate totals
     const income = transactions
-      .filter(t => t.type === TransactionType.INCOME)
+      .filter((t) => t.type === TransactionType.INCOME)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const expenses = transactions
-      .filter(t => t.type === TransactionType.EXPENSE)
+      .filter((t) => t.type === TransactionType.EXPENSE)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0);
@@ -74,17 +68,14 @@ export class AnalyticsService {
     const totalBudgeted = budgets.reduce((sum, b) => sum + Number(b.amount), 0);
     const totalSpent = budgets.reduce((sum, b) => sum + Number(b.spent), 0);
 
-    const totalInvested = investments.reduce(
-      (sum, i) => sum + Number(i.currentValue),
-      0,
-    );
+    const totalInvested = investments.reduce((sum, i) => sum + Number(i.currentValue), 0);
 
     const lentAmount = lendBorrowRecords
-      .filter(r => r.type === 'lend' && r.status !== 'settled')
+      .filter((r) => r.type === 'lend' && r.status !== 'settled')
       .reduce((sum, r) => sum + Number(r.amountRemaining), 0);
 
     const borrowedAmount = lendBorrowRecords
-      .filter(r => r.type === 'borrow' && r.status !== 'settled')
+      .filter((r) => r.type === 'borrow' && r.status !== 'settled')
       .reduce((sum, r) => sum + Number(r.amountRemaining), 0);
 
     return {
@@ -106,7 +97,8 @@ export class AnalyticsService {
         totalBudgeted: Math.round(totalBudgeted * 100) / 100,
         totalSpent: Math.round(totalSpent * 100) / 100,
         remaining: Math.round((totalBudgeted - totalSpent) * 100) / 100,
-        utilizationRate: totalBudgeted > 0 ? Math.round((totalSpent / totalBudgeted) * 10000) / 100 : 0,
+        utilizationRate:
+          totalBudgeted > 0 ? Math.round((totalSpent / totalBudgeted) * 10000) / 100 : 0,
       },
       investments: {
         totalValue: Math.round(totalInvested * 100) / 100,
@@ -158,10 +150,7 @@ export class AnalyticsService {
       category.count += 1;
     }
 
-    const totalSpent = Array.from(categoryMap.values()).reduce(
-      (sum, cat) => sum + cat.amount,
-      0,
-    );
+    const totalSpent = Array.from(categoryMap.values()).reduce((sum, cat) => sum + cat.amount, 0);
 
     const categories = Array.from(categoryMap.entries())
       .map(([id, data]) => ({
@@ -220,10 +209,7 @@ export class AnalyticsService {
       category.count += 1;
     }
 
-    const totalIncome = Array.from(categoryMap.values()).reduce(
-      (sum, cat) => sum + cat.amount,
-      0,
-    );
+    const totalIncome = Array.from(categoryMap.values()).reduce((sum, cat) => sum + cat.amount, 0);
 
     const categories = Array.from(categoryMap.entries())
       .map(([id, data]) => ({
@@ -287,7 +273,10 @@ export class AnalyticsService {
         income: Math.round(data.income * 100) / 100,
         expenses: Math.round(data.expenses * 100) / 100,
         netCashFlow: Number((data.income - data.expenses).toFixed(2)),
-        savingsRate: data.income > 0 ? Number((((data.income - data.expenses) / data.income) * 100).toFixed(2)) : 0,
+        savingsRate:
+          data.income > 0
+            ? Number((((data.income - data.expenses) / data.income) * 100).toFixed(2))
+            : 0,
       }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
@@ -396,7 +385,10 @@ export class AnalyticsService {
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
       // Reverse the transaction effect to get historical balance
-      if (transaction.type === TransactionType.INCOME || transaction.type === TransactionType.TRANSFER) {
+      if (
+        transaction.type === TransactionType.INCOME ||
+        transaction.type === TransactionType.TRANSFER
+      ) {
         runningBalance -= Number(transaction.amount);
       } else if (transaction.type === TransactionType.EXPENSE) {
         runningBalance += Number(transaction.amount);
@@ -412,7 +404,7 @@ export class AnalyticsService {
     for (const [month, _] of Array.from(monthlyBalances.entries()).sort((a, b) =>
       a[0].localeCompare(b[0]),
     )) {
-      const monthTransactions = transactions.filter(t => {
+      const monthTransactions = transactions.filter((t) => {
         const tDate = new Date(t.date);
         const tMonth = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
         return tMonth === month;
@@ -479,19 +471,19 @@ export class AnalyticsService {
     ]);
 
     const currentIncome = currentTransactions
-      .filter(t => t.type === TransactionType.INCOME)
+      .filter((t) => t.type === TransactionType.INCOME)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const currentExpenses = currentTransactions
-      .filter(t => t.type === TransactionType.EXPENSE)
+      .filter((t) => t.type === TransactionType.EXPENSE)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const previousIncome = previousTransactions
-      .filter(t => t.type === TransactionType.INCOME)
+      .filter((t) => t.type === TransactionType.INCOME)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const previousExpenses = previousTransactions
-      .filter(t => t.type === TransactionType.EXPENSE)
+      .filter((t) => t.type === TransactionType.EXPENSE)
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     return {
@@ -514,14 +506,22 @@ export class AnalyticsService {
       changes: {
         income: {
           amount: Number((currentIncome - previousIncome).toFixed(2)),
-          percentage: previousIncome > 0 ? Number((((currentIncome - previousIncome) / previousIncome) * 100).toFixed(2)) : 0,
+          percentage:
+            previousIncome > 0
+              ? Number((((currentIncome - previousIncome) / previousIncome) * 100).toFixed(2))
+              : 0,
         },
         expenses: {
           amount: Number((currentExpenses - previousExpenses).toFixed(2)),
-          percentage: previousExpenses > 0 ? Number((((currentExpenses - previousExpenses) / previousExpenses) * 100).toFixed(2)) : 0,
+          percentage:
+            previousExpenses > 0
+              ? Number((((currentExpenses - previousExpenses) / previousExpenses) * 100).toFixed(2))
+              : 0,
         },
         netCashFlow: {
-          amount: Number(((currentIncome - currentExpenses) - (previousIncome - previousExpenses)).toFixed(2)),
+          amount: Number(
+            (currentIncome - currentExpenses - (previousIncome - previousExpenses)).toFixed(2),
+          ),
         },
         transactions: {
           count: currentTransactions.length - previousTransactions.length,
@@ -560,7 +560,10 @@ export class AnalyticsService {
     const investments = await this.investmentRepository.find({
       where: { userId, isActive: true },
     });
-    const investmentsValue = investments.reduce((sum, inv) => sum + Number(inv.currentValue || 0), 0);
+    const investmentsValue = investments.reduce(
+      (sum, inv) => sum + Number(inv.currentValue || 0),
+      0,
+    );
 
     // Get lend/borrow balances
     const lendBorrowRecords = await this.lendBorrowRepository.find({
@@ -582,18 +585,18 @@ export class AnalyticsService {
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
       // Get transactions for this month
-      const monthTransactions = transactions.filter(t => {
+      const monthTransactions = transactions.filter((t) => {
         const tDate = new Date(t.date);
         return tDate.getFullYear() === date.getFullYear() && tDate.getMonth() === date.getMonth();
       });
 
       // Calculate net cash flow for the month
       const monthIncome = monthTransactions
-        .filter(t => t.type === TransactionType.INCOME)
+        .filter((t) => t.type === TransactionType.INCOME)
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
       const monthExpenses = monthTransactions
-        .filter(t => t.type === TransactionType.EXPENSE)
+        .filter((t) => t.type === TransactionType.EXPENSE)
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
       const netChange = monthIncome - monthExpenses;
@@ -619,9 +622,7 @@ export class AnalyticsService {
     const firstMonthNetWorth = trends[0]?.netWorth || 0;
     const lastMonthNetWorth = trends[trends.length - 1]?.netWorth || 0;
     const totalChange = lastMonthNetWorth - firstMonthNetWorth;
-    const percentageChange = firstMonthNetWorth > 0
-      ? ((totalChange / firstMonthNetWorth) * 100)
-      : 0;
+    const percentageChange = firstMonthNetWorth > 0 ? (totalChange / firstMonthNetWorth) * 100 : 0;
 
     return {
       current: {
@@ -697,7 +698,9 @@ export class AnalyticsService {
       }
     } else {
       // Custom date range
-      startDate = queryDto.startDate ? new Date(queryDto.startDate) : new Date(now.getFullYear(), now.getMonth(), 1);
+      startDate = queryDto.startDate
+        ? new Date(queryDto.startDate)
+        : new Date(now.getFullYear(), now.getMonth(), 1);
       endDate = queryDto.endDate ? new Date(queryDto.endDate) : now;
     }
 

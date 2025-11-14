@@ -5,7 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsBoolean,
-  Min
+  Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReminderType, ReminderFrequency, ReminderStatus } from '@database/entities';

@@ -59,10 +59,7 @@ export class SubscriptionsController {
    * Upgrade to a higher tier
    */
   @Post('upgrade')
-  async upgradeSubscription(
-    @Request() req: any,
-    @Body() upgradeDto: UpgradeSubscriptionDto,
-  ) {
+  async upgradeSubscription(@Request() req: any, @Body() upgradeDto: UpgradeSubscriptionDto) {
     const userId = req.user?.id || req.user?.userId;
     return this.subscriptionsService.upgradeSubscription(userId, upgradeDto);
   }
@@ -73,10 +70,7 @@ export class SubscriptionsController {
    */
   @Post('cancel')
   @HttpCode(HttpStatus.OK)
-  async cancelSubscription(
-    @Request() req: any,
-    @Body() cancelDto: CancelSubscriptionDto,
-  ) {
+  async cancelSubscription(@Request() req: any, @Body() cancelDto: CancelSubscriptionDto) {
     const userId = req.user?.id || req.user?.userId;
     return this.subscriptionsService.cancelSubscription(userId, cancelDto);
   }
@@ -120,10 +114,7 @@ export class SubscriptionsController {
    * Update payment method
    */
   @Put('payment-method')
-  async updatePaymentMethod(
-    @Request() req: any,
-    @Body() paymentDto: UpdatePaymentMethodDto,
-  ) {
+  async updatePaymentMethod(@Request() req: any, @Body() paymentDto: UpdatePaymentMethodDto) {
     const userId = req.user?.id || req.user?.userId;
     // TODO: Implement Stripe payment method update
     return { message: 'Payment method updated successfully' };
@@ -134,10 +125,7 @@ export class SubscriptionsController {
    * Apply promo code
    */
   @Post('promo-code')
-  async applyPromoCode(
-    @Request() req: any,
-    @Body() promoDto: ApplyPromoCodeDto,
-  ) {
+  async applyPromoCode(@Request() req: any, @Body() promoDto: ApplyPromoCodeDto) {
     const userId = req.user?.id || req.user?.userId;
     // TODO: Implement promo code validation and application
     return { message: 'Promo code applied successfully' };
@@ -157,12 +145,7 @@ export class SubscriptionsController {
           name: 'Free',
           price: 0,
           billingCycle: null,
-          features: [
-            '100 transactions per month',
-            '3 accounts',
-            '2 budgets',
-            'Basic reports',
-          ],
+          features: ['100 transactions per month', '3 accounts', '2 budgets', 'Basic reports'],
         },
         {
           tier: 'basic',
@@ -239,10 +222,7 @@ export class SubscriptionsController {
    * Purchase an addon
    */
   @Post('addons/purchase')
-  async purchaseAddon(
-    @Request() req: any,
-    @Body() purchaseDto: PurchaseAddonDto,
-  ) {
+  async purchaseAddon(@Request() req: any, @Body() purchaseDto: PurchaseAddonDto) {
     const userId = req.user?.id || req.user?.userId;
     return this.addonsService.purchaseAddon(userId, purchaseDto);
   }

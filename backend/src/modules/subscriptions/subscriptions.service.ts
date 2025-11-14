@@ -1,11 +1,26 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Subscription, SubscriptionTier, SubscriptionStatus, BillingCycle } from '../../database/entities/subscription.entity';
+import {
+  Subscription,
+  SubscriptionTier,
+  SubscriptionStatus,
+  BillingCycle,
+} from '../../database/entities/subscription.entity';
 import { UsageTracking } from '../../database/entities/usage-tracking.entity';
 import { Invoice, InvoiceStatus } from '../../database/entities/invoice.entity';
 import { User } from '../../database/entities/user.entity';
-import { FEATURE_LIMITS, hasFeatureAccess, FeatureFlag, getTierLimits } from '../../common/constants/features.constants';
+import {
+  FEATURE_LIMITS,
+  hasFeatureAccess,
+  FeatureFlag,
+  getTierLimits,
+} from '../../common/constants/features.constants';
 import {
   UpgradeSubscriptionDto,
   CancelSubscriptionDto,
@@ -40,8 +55,9 @@ export class SubscriptionsService {
     }
 
     const limits = getTierLimits(subscription.tier);
-    const isActive = subscription.status === SubscriptionStatus.ACTIVE ||
-                     subscription.status === SubscriptionStatus.TRIALING;
+    const isActive =
+      subscription.status === SubscriptionStatus.ACTIVE ||
+      subscription.status === SubscriptionStatus.TRIALING;
 
     return {
       id: subscription.id,
@@ -108,7 +124,9 @@ export class SubscriptionsService {
 
     // Validate tier upgrade (can't downgrade to free)
     if (dto.tier === SubscriptionTier.FREE) {
-      throw new BadRequestException('Cannot downgrade to FREE tier. Use cancel subscription instead.');
+      throw new BadRequestException(
+        'Cannot downgrade to FREE tier. Use cancel subscription instead.',
+      );
     }
 
     // TODO: Integrate with Stripe for payment processing
@@ -139,9 +157,10 @@ export class SubscriptionsService {
     };
 
     // dto.tier is guaranteed to not be FREE due to validation above
-    subscription.price = dto.billingCycle === BillingCycle.MONTHLY
-      ? pricing[dto.tier].monthly
-      : pricing[dto.tier].yearly;
+    subscription.price =
+      dto.billingCycle === BillingCycle.MONTHLY
+        ? pricing[dto.tier].monthly
+        : pricing[dto.tier].yearly;
 
     await this.subscriptionRepository.save(subscription);
 
@@ -236,7 +255,10 @@ export class SubscriptionsService {
   /**
    * Check if user has reached a usage limit
    */
-  async checkUsageLimit(userId: string, resource: keyof typeof FEATURE_LIMITS[SubscriptionTier.FREE]): Promise<boolean> {
+  async checkUsageLimit(
+    userId: string,
+    resource: keyof (typeof FEATURE_LIMITS)[SubscriptionTier.FREE],
+  ): Promise<boolean> {
     const subscription = await this.getCurrentSubscription(userId);
     const usage = await this.getUsage(userId);
     const limits = getTierLimits(subscription.tier);
@@ -244,7 +266,8 @@ export class SubscriptionsService {
     const limit = limits[resource];
     if (limit === Infinity) return false;
 
-    const resourceKey = resource.replace('max', '').charAt(0).toLowerCase() + resource.replace('max', '').slice(1);
+    const resourceKey =
+      resource.replace('max', '').charAt(0).toLowerCase() + resource.replace('max', '').slice(1);
     const currentUsage = usage[`${resourceKey}Count` as keyof typeof usage];
 
     return Number(currentUsage) >= limit;

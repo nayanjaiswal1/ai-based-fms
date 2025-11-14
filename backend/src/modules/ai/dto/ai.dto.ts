@@ -6,7 +6,7 @@ export class AutoCategorizeDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ example: 12.50 })
+  @ApiProperty({ example: 12.5 })
   @IsNumber()
   amount: number;
 

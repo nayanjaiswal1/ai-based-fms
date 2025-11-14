@@ -1,22 +1,20 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { GroupsService } from './groups.service';
 import { GroupCommentsService } from './group-comments.service';
 import { RecurringGroupTransactionsService } from './recurring-group-transactions.service';
 import { GroupBudgetsService } from './group-budgets.service';
 import { CreateGroupDto, UpdateGroupDto, AddMemberDto } from './dto/group.dto';
-import { CreateGroupTransactionDto, UpdateGroupTransactionDto, SettleUpDto } from './dto/group-transaction.dto';
+import {
+  CreateGroupTransactionDto,
+  UpdateGroupTransactionDto,
+  SettleUpDto,
+} from './dto/group-transaction.dto';
 import { CreateGroupCommentDto, UpdateGroupCommentDto } from './dto/group-comment.dto';
-import { CreateRecurringGroupTransactionDto, UpdateRecurringGroupTransactionDto } from './dto/recurring-group-transaction.dto';
+import {
+  CreateRecurringGroupTransactionDto,
+  UpdateRecurringGroupTransactionDto,
+} from './dto/recurring-group-transaction.dto';
 import { CreateGroupBudgetDto, UpdateGroupBudgetDto } from './dto/group-budget.dto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -190,10 +188,7 @@ export class GroupsController {
 
   @Delete('comments/:commentId')
   @ApiOperation({ summary: 'Delete a comment' })
-  deleteComment(
-    @Param('commentId') commentId: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  deleteComment(@Param('commentId') commentId: string, @CurrentUser('id') userId: string) {
     return this.groupCommentsService.remove(commentId, userId);
   }
 
@@ -272,19 +267,13 @@ export class GroupsController {
 
   @Get('budgets/:budgetId')
   @ApiOperation({ summary: 'Get a specific group budget' })
-  getGroupBudget(
-    @Param('budgetId') budgetId: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  getGroupBudget(@Param('budgetId') budgetId: string, @CurrentUser('id') userId: string) {
     return this.groupBudgetsService.findOne(budgetId, userId);
   }
 
   @Get('budgets/:budgetId/progress')
   @ApiOperation({ summary: 'Get budget progress and status' })
-  getGroupBudgetProgress(
-    @Param('budgetId') budgetId: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  getGroupBudgetProgress(@Param('budgetId') budgetId: string, @CurrentUser('id') userId: string) {
     return this.groupBudgetsService.getProgress(budgetId, userId);
   }
 
@@ -300,10 +289,7 @@ export class GroupsController {
 
   @Delete('budgets/:budgetId')
   @ApiOperation({ summary: 'Delete a group budget' })
-  deleteGroupBudget(
-    @Param('budgetId') budgetId: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  deleteGroupBudget(@Param('budgetId') budgetId: string, @CurrentUser('id') userId: string) {
     return this.groupBudgetsService.remove(budgetId, userId);
   }
 }

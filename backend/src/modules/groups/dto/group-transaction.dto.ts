@@ -1,4 +1,14 @@
-import { IsString, IsNumber, IsEnum, IsDateString, IsObject, IsOptional, IsArray, IsBoolean, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsDateString,
+  IsObject,
+  IsOptional,
+  IsArray,
+  IsBoolean,
+  Min,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SplitType } from '@database/entities';
 
@@ -7,7 +17,7 @@ export class CreateGroupTransactionDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ example: 120.50 })
+  @ApiProperty({ example: 120.5 })
   @IsNumber()
   @Min(0)
   amount: number;
@@ -23,14 +33,15 @@ export class CreateGroupTransactionDto {
   @ApiProperty({
     enum: SplitType,
     example: SplitType.EQUAL,
-    description: 'How to split the expense: equal, custom, percentage, or shares'
+    description: 'How to split the expense: equal, custom, percentage, or shares',
   })
   @IsEnum(SplitType)
   splitType: SplitType;
 
   @ApiProperty({
     example: { 'user1-uuid': 40.17, 'user2-uuid': 40.17, 'user3-uuid': 40.16 },
-    description: 'Amount owed by each member. For equal split, calculated automatically. For custom, provide specific amounts.'
+    description:
+      'Amount owed by each member. For equal split, calculated automatically. For custom, provide specific amounts.',
   })
   @IsObject()
   splits: Record<string, number>;
@@ -93,7 +104,7 @@ export class SettleUpDto {
   @IsString()
   toUserId: string;
 
-  @ApiProperty({ example: 50.00 })
+  @ApiProperty({ example: 50.0 })
   @IsNumber()
   @Min(0)
   amount: number;

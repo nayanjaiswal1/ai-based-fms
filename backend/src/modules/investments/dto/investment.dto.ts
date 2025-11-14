@@ -1,4 +1,12 @@
-import { IsString, IsNumber, IsEnum, IsDateString, IsOptional, IsBoolean, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsDateString,
+  IsOptional,
+  IsBoolean,
+  Min,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { InvestmentType } from '@database/entities';
 

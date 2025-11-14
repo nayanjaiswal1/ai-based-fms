@@ -70,11 +70,15 @@ export class ImportService {
       this.logger.error('File parsing failed', error.stack);
 
       if (error instanceof SyntaxError) {
-        throw new BadRequestException('Invalid file format. Please ensure the file is valid CSV/Excel.');
+        throw new BadRequestException(
+          'Invalid file format. Please ensure the file is valid CSV/Excel.',
+        );
       } else if (error.code === 'LIMIT_FILE_SIZE') {
         throw new BadRequestException('File size exceeds maximum allowed (10MB).');
       } else {
-        throw new BadRequestException('Failed to parse file. Please check the file format and try again.');
+        throw new BadRequestException(
+          'Failed to parse file. Please check the file format and try again.',
+        );
       }
     }
   }
@@ -121,7 +125,8 @@ export class ImportService {
       }
 
       // Update import log
-      importLog.status = failedTransactions.length === 0 ? ImportStatus.COMPLETED : ImportStatus.PARTIALLY_COMPLETED;
+      importLog.status =
+        failedTransactions.length === 0 ? ImportStatus.COMPLETED : ImportStatus.PARTIALLY_COMPLETED;
       importLog.successfulRecords = successfulTransactions.length;
       importLog.failedRecords = failedTransactions.length;
       importLog.completedAt = new Date();
@@ -244,7 +249,7 @@ export class ImportService {
     const data = xlsx.utils.sheet_to_json(worksheet);
 
     return data
-      .map(row => {
+      .map((row) => {
         try {
           return this.mapRowToTransaction(row, mappingConfig || {});
         } catch (error) {
@@ -252,7 +257,7 @@ export class ImportService {
           return null;
         }
       })
-      .filter(tx => tx !== null);
+      .filter((tx) => tx !== null);
   }
 
   /**
@@ -304,7 +309,7 @@ export class ImportService {
     // Find the actual column name (case-insensitive)
     const findColumn = (possibleNames: string[]) => {
       for (const name of possibleNames) {
-        const key = Object.keys(row).find(k => k.toLowerCase() === name.toLowerCase());
+        const key = Object.keys(row).find((k) => k.toLowerCase() === name.toLowerCase());
         if (key) return row[key];
       }
       return null;

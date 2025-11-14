@@ -1,4 +1,16 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query, Res, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Get,
+  Query,
+  Res,
+  UseGuards,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -49,7 +61,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   @ApiResponse({ status: 409, description: 'Email already registered' })
-  async register(@Body() registerDto: RegisterDto, @Req() req: any, @Res({ passthrough: true }) res: Response) {
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
     const result = await this.authService.register(registerDto, userAgent, ipAddress);
@@ -69,7 +85,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto, @Req() req: any, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
     const result = await this.authService.login(loginDto, userAgent, ipAddress);
@@ -129,7 +149,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Google OAuth login/register' })
   @ApiResponse({ status: 200, description: 'User authenticated via Google' })
   @ApiResponse({ status: 400, description: 'Invalid OAuth code' })
-  async googleOAuthPost(@Body('code') code: string, @Req() req: any, @Res({ passthrough: true }) res: Response) {
+  async googleOAuthPost(
+    @Body('code') code: string,
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
     const result = await this.authService.googleOAuth(code, userAgent, ipAddress);
@@ -164,10 +188,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: '2FA successfully enabled, returns backup codes' })
   @ApiResponse({ status: 400, description: '2FA setup not initiated' })
   @ApiResponse({ status: 401, description: 'Invalid 2FA code or unauthorized' })
-  async verify2FASetup(
-    @CurrentUser('id') userId: string,
-    @Body() verify2FADto: Verify2FADto,
-  ) {
+  async verify2FASetup(@CurrentUser('id') userId: string, @Body() verify2FADto: Verify2FADto) {
     return this.authService.verify2FASetup(userId, verify2FADto);
   }
 
@@ -179,10 +200,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: '2FA successfully disabled' })
   @ApiResponse({ status: 400, description: '2FA not enabled' })
   @ApiResponse({ status: 401, description: 'Invalid 2FA code or unauthorized' })
-  async disable2FA(
-    @CurrentUser('id') userId: string,
-    @Body() verify2FADto: Verify2FADto,
-  ) {
+  async disable2FA(@CurrentUser('id') userId: string, @Body() verify2FADto: Verify2FADto) {
     return this.authService.disable2FA(userId, verify2FADto);
   }
 
@@ -193,7 +211,11 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   @ApiResponse({ status: 400, description: '2FA not enabled for account' })
   @ApiResponse({ status: 401, description: 'Invalid credentials or 2FA code' })
-  async login2FA(@Body() login2FADto: Login2FADto, @Req() req: any, @Res({ passthrough: true }) res: Response) {
+  async login2FA(
+    @Body() login2FADto: Login2FADto,
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
     const result = await this.authService.login2FA(login2FADto, userAgent, ipAddress);

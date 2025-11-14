@@ -60,9 +60,7 @@ export class DashboardPreferencesService {
     return await this.createDefaultPreferences(userId);
   }
 
-  private async createDefaultPreferences(
-    userId: string,
-  ): Promise<UserDashboardPreference> {
+  private async createDefaultPreferences(userId: string): Promise<UserDashboardPreference> {
     const defaultWidgets = [
       {
         id: 'total-balance',

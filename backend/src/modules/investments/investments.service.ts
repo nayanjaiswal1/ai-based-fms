@@ -121,7 +121,7 @@ export class InvestmentsService {
       topPerformers: investments
         .sort((a, b) => b.returnPercentage - a.returnPercentage)
         .slice(0, 5)
-        .map(inv => ({
+        .map((inv) => ({
           id: inv.id,
           name: inv.name,
           type: inv.type,
@@ -134,21 +134,32 @@ export class InvestmentsService {
   async getPerformanceMetrics(userId: string) {
     const investments = await this.findAll(userId, true);
 
-    const profitable = investments.filter(inv => inv.returns > 0);
-    const losing = investments.filter(inv => inv.returns < 0);
+    const profitable = investments.filter((inv) => inv.returns > 0);
+    const losing = investments.filter((inv) => inv.returns < 0);
 
     return {
       profitableInvestments: profitable.length,
       losingInvestments: losing.length,
-      averageReturn: investments.length > 0
-        ? Number((investments.reduce((sum, inv) => sum + inv.returnPercentage, 0) / investments.length).toFixed(2))
-        : 0,
-      bestPerformer: investments.length > 0
-        ? investments.reduce((best, inv) => inv.returnPercentage > best.returnPercentage ? inv : best)
-        : null,
-      worstPerformer: investments.length > 0
-        ? investments.reduce((worst, inv) => inv.returnPercentage < worst.returnPercentage ? inv : worst)
-        : null,
+      averageReturn:
+        investments.length > 0
+          ? Number(
+              (
+                investments.reduce((sum, inv) => sum + inv.returnPercentage, 0) / investments.length
+              ).toFixed(2),
+            )
+          : 0,
+      bestPerformer:
+        investments.length > 0
+          ? investments.reduce((best, inv) =>
+              inv.returnPercentage > best.returnPercentage ? inv : best,
+            )
+          : null,
+      worstPerformer:
+        investments.length > 0
+          ? investments.reduce((worst, inv) =>
+              inv.returnPercentage < worst.returnPercentage ? inv : worst,
+            )
+          : null,
     };
   }
 }

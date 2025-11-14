@@ -33,10 +33,7 @@ export class CategoriesController {
   @Get()
   @ApiOperation({ summary: 'Get all categories' })
   @ApiResponse({ status: 200, description: 'Categories retrieved successfully' })
-  findAll(
-    @CurrentUser('id') userId: string,
-    @Query('includeDefault') includeDefault?: boolean,
-  ) {
+  findAll(@CurrentUser('id') userId: string, @Query('includeDefault') includeDefault?: boolean) {
     return this.categoriesService.findAll(userId, includeDefault !== false);
   }
 

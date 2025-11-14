@@ -44,7 +44,10 @@ export class ConfirmImportDto {
   @IsString()
   importId: string;
 
-  @ApiProperty({ type: [Object], example: [{ date: '2025-01-15', description: 'Coffee', amount: 5.50 }] })
+  @ApiProperty({
+    type: [Object],
+    example: [{ date: '2025-01-15', description: 'Coffee', amount: 5.5 }],
+  })
   @IsArray()
   transactions: any[];
 

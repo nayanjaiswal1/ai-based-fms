@@ -41,11 +41,7 @@ export const Cache = (config: CacheConfig) => {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     SetMetadata(CACHE_KEY_METADATA, config.key)(target, propertyKey, descriptor);
     SetMetadata(CACHE_TTL_METADATA, config.ttl)(target, propertyKey, descriptor);
-    SetMetadata(CACHE_USER_SPECIFIC, config.userSpecific ?? true)(
-      target,
-      propertyKey,
-      descriptor,
-    );
+    SetMetadata(CACHE_USER_SPECIFIC, config.userSpecific ?? true)(target, propertyKey, descriptor);
     return descriptor;
   };
 };

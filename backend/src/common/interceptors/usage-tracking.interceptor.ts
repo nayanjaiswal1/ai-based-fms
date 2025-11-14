@@ -36,7 +36,10 @@ export class UsageTrackingInterceptor implements NestInterceptor {
     }
 
     // Check if user has reached limit BEFORE creating the resource
-    const hasReachedLimit = await this.subscriptionsService.checkUsageLimit(userId, resource as any);
+    const hasReachedLimit = await this.subscriptionsService.checkUsageLimit(
+      userId,
+      resource as any,
+    );
 
     if (hasReachedLimit) {
       throw new BadRequestException(

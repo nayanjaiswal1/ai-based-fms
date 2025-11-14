@@ -1,4 +1,15 @@
-import { IsString, IsNotEmpty, IsNumber, IsEnum, IsOptional, IsObject, IsDateString, IsInt, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsEnum,
+  IsOptional,
+  IsObject,
+  IsDateString,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { SplitType } from '@database/entities';
 import { RecurrenceFrequency, RecurrenceStatus } from '@database/entities';
 

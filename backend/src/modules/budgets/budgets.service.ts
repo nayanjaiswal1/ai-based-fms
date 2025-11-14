@@ -188,7 +188,7 @@ export class BudgetsService {
       totalSpent,
       remaining: totalBudgeted - totalSpent,
       overdraftCount,
-      budgets: budgets.map(b => ({
+      budgets: budgets.map((b) => ({
         id: b.id,
         name: b.name,
         amount: b.amount,
@@ -218,10 +218,7 @@ export class BudgetsService {
     // Check if we've already alerted at this percentage level
     const lastAlertedPercentage = this.alertedBudgets.get(budget.id) || 0;
 
-    if (
-      roundedPercentage >= budget.alertThreshold &&
-      roundedPercentage > lastAlertedPercentage
-    ) {
+    if (roundedPercentage >= budget.alertThreshold && roundedPercentage > lastAlertedPercentage) {
       // Update tracking
       this.alertedBudgets.set(budget.id, roundedPercentage);
 

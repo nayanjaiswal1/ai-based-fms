@@ -33,10 +33,7 @@ export class RemindersController {
   @Get()
   @ApiOperation({ summary: 'Get all reminders' })
   @ApiQuery({ name: 'status', enum: ReminderStatus, required: false })
-  findAll(
-    @CurrentUser('id') userId: string,
-    @Query('status') status?: ReminderStatus,
-  ) {
+  findAll(@CurrentUser('id') userId: string, @Query('status') status?: ReminderStatus) {
     return this.remindersService.findAll(userId, status);
   }
 

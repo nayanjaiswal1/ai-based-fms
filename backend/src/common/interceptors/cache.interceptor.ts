@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Inject } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -28,29 +22,17 @@ export class CacheInterceptor implements NestInterceptor {
     private reflector: Reflector,
   ) {}
 
-  async intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Promise<Observable<any>> {
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
     const handler = context.getHandler();
 
     // Check for cache configuration
-    const cacheKeyTemplate = this.reflector.get<string>(
-      CACHE_KEY_METADATA,
-      handler,
-    );
+    const cacheKeyTemplate = this.reflector.get<string>(CACHE_KEY_METADATA, handler);
     const cacheTTL = this.reflector.get<number>(CACHE_TTL_METADATA, handler);
-    const userSpecific = this.reflector.get<boolean>(
-      CACHE_USER_SPECIFIC,
-      handler,
-    );
+    const userSpecific = this.reflector.get<boolean>(CACHE_USER_SPECIFIC, handler);
 
     // Check for cache invalidation
-    const invalidateKeys = this.reflector.get<string[]>(
-      INVALIDATE_CACHE_METADATA,
-      handler,
-    );
+    const invalidateKeys = this.reflector.get<string[]>(INVALIDATE_CACHE_METADATA, handler);
 
     // If no cache config, just continue
     if (!cacheKeyTemplate || request.method !== 'GET') {
@@ -66,11 +48,7 @@ export class CacheInterceptor implements NestInterceptor {
     }
 
     // Build cache key
-    const cacheKey = this.buildCacheKey(
-      cacheKeyTemplate,
-      request,
-      userSpecific,
-    );
+    const cacheKey = this.buildCacheKey(cacheKeyTemplate, request, userSpecific);
 
     // Try to get from cache
     try {
@@ -103,11 +81,7 @@ export class CacheInterceptor implements NestInterceptor {
   /**
    * Build cache key from template
    */
-  private buildCacheKey(
-    template: string,
-    request: any,
-    userSpecific: boolean,
-  ): string {
+  private buildCacheKey(template: string, request: any, userSpecific: boolean): string {
     let key = template;
 
     // Replace userId
@@ -134,10 +108,7 @@ export class CacheInterceptor implements NestInterceptor {
   /**
    * Invalidate cache keys
    */
-  private async invalidateCacheKeys(
-    keys: string[],
-    request: any,
-  ): Promise<void> {
+  private async invalidateCacheKeys(keys: string[], request: any): Promise<void> {
     try {
       for (const keyTemplate of keys) {
         const key = this.buildCacheKey(keyTemplate, request, true);

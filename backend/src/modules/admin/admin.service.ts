@@ -19,14 +19,23 @@ export class AdminService {
 
   async getAllUsers(page: number = 1, limit: number = 50) {
     const [users, total] = await this.userRepository.findAndCount({
-      select: ['id', 'email', 'firstName', 'lastName', 'role', 'subscriptionTier', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'email',
+        'firstName',
+        'lastName',
+        'role',
+        'subscriptionTier',
+        'createdAt',
+        'updatedAt',
+      ],
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
     });
 
     return {
-      users: users.map(u => this.sanitizeUser(u)),
+      users: users.map((u) => this.sanitizeUser(u)),
       total,
       page,
       pages: Math.ceil(total / limit),
@@ -36,7 +45,16 @@ export class AdminService {
   async getUserDetails(userId: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      select: ['id', 'email', 'firstName', 'lastName', 'role', 'subscriptionTier', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'email',
+        'firstName',
+        'lastName',
+        'role',
+        'subscriptionTier',
+        'createdAt',
+        'updatedAt',
+      ],
     });
 
     if (!user) {
@@ -179,7 +197,7 @@ export class AdminService {
     });
 
     return {
-      activities: activities.map(a => ({
+      activities: activities.map((a) => ({
         id: a.id,
         action: `${a.type} transaction`,
         description: a.description,

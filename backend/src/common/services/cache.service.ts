@@ -74,11 +74,7 @@ export class CacheService {
   /**
    * Get or set pattern - fetch from cache or execute function
    */
-  async getOrSet<T>(
-    key: string,
-    fn: () => Promise<T>,
-    ttl?: number,
-  ): Promise<T> {
+  async getOrSet<T>(key: string, fn: () => Promise<T>, ttl?: number): Promise<T> {
     // Try to get from cache
     const cached = await this.get<T>(key);
     if (cached !== null && cached !== undefined) {

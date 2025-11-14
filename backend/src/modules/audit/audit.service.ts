@@ -21,11 +21,17 @@ export class AuditService {
   /**
    * Get audit logs for a user with filters and pagination
    */
-  async getAuditLogs(
-    userId: string,
-    filters: AuditFiltersDto,
-  ): Promise<AuditLogResponseDto> {
-    const { page = 1, limit = 50, startDate, endDate, action, entityType, entityId, search } = filters;
+  async getAuditLogs(userId: string, filters: AuditFiltersDto): Promise<AuditLogResponseDto> {
+    const {
+      page = 1,
+      limit = 50,
+      startDate,
+      endDate,
+      action,
+      entityType,
+      entityId,
+      search,
+    } = filters;
 
     const where: FindOptionsWhere<AuditLog> = {
       userId,
@@ -49,15 +55,13 @@ export class AuditService {
 
     const skip = (page - 1) * limit;
 
-    let queryBuilder = this.auditLogRepository
-      .createQueryBuilder('audit')
-      .where(where);
+    let queryBuilder = this.auditLogRepository.createQueryBuilder('audit').where(where);
 
     // Add search filter if provided
     if (search) {
       queryBuilder = queryBuilder.andWhere(
         '(audit.description ILIKE :search OR audit.entityId = :searchExact)',
-        { search: `%${search}%`, searchExact: search }
+        { search: `%${search}%`, searchExact: search },
       );
     }
 
@@ -67,7 +71,7 @@ export class AuditService {
       .take(limit)
       .getManyAndCount();
 
-    const data = logs.map(log => this.mapToDto(log));
+    const data = logs.map((log) => this.mapToDto(log));
 
     return {
       data,
@@ -97,16 +101,13 @@ export class AuditService {
       },
     });
 
-    return logs.map(log => this.mapToDto(log));
+    return logs.map((log) => this.mapToDto(log));
   }
 
   /**
    * Get full history of a transaction with detailed changes
    */
-  async getTransactionHistory(
-    userId: string,
-    transactionId: string,
-  ): Promise<AuditLogDto[]> {
+  async getTransactionHistory(userId: string, transactionId: string): Promise<AuditLogDto[]> {
     return this.getEntityAuditLogs(userId, 'Transaction', transactionId);
   }
 
@@ -139,7 +140,7 @@ export class AuditService {
     // Group by date
     const activitiesByDate = new Map<string, Map<AuditAction, number>>();
 
-    logs.forEach(log => {
+    logs.forEach((log) => {
       const dateKey = log.createdAt.toISOString().split('T')[0];
 
       if (!activitiesByDate.has(dateKey)) {
@@ -213,12 +214,9 @@ export class AuditService {
     }
 
     // Get all unique keys from both objects
-    const allKeys = new Set([
-      ...Object.keys(oldValues),
-      ...Object.keys(newValues),
-    ]);
+    const allKeys = new Set([...Object.keys(oldValues), ...Object.keys(newValues)]);
 
-    allKeys.forEach(key => {
+    allKeys.forEach((key) => {
       const oldValue = oldValues[key];
       const newValue = newValues[key];
 

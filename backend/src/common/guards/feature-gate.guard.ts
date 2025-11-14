@@ -29,7 +29,7 @@ export class FeatureGateGuard implements CanActivate {
 
     if (!isFeatureEnabled(userTier, requiredFeature)) {
       throw new ForbiddenException(
-        `This feature requires ${this.getRequiredTier(requiredFeature)} plan or higher. Please upgrade your subscription.`
+        `This feature requires ${this.getRequiredTier(requiredFeature)} plan or higher. Please upgrade your subscription.`,
       );
     }
 

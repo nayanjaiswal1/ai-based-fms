@@ -82,11 +82,31 @@ export const FEATURE_ACCESS: Record<FeatureFlag, SubscriptionTier[]> = {
   ],
 
   // Intermediate Features - Basic+
-  [FeatureFlag.GROUPS]: [SubscriptionTier.BASIC, SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
-  [FeatureFlag.BASIC_REPORTS]: [SubscriptionTier.BASIC, SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
-  [FeatureFlag.CSV_IMPORT]: [SubscriptionTier.BASIC, SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
-  [FeatureFlag.EXPORT_DATA]: [SubscriptionTier.BASIC, SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
-  [FeatureFlag.TWO_FACTOR_AUTH]: [SubscriptionTier.BASIC, SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
+  [FeatureFlag.GROUPS]: [
+    SubscriptionTier.BASIC,
+    SubscriptionTier.PREMIUM,
+    SubscriptionTier.ENTERPRISE,
+  ],
+  [FeatureFlag.BASIC_REPORTS]: [
+    SubscriptionTier.BASIC,
+    SubscriptionTier.PREMIUM,
+    SubscriptionTier.ENTERPRISE,
+  ],
+  [FeatureFlag.CSV_IMPORT]: [
+    SubscriptionTier.BASIC,
+    SubscriptionTier.PREMIUM,
+    SubscriptionTier.ENTERPRISE,
+  ],
+  [FeatureFlag.EXPORT_DATA]: [
+    SubscriptionTier.BASIC,
+    SubscriptionTier.PREMIUM,
+    SubscriptionTier.ENTERPRISE,
+  ],
+  [FeatureFlag.TWO_FACTOR_AUTH]: [
+    SubscriptionTier.BASIC,
+    SubscriptionTier.PREMIUM,
+    SubscriptionTier.ENTERPRISE,
+  ],
 
   // Advanced Features - Premium+
   [FeatureFlag.INVESTMENTS]: [SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],

@@ -1,9 +1,25 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+  Optional,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Group, GroupMember, GroupMemberRole, GroupTransaction, SplitType } from '@database/entities';
+import {
+  Group,
+  GroupMember,
+  GroupMemberRole,
+  GroupTransaction,
+  SplitType,
+} from '@database/entities';
 import { CreateGroupDto, UpdateGroupDto, AddMemberDto } from './dto/group.dto';
-import { CreateGroupTransactionDto, UpdateGroupTransactionDto, SettleUpDto } from './dto/group-transaction.dto';
+import {
+  CreateGroupTransactionDto,
+  UpdateGroupTransactionDto,
+  SettleUpDto,
+} from './dto/group-transaction.dto';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
@@ -21,7 +37,7 @@ export class GroupsService {
   // Helper method to safely broadcast events when WebSocket is enabled
   private async broadcastGroupEvent(groupId: string, event: string, data: any) {
     if (this.notificationsGateway) {
-      await this.notificationsGateway.broadcastToGroup(groupId, event, data);
+      await this.notificationsGateway.broadcastGroupEvent(groupId, event, data);
     }
   }
 
@@ -48,9 +64,7 @@ export class GroupsService {
       relations: ['group'],
     });
 
-    return memberships
-      .filter(m => m.group.isActive)
-      .map(m => m.group);
+    return memberships.filter((m) => m.group.isActive).map((m) => m.group);
   }
 
   async findOne(id: string, userId: string) {
@@ -112,14 +126,14 @@ export class GroupsService {
       }
       // Reactivate if was previously removed
       existing.isActive = true;
-      existing.role = addMemberDto.role as GroupMemberRole || GroupMemberRole.MEMBER;
+      existing.role = (addMemberDto.role as GroupMemberRole) || GroupMemberRole.MEMBER;
       return this.memberRepository.save(existing);
     }
 
     const member = this.memberRepository.create({
       groupId,
       userId: addMemberDto.userId,
-      role: addMemberDto.role as GroupMemberRole || GroupMemberRole.MEMBER,
+      role: (addMemberDto.role as GroupMemberRole) || GroupMemberRole.MEMBER,
     });
 
     const saved = await this.memberRepository.save(member);
@@ -158,7 +172,12 @@ export class GroupsService {
     return saved;
   }
 
-  async updateMemberRole(groupId: string, requestUserId: string, memberUserId: string, role: GroupMemberRole) {
+  async updateMemberRole(
+    groupId: string,
+    requestUserId: string,
+    memberUserId: string,
+    role: GroupMemberRole,
+  ) {
     await this.checkAdminAccess(groupId, requestUserId);
 
     const member = await this.memberRepository.findOne({
@@ -221,7 +240,12 @@ export class GroupsService {
     });
   }
 
-  async updateTransaction(groupId: string, transactionId: string, userId: string, updateDto: UpdateGroupTransactionDto) {
+  async updateTransaction(
+    groupId: string,
+    transactionId: string,
+    userId: string,
+    updateDto: UpdateGroupTransactionDto,
+  ) {
     await this.checkMemberAccess(groupId, userId);
 
     const transaction = await this.transactionRepository.findOne({
@@ -318,7 +342,7 @@ export class GroupsService {
       relations: ['user'],
     });
 
-    return members.map(member => ({
+    return members.map((member) => ({
       userId: member.userId,
       name: `${member.user.firstName} ${member.user.lastName}`,
       balance: member.balance,
@@ -332,11 +356,12 @@ export class GroupsService {
 
     const balances = await this.getBalances(groupId, userId);
 
-    const debtors = balances.filter(b => b.balance < 0).sort((a, b) => a.balance - b.balance);
-    const creditors = balances.filter(b => b.balance > 0).sort((a, b) => b.balance - a.balance);
+    const debtors = balances.filter((b) => b.balance < 0).sort((a, b) => a.balance - b.balance);
+    const creditors = balances.filter((b) => b.balance > 0).sort((a, b) => b.balance - a.balance);
 
     const suggestions = [];
-    let i = 0, j = 0;
+    let i = 0,
+      j = 0;
 
     while (i < debtors.length && j < creditors.length) {
       const debtor = debtors[i];

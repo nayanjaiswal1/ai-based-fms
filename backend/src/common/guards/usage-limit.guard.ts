@@ -43,7 +43,7 @@ export class UsageLimitGuard implements CanActivate {
 
     if (currentCount >= limit) {
       throw new ForbiddenException(
-        `You have reached the maximum ${config.limitType.replace('max', '').toLowerCase()} limit (${limit}) for your ${userTier} plan. Please upgrade to continue.`
+        `You have reached the maximum ${config.limitType.replace('max', '').toLowerCase()} limit (${limit}) for your ${userTier} plan. Please upgrade to continue.`,
       );
     }
 

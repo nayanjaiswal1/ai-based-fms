@@ -32,7 +32,11 @@ export class AccountsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update an account' })
-  update(@Param('id') id: string, @CurrentUser('id') userId: string, @Body() updateDto: UpdateAccountDto) {
+  update(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Body() updateDto: UpdateAccountDto,
+  ) {
     return this.accountsService.update(id, userId, updateDto);
   }
 
