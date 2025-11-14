@@ -50,6 +50,9 @@ export default function CategoryDetailPage() {
 
   const categoryData = category.data;
   const transactionsList = transactions?.data || [];
+  const totalAmount = transactionsList.reduce((sum, t) => sum + Number(t.amount), 0);
+  const transactionCount = transactionsList.length;
+
   const statusBarItems = useMemo(() => [
     {
       id: 'count',
@@ -77,8 +80,6 @@ export default function CategoryDetailPage() {
       color: categoryData.type === 'income' ? '#10b981' : '#ef4444',
     },
   ], [transactionCount, totalAmount, categoryData, formatLocale]);
-  const totalAmount = transactionsList.reduce((sum, t) => sum + Number(t.amount), 0);
-  const transactionCount = transactionsList.length;
 
   return (
     <div className="space-y-6">

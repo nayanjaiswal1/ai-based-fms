@@ -56,6 +56,8 @@ export default function TagDetailPage() {
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + Number(t.amount), 0);
   const totalExpense = transactionsList
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const statusBarItems = useMemo(() => [
     {
@@ -95,8 +97,6 @@ export default function TagDetailPage() {
       color: (totalIncome - totalExpense) >= 0 ? '#10b981' : '#ef4444',
     },
   ], [transactionCount, totalIncome, totalExpense, transactionsList, formatLocale]);
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
 
   return (
     <div className="space-y-6">
