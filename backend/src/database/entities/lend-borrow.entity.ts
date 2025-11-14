@@ -43,9 +43,6 @@ export class LendBorrow {
   @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
   amountPaid: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
-  amountRemaining: number;
-
   @Column({ default: 'USD' })
   currency: string;
 

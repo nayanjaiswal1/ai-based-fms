@@ -97,6 +97,7 @@ export const transactionsApi = {
   getAll: (params?: any) => api.get('/transactions', { params }),
   getOne: (id: string) => api.get(`/transactions/${id}`),
   getById: (id: string) => api.get(`/transactions/${id}`),
+  getSource: (id: string) => api.get(`/transactions/${id}/source`),
   create: (data: any) => api.post('/transactions', data),
   update: (id: string, data: any) => api.patch(`/transactions/${id}`, data),
   delete: (id: string) => api.delete(`/transactions/${id}`),
@@ -176,6 +177,18 @@ export const lendBorrowApi = {
   recordPayment: (id: string, data: any) => api.post(`/lend-borrow/${id}/payments`, data),
   getPayments: (id: string) => api.get(`/lend-borrow/${id}/payments`),
   getSummary: () => api.get('/lend-borrow/summary'),
+};
+
+export const sharedExpensesApi = {
+  getAll: (params?: any) => api.get('/shared-expenses', { params }),
+  getOne: (id: string) => api.get(`/shared-expenses/${id}`),
+  createPersonalDebt: (data: any) => api.post('/shared-expenses/personal-debt', data),
+  createGroup: (data: any) => api.post('/shared-expenses/group', data),
+  update: (id: string, data: any) => api.put(`/shared-expenses/${id}`, data),
+  delete: (id: string) => api.delete(`/shared-expenses/${id}`),
+  addTransaction: (id: string, data: any) => api.post(`/shared-expenses/${id}/transactions`, data),
+  getConsolidatedDebts: () => api.get('/shared-expenses/consolidated-debts'),
+  checkDuplicate: (identifier: string) => api.get(`/shared-expenses/check-duplicate`, { params: { identifier } }),
 };
 
 export const notificationsApi = {

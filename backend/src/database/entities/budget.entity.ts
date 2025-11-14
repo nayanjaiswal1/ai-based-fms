@@ -35,9 +35,6 @@ export class Budget {
   @Column({ type: 'decimal', precision: 15, scale: 2 })
   amount: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
-  spent: number;
-
   @Column({ type: 'enum', enum: BudgetPeriod })
   period: BudgetPeriod;
 

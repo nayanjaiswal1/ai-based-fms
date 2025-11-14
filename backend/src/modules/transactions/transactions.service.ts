@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, FindOptionsWhere, In, DataSource } from 'typeorm';
-import { Transaction, Account } from '@database/entities';
+import { Transaction, Account, TransactionLineItem, TransactionSourceType } from '@database/entities';
 import { AccountsService } from '../accounts/accounts.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '@database/entities/audit-log.entity';
@@ -11,35 +11,61 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
+    @InjectRepository(TransactionLineItem)
+    private lineItemRepository: Repository<TransactionLineItem>,
     private accountsService: AccountsService,
     private auditService: AuditService,
     private dataSource: DataSource,
   ) {}
 
   async create(userId: string, createDto: any): Promise<Transaction> {
-    const transaction = this.transactionRepository.create({
-      ...createDto,
-      userId,
-      createdBy: userId,
-    } as unknown as Transaction);
+    return this.dataSource.transaction(async (manager) => {
+      // Calculate total amount from line items if provided
+      const totalAmount = createDto.lineItems?.length
+        ? createDto.lineItems.reduce((sum: number, item: any) => sum + Number(item.amount), 0)
+        : createDto.amount;
 
-    const saved = await this.transactionRepository.save(transaction);
+      const transaction = manager.create(Transaction, {
+        ...createDto,
+        amount: totalAmount,
+        userId,
+        createdBy: userId,
+        sourceType: createDto.sourceType || TransactionSourceType.MANUAL,
+        sourceId: createDto.sourceId || null,
+      } as unknown as Transaction);
 
-    // Update account balance
-    const balanceChange = createDto.type === 'expense' ? -createDto.amount : createDto.amount;
-    await this.accountsService.updateBalance(createDto.accountId, balanceChange);
+      const saved = await manager.save(transaction);
 
-    // Create audit log
-    await this.auditService.logTransactionChange(
-      userId,
-      AuditAction.CREATE,
-      saved.id,
-      null,
-      this.serializeTransaction(saved),
-      `Created transaction: ${saved.description || 'Untitled'}`,
-    );
+      // Create line items if provided
+      if (createDto.lineItems?.length) {
+        const lineItems = createDto.lineItems.map((item: any, index: number) =>
+          manager.create(TransactionLineItem, {
+            transactionId: saved.id,
+            categoryId: item.categoryId,
+            description: item.description,
+            amount: item.amount,
+            sortOrder: index,
+          }),
+        );
+        await manager.save(lineItems);
+      }
 
-    return saved;
+      // Update account balance
+      const balanceChange = createDto.type === 'expense' ? -totalAmount : totalAmount;
+      await this.accountsService.updateBalance(createDto.accountId, balanceChange);
+
+      // Create audit log
+      await this.auditService.logTransactionChange(
+        userId,
+        AuditAction.CREATE,
+        saved.id,
+        null,
+        this.serializeTransaction(saved),
+        `Created transaction: ${saved.description || 'Untitled'}`,
+      );
+
+      return saved;
+    });
   }
 
   async findAll(userId: string, filters?: any) {
@@ -61,7 +87,7 @@ export class TransactionsService {
 
     return this.transactionRepository.find({
       where,
-      relations: ['account', 'category', 'tags'],
+      relations: ['account', 'category', 'tags', 'lineItems', 'lineItems.category'],
       order: { date: 'DESC', createdAt: 'DESC' },
       take: Math.min(filters?.limit || DEFAULT_LIMIT, MAX_LIMIT),
       skip: filters?.offset || 0,
@@ -71,10 +97,34 @@ export class TransactionsService {
   async findOne(id: string, userId: string) {
     const transaction = await this.transactionRepository.findOne({
       where: { id, userId, isDeleted: false },
-      relations: ['account', 'category', 'tags'],
+      relations: ['account', 'category', 'tags', 'lineItems', 'lineItems.category'],
     });
     if (!transaction) throw new NotFoundException('Transaction not found');
     return transaction;
+  }
+
+  async getTransactionSource(id: string, userId: string) {
+    const transaction = await this.findOne(id, userId);
+
+    if (!transaction.sourceType || transaction.sourceType === TransactionSourceType.MANUAL) {
+      return {
+        sourceType: TransactionSourceType.MANUAL,
+        sourceId: null,
+        navigationUrl: null,
+      };
+    }
+
+    const navigationMap = {
+      [TransactionSourceType.INVESTMENT]: `/investments/${transaction.sourceId}`,
+      [TransactionSourceType.SHARED_EXPENSE]: `/shared-expenses/${transaction.sourceId}`,
+      [TransactionSourceType.RECURRING]: `/recurring/${transaction.sourceId}`,
+    };
+
+    return {
+      sourceType: transaction.sourceType,
+      sourceId: transaction.sourceId,
+      navigationUrl: navigationMap[transaction.sourceType] || null,
+    };
   }
 
   async update(id: string, userId: string, updateDto: any) {

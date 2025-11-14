@@ -37,12 +37,6 @@ export class Investment {
   @Column({ type: 'decimal', precision: 15, scale: 2 })
   currentValue: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  returns: number;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  returnPercentage: number;
-
   @Column({ default: 'USD' })
   currency: string;
 

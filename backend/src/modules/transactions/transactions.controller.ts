@@ -56,6 +56,12 @@ export class TransactionsController {
     return this.transactionsService.findOne(id, userId);
   }
 
+  @Get(':id/source')
+  @ApiOperation({ summary: 'Get transaction source for navigation' })
+  getTransactionSource(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.transactionsService.getTransactionSource(id, userId);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,
