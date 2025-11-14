@@ -307,7 +307,10 @@ export default function TransactionsPage() {
 
           {/* Hide Import on very small screens */}
           <ProtectedAction feature={FeatureFlag.ADVANCED_IMPORT} behavior="disable">
-            <button className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <button
+              onClick={() => navigate('/import')}
+              className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
               <Upload className="h-4 w-4" />
               Import
             </button>
