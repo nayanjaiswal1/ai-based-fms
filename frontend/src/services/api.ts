@@ -138,8 +138,8 @@ export const groupsApi = {
   removeMember: (id: string, memberId: string) => api.delete(`/groups/${id}/members/${memberId}`),
   updateMemberRole: (id: string, memberId: string, data: any) =>
     api.patch(`/groups/${id}/members/${memberId}`, data),
-  getExpenses: (id: string) => api.get(`/groups/${id}/expenses`),
-  createExpense: (id: string, data: any) => api.post(`/groups/${id}/expenses`, data),
+  getExpenses: (id: string) => api.get(`/groups/${id}/transactions`),
+  createExpense: (id: string, data: any) => api.post(`/groups/${id}/transactions`, data),
   getBalances: (id: string) => api.get(`/groups/${id}/balances`),
   getSettlements: (id: string) => api.get(`/groups/${id}/settlements`),
   settleUp: (id: string, data: any) => api.post(`/groups/${id}/settle`, data),
@@ -209,14 +209,12 @@ export const aiApi = {
 };
 
 export const importApi = {
-  uploadFile: (data: FormData) => api.post('/import/upload', data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  preview: (sessionId: string) => api.get(`/import/preview/${sessionId}`),
-  mapColumns: (sessionId: string, data: any) =>
-    api.post(`/import/map/${sessionId}`, data),
-  confirm: (sessionId: string) => api.post(`/import/confirm/${sessionId}`),
-  cancel: (sessionId: string) => api.post(`/import/cancel/${sessionId}`),
+  createLog: (data: { type: string; fileName: string; description?: string }) =>
+    api.post('/import/create', data),
+  parse: (data: { fileContent: string; fileType: string; mappingConfig?: Record<string, any> }) =>
+    api.post('/import/parse', data),
+  confirm: (data: { importId: string; transactions: any[]; defaultAccountId?: string; autoCategorize?: boolean }) =>
+    api.post('/import/confirm', data),
   getHistory: () => api.get('/import/history'),
 };
 

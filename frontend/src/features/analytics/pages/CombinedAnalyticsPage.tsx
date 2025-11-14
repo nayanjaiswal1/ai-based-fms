@@ -15,17 +15,17 @@ export default function CombinedAnalyticsPage() {
     {
       id: 'analytics' as AnalyticsTab,
       label: 'Analytics',
-      icon: BarChart3,
+      icon: <BarChart3 className="h-5 w-5" />,
     },
     {
       id: 'insights' as AnalyticsTab,
       label: 'Insights',
-      icon: Lightbulb,
+      icon: <Lightbulb className="h-5 w-5" />,
     },
     {
       id: 'reports' as AnalyticsTab,
       label: 'Reports',
-      icon: FileText,
+      icon: <FileText className="h-5 w-5" />,
     },
   ];
 

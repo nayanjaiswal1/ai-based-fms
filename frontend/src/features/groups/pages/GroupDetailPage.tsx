@@ -28,7 +28,7 @@ export default function GroupDetailPage() {
 
   const { data: group, isLoading } = useQuery({
     queryKey: ['group', id],
-    queryFn: () => groupsApi.getById(id!),
+    queryFn: () => groupsApi.getOne(id!),
     enabled: !!id,
   });
 
@@ -153,7 +153,7 @@ export default function GroupDetailPage() {
           <button
             onClick={() => {
               // TODO: Add expense to group
-              toast.info('Add expense feature coming soon');
+              toast('Add expense feature coming soon');
             }}
             className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
@@ -280,7 +280,7 @@ export default function GroupDetailPage() {
                             confirm({
                               title: 'Settle Up',
                               message: `Mark ${balance.from} as having paid ${balance.to} $${Number(balance.amount).toFixed(2)}?`,
-                              variant: 'default',
+                              variant: 'info',
                               confirmLabel: 'Settle',
                               onConfirm: async () => {
                                 await settleUpMutation.mutateAsync({
