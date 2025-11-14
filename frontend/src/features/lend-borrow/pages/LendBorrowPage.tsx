@@ -5,6 +5,7 @@ import { lendBorrowApi } from '@services/api';
 import { Plus, DollarSign, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import { StatusBar } from '@/components/ui/StatusBar';
 import { useCurrency } from '@/hooks/useCurrency';
+import { PageHeader } from '@/components/ui/PageHeader';
 import LendBorrowModal from '../components/LendBorrowModal';
 import PaymentModal from '../components/PaymentModal';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -23,6 +24,8 @@ export default function LendBorrowPage() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [filters, setFilters] = useState<Record<string, any>>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   // Detect modal state from URL path
   const isNewModal = location.pathname === '/lend-borrow/new';
@@ -31,8 +34,8 @@ export default function LendBorrowPage() {
   const recordId = id;
 
   const { data: records, isLoading } = useQuery({
-    queryKey: ['lend-borrow', filters],
-    queryFn: () => lendBorrowApi.getAll(filters),
+    queryKey: ['lend-borrow', filters, searchTerm],
+    queryFn: () => lendBorrowApi.getAll({ ...filters, search: searchTerm || undefined }),
   });
 
   const { data: summary } = useQuery({
@@ -138,39 +141,45 @@ export default function LendBorrowPage() {
 
   const handleClearFilters = () => {
     setFilters({});
+    setSearchTerm('');
   };
+
+  const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Lend & Borrow</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Track money you've lent or borrowed
-          </p>
-        </div>
-        <button
-          onClick={() => navigate('/lend-borrow/new')}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Add Record
-        </button>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        showSearch={true}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search records..."
+        showFilter={true}
+        onFilterClick={() => setShowFilters(!showFilters)}
+        activeFiltersCount={activeFiltersCount}
+        buttons={[
+          {
+            label: 'Add Record',
+            icon: Plus,
+            onClick: () => navigate('/lend-borrow/new'),
+            variant: 'primary' as const,
+          },
+        ]}
+      />
 
-
-      {/* Filters */}
-      <div className="rounded-lg bg-white p-4 shadow">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <Filters
-            filters={filterConfigs}
-            values={filters}
-            onChange={handleFilterChange}
-            onClear={handleClearFilters}
-          />
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <Filters
+              filters={filterConfigs}
+              values={filters}
+              onChange={handleFilterChange}
+              onClear={handleClearFilters}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Records Table */}
       <DataTable

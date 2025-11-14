@@ -135,12 +135,11 @@ export default function GroupDetailPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{groupData.name}</h1>
-            {groupData.description && (
-              <p className="mt-1 text-sm text-muted-foreground">{groupData.description}</p>
-            )}
-          </div>
+          {groupData.description && (
+            <div>
+              <p className="text-sm text-muted-foreground">{groupData.description}</p>
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <button

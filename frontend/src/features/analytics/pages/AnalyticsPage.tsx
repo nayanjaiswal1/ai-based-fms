@@ -108,16 +108,6 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Insights and trends for your financial data
-          </p>
-        </div>
-      </div>
-
       {/* Date Range Selector */}
       <div className="rounded-lg bg-white p-4 shadow">
         <div className="flex flex-wrap items-center gap-3">

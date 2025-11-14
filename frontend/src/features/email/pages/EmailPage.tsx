@@ -76,13 +76,7 @@ export default function EmailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Email Integration</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Connect your email to automatically import transactions
-          </p>
-        </div>
+      <div className="flex justify-end">
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"

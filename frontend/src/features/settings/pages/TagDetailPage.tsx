@@ -116,7 +116,6 @@ export default function TagDetailPage() {
             <Tag className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{tagData.name}</h1>
             <p className="text-sm text-muted-foreground">Tag</p>
           </div>
         </div>

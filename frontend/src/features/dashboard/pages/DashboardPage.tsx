@@ -218,15 +218,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Header with staggered animation */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between animate-fade-in-down">
-        <div className="min-w-0 space-y-2">
-          <h1 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight text-gradient">
-            Dashboard
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Welcome back! Here's your financial overview.
-          </p>
-        </div>
+      <div className="flex justify-end animate-fade-in-down">
         <div className="flex gap-3 items-center flex-shrink-0 animate-fade-in-left" style={{ animationDelay: '0.1s' }}>
           <DashboardCustomizer
             isCustomizing={isCustomizing}

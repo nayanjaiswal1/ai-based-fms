@@ -160,13 +160,7 @@ export default function DuplicatesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Potential Duplicates</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Review and merge duplicate transactions to keep your records clean
-          </p>
-        </div>
+      <div className="flex justify-end">
         <button
           onClick={() => refetch()}
           disabled={isLoading}
