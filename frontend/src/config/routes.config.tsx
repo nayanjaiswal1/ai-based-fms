@@ -14,6 +14,7 @@ const ReconciliationPage = lazy(() =>
   }))
 );
 const BudgetsPage = lazy(() => import('@features/budgets/pages/BudgetsPage'));
+const AIBudgetWizardPage = lazy(() => import('@features/budgets/pages/AIBudgetWizardPage'));
 const GroupsPage = lazy(() => import('@features/groups/pages/GroupsPage'));
 const InvestmentsPage = lazy(() => import('@features/investments/pages/InvestmentsPage'));
 const LendBorrowPage = lazy(() => import('@features/lend-borrow/pages/LendBorrowPage'));
@@ -96,6 +97,10 @@ export const protectedRoutes: RouteObject[] = [
   {
     path: '/budgets/edit/:id',
     element: <BudgetsPage />,
+  },
+  {
+    path: '/budgets/ai-wizard',
+    element: <AIBudgetWizardPage />,
   },
   {
     path: '/groups',

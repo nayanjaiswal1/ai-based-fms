@@ -206,6 +206,13 @@ export const aiApi = {
   getInsights: (params: any) => api.get('/ai/insights', { params }),
   detectDuplicates: (params?: { threshold?: number; timeWindow?: number; includeCategories?: boolean }) =>
     api.get('/ai/detect-duplicates', { params }),
+  generateBudget: (data: {
+    monthlyIncome: number;
+    savingsGoal?: number;
+    debtPayments?: number;
+    regularExpenses?: string[];
+    additionalContext?: string;
+  }) => api.post('/ai/generate-budget', data),
 };
 
 export const importApi = {

@@ -3,13 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { OpenAI } from 'openai';
-import { Transaction, Category, Budget } from '@database/entities';
+import { Transaction, Category, Budget, Tag } from '@database/entities';
 import {
   AutoCategorizeDto,
   ParseReceiptDto,
   DetectDuplicatesDto,
   GenerateInsightsDto,
   NaturalLanguageQueryDto,
+  GenerateBudgetDto,
 } from './dto/ai.dto';
 
 @Injectable()
@@ -23,6 +24,8 @@ export class AiService {
     private categoryRepository: Repository<Category>,
     @InjectRepository(Budget)
     private budgetRepository: Repository<Budget>,
+    @InjectRepository(Tag)
+    private tagRepository: Repository<Tag>,
     private configService: ConfigService,
   ) {
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
@@ -579,6 +582,159 @@ Focus on high-impact, realistic changes.`;
       };
     } catch (error) {
       throw new BadRequestException('Failed to generate suggestions: ' + error.message);
+    }
+  }
+
+  /**
+   * Generate AI-powered budget distribution based on user financial information
+   */
+  async generateBudget(userId: string, dto: GenerateBudgetDto) {
+    this.checkOpenAIAvailability();
+
+    // Get user's categories and tags
+    const [categories, tags] = await Promise.all([
+      this.categoryRepository.find({
+        where: [{ userId }, { isDefault: true }],
+        order: { name: 'ASC' },
+      }),
+      this.tagRepository.find({
+        where: [{ userId }, { isDefault: true }],
+        order: { name: 'ASC' },
+      }),
+    ]);
+
+    // Calculate available budget after fixed expenses
+    const fixedExpenses = (dto.savingsGoal || 0) + (dto.debtPayments || 0);
+    const regularExpensesTotal = dto.regularExpenses?.reduce((sum, exp) => {
+      const match = exp.match(/\$?(\d+\.?\d*)/);
+      return sum + (match ? parseFloat(match[1]) : 0);
+    }, 0) || 0;
+
+    const availableForBudgets = dto.monthlyIncome - fixedExpenses - regularExpensesTotal;
+
+    // Build context for AI
+    const categoryList = categories
+      .filter((c) => c.type === 'expense' || c.type === 'both')
+      .map((c) => `- ${c.name}${c.description ? `: ${c.description}` : ''}`)
+      .join('\n');
+
+    const tagList = tags.map((t) => `- ${t.name}${t.description ? `: ${t.description}` : ''}`).join('\n');
+
+    const prompt = `You are a financial planning AI. Based on the user's financial information, create a detailed monthly budget distribution across expense categories.
+
+User Financial Information:
+- Monthly Income: $${dto.monthlyIncome.toFixed(2)}
+- Savings Goal: $${(dto.savingsGoal || 0).toFixed(2)}
+- Debt Payments: $${(dto.debtPayments || 0).toFixed(2)}
+${dto.regularExpenses?.length ? `- Regular Expenses:\n  ${dto.regularExpenses.join('\n  ')}` : ''}
+${dto.additionalContext ? `- Additional Context: ${dto.additionalContext}` : ''}
+
+Available for Variable Budgets: $${availableForBudgets.toFixed(2)}
+
+Available Expense Categories:
+${categoryList}
+
+Available Tags for Organization:
+${tagList}
+
+Please create a comprehensive budget plan that:
+1. Distributes the available budget ($${availableForBudgets.toFixed(2)}) across appropriate expense categories
+2. Follows the 50/30/20 rule as a guideline (50% needs, 30% wants, 20% savings - but adjust based on user's situation)
+3. Assigns 2-4 relevant tags to each category to help track spending
+4. Ensures the total allocated budget equals or is slightly less than the available amount
+5. Provides practical, realistic budget amounts
+
+Return ONLY a valid JSON object in this exact format (no additional text):
+{
+  "budgets": [
+    {
+      "categoryName": "Category Name",
+      "amount": number,
+      "tags": ["tag1", "tag2"],
+      "reasoning": "Brief explanation why this amount"
+    }
+  ],
+  "summary": {
+    "totalAllocated": number,
+    "remaining": number,
+    "distribution": {
+      "needs": number,
+      "wants": number,
+      "savings": number
+    }
+  },
+  "recommendations": [
+    "Recommendation 1",
+    "Recommendation 2"
+  ]
+}
+
+Use only categories and tags from the provided lists. Ensure all category names and tag names match exactly.`;
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.6,
+        max_tokens: 2000,
+      });
+
+      const responseText = completion.choices[0]?.message?.content?.trim();
+      if (!responseText) {
+        throw new Error('No response from AI');
+      }
+
+      // Extract JSON from response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('Could not parse budget data');
+      }
+
+      const budgetPlan = JSON.parse(jsonMatch[0]);
+
+      // Validate and enhance the budget plan with actual category/tag IDs
+      const validatedBudgets = [];
+      for (const budget of budgetPlan.budgets) {
+        const category = categories.find(
+          (c) => c.name.toLowerCase() === budget.categoryName.toLowerCase(),
+        );
+
+        if (!category) continue; // Skip if category not found
+
+        const tagIds = budget.tags
+          .map((tagName: string) => {
+            const tag = tags.find((t) => t.name.toLowerCase() === tagName.toLowerCase());
+            return tag?.id;
+          })
+          .filter((id: string | undefined) => id !== undefined);
+
+        validatedBudgets.push({
+          categoryId: category.id,
+          categoryName: category.name,
+          amount: Number(budget.amount),
+          suggestedTags: budget.tags,
+          tagIds: tagIds,
+          reasoning: budget.reasoning,
+        });
+      }
+
+      return {
+        success: true,
+        income: dto.monthlyIncome,
+        fixedExpenses: {
+          savings: dto.savingsGoal || 0,
+          debt: dto.debtPayments || 0,
+          regular: regularExpensesTotal,
+          total: fixedExpenses + regularExpensesTotal,
+        },
+        availableForBudgets,
+        budgets: validatedBudgets,
+        summary: budgetPlan.summary,
+        recommendations: budgetPlan.recommendations,
+        generatedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      throw new BadRequestException('Failed to generate budget: ' + error.message);
     }
   }
 

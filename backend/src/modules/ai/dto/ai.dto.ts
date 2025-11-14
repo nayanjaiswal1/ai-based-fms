@@ -67,3 +67,36 @@ export class SmartSuggestionsDto {
   @IsNumber()
   limit?: number;
 }
+
+export class GenerateBudgetDto {
+  @ApiProperty({ example: 5000, description: 'Monthly income' })
+  @IsNumber()
+  monthlyIncome: number;
+
+  @ApiPropertyOptional({ example: 1000, description: 'Monthly savings goal' })
+  @IsOptional()
+  @IsNumber()
+  savingsGoal?: number;
+
+  @ApiPropertyOptional({ example: 500, description: 'Monthly debt payments' })
+  @IsOptional()
+  @IsNumber()
+  debtPayments?: number;
+
+  @ApiPropertyOptional({
+    example: ['Rent: $1200', 'Car Payment: $350'],
+    description: 'List of regular monthly expenses'
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  regularExpenses?: string[];
+
+  @ApiPropertyOptional({
+    example: 'I have a family of 4 and want to save for a vacation',
+    description: 'Additional context about financial situation'
+  })
+  @IsOptional()
+  @IsString()
+  additionalContext?: string;
+}
