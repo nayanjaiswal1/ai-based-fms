@@ -193,8 +193,8 @@ export class AdminDashboardService {
 
     return activities.map(activity => ({
       date: activity.date,
-      hour: parseInt(activity.hour),
-      count: parseInt(activity.count),
+      hour: parseInt(activity.hour, 10),
+      count: parseInt(activity.count, 10),
     }));
   }
 

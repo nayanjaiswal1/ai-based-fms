@@ -471,15 +471,23 @@ export class AuthService {
 
     console.log(`Password reset link: ${resetUrl}`);
 
+    // Only expose sensitive data in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      return {
+        message: 'If an account with that email exists, a password reset link has been sent',
+        resetToken, // DEV ONLY
+        resetUrl, // DEV ONLY
+      };
+    }
+
     return {
       message: 'If an account with that email exists, a password reset link has been sent',
-      // TODO: Remove this in production
-      resetToken, // Only for development/testing
-      resetUrl, // Only for development/testing
     };
   }
 
   async resetPassword(passwordResetDto: PasswordResetDto) {
+    const startTime = Date.now();
+
     // Find users with non-expired reset tokens
     const users = await this.userRepository
       .createQueryBuilder('user')
@@ -500,6 +508,13 @@ export class AuthService {
         matchedUser = user;
         break;
       }
+    }
+
+    // Add constant-time delay to prevent timing attacks
+    const elapsedTime = Date.now() - startTime;
+    const minDelay = 1000; // 1 second minimum response time
+    if (elapsedTime < minDelay) {
+      await new Promise(resolve => setTimeout(resolve, minDelay - elapsedTime));
     }
 
     if (!matchedUser) {

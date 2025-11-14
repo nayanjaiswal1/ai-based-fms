@@ -21,7 +21,13 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   } = options;
 
   const socketRef = useRef<Socket | null>(null);
-  const { user, accessToken } = useAuthStore();
+  const { user } = useAuthStore();
+
+  // Use refs to avoid dependency issues
+  const optionsRef = useRef(options);
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   const connect = useCallback(() => {
     // Don't connect if WebSocket is disabled
@@ -30,15 +36,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       return;
     }
 
-    if (socketRef.current?.connected || !user || !accessToken) {
+    if (socketRef.current?.connected || !user) {
       return;
     }
 
     try {
+      // Tokens are sent automatically via httpOnly cookies
       socketRef.current = io(`${API_CONFIG.baseURL}${namespace}`, {
-        auth: {
-          token: accessToken,
-        },
+        withCredentials: true, // Send cookies with requests
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
@@ -48,33 +53,37 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       socketRef.current.on('connect', () => {
         console.log('WebSocket connected:', socketRef.current?.id);
         // Emit authenticate after connection
-        socketRef.current?.emit('authenticate', user.id);
-        onConnect?.();
+        if (socketRef.current && user) {
+          socketRef.current.emit('authenticate', user.id);
+        }
+        optionsRef.current.onConnect?.();
       });
 
       socketRef.current.on('disconnect', () => {
         console.log('WebSocket disconnected');
-        onDisconnect?.();
+        optionsRef.current.onDisconnect?.();
       });
 
       socketRef.current.on('error', (error) => {
         console.error('WebSocket error:', error);
-        onError?.(error);
+        optionsRef.current.onError?.(error);
       });
 
       socketRef.current.on('connect_error', (error) => {
         console.error('WebSocket connection error:', error);
-        onError?.(error);
+        optionsRef.current.onError?.(error);
       });
     } catch (error) {
       console.error('Failed to connect to WebSocket:', error);
-      onError?.(error);
+      optionsRef.current.onError?.(error);
     }
-  }, [user, accessToken, namespace, onConnect, onDisconnect, onError]);
+  }, [user, namespace]);
 
   const disconnect = useCallback(() => {
-    if (socketRef.current?.connected) {
-      socketRef.current.disconnect();
+    if (socketRef.current) {
+      if (socketRef.current.connected) {
+        socketRef.current.disconnect();
+      }
       socketRef.current = null;
     }
   }, []);
@@ -107,7 +116,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     return () => {
       disconnect();
     };
-  }, [autoConnect, connect, disconnect]);
+  }, [autoConnect]);
 
   return {
     socket: socketRef.current,

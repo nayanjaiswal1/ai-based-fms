@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, FindOptionsWhere, In } from 'typeorm';
-import { Transaction } from '@database/entities';
+import { Repository, Between, FindOptionsWhere, In, DataSource } from 'typeorm';
+import { Transaction, Account } from '@database/entities';
 import { AccountsService } from '../accounts/accounts.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '@database/entities/audit-log.entity';
@@ -13,6 +13,7 @@ export class TransactionsService {
     private transactionRepository: Repository<Transaction>,
     private accountsService: AccountsService,
     private auditService: AuditService,
+    private dataSource: DataSource,
   ) {}
 
   async create(userId: string, createDto: any): Promise<Transaction> {
@@ -55,11 +56,14 @@ export class TransactionsService {
     if (filters?.categoryId) where.categoryId = filters.categoryId;
     if (filters?.accountId) where.accountId = filters.accountId;
 
+    const MAX_LIMIT = 1000;
+    const DEFAULT_LIMIT = 50;
+
     return this.transactionRepository.find({
       where,
       relations: ['account', 'category', 'tags'],
       order: { date: 'DESC', createdAt: 'DESC' },
-      take: filters?.limit || 50,
+      take: Math.min(filters?.limit || DEFAULT_LIMIT, MAX_LIMIT),
       skip: filters?.offset || 0,
     });
   }
@@ -74,34 +78,65 @@ export class TransactionsService {
   }
 
   async update(id: string, userId: string, updateDto: any) {
-    const transaction = await this.findOne(id, userId);
+    return await this.dataSource.transaction(async (manager) => {
+      const transactionRepo = manager.getRepository(Transaction);
+      const accountRepo = manager.getRepository(Account);
 
-    // Store old values for audit log
-    const oldValues = this.serializeTransaction(transaction);
+      // Find transaction with pessimistic lock
+      const transaction = await transactionRepo.findOne({
+        where: { id, userId, isDeleted: false },
+        relations: ['account', 'category', 'tags'],
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    // Reverse old balance change
-    const oldBalanceChange = transaction.type === 'expense' ? -transaction.amount : transaction.amount;
-    await this.accountsService.updateBalance(transaction.accountId, -oldBalanceChange);
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
 
-    Object.assign(transaction, { ...updateDto, updatedBy: userId });
-    const updated = await this.transactionRepository.save(transaction);
+      // Store old values for audit log
+      const oldValues = this.serializeTransaction(transaction);
 
-    // Apply new balance change
-    const newBalanceChange = updated.type === 'expense' ? -updated.amount : updated.amount;
-    await this.accountsService.updateBalance(updated.accountId, newBalanceChange);
+      // Calculate balance changes atomically
+      const oldBalanceChange = transaction.type === 'expense' ? -transaction.amount : transaction.amount;
+      const newAmount = updateDto.amount !== undefined ? updateDto.amount : transaction.amount;
+      const newType = updateDto.type !== undefined ? updateDto.type : transaction.type;
+      const newBalanceChange = newType === 'expense' ? -newAmount : newAmount;
+      const balanceDelta = newBalanceChange - oldBalanceChange;
 
-    // Create audit log
-    const newValues = this.serializeTransaction(updated);
-    await this.auditService.logTransactionChange(
-      userId,
-      AuditAction.UPDATE,
-      updated.id,
-      oldValues,
-      newValues,
-      `Updated transaction: ${updated.description || 'Untitled'}`,
-    );
+      // Handle account changes
+      const newAccountId = updateDto.accountId !== undefined ? updateDto.accountId : transaction.accountId;
 
-    return updated;
+      if (newAccountId !== transaction.accountId) {
+        // Moving to different account: reverse from old, apply to new
+        await accountRepo.increment({ id: transaction.accountId }, 'balance', -oldBalanceChange);
+        await accountRepo.increment({ id: newAccountId }, 'balance', newBalanceChange);
+      } else {
+        // Same account: apply delta
+        if (balanceDelta !== 0) {
+          await accountRepo.increment({ id: transaction.accountId }, 'balance', balanceDelta);
+        }
+      }
+
+      // Update transaction
+      Object.assign(transaction, { ...updateDto, updatedBy: userId });
+      const updated = await transactionRepo.save(transaction);
+
+      // Create audit log (outside transaction to avoid deadlocks)
+      const newValues = this.serializeTransaction(updated);
+      // Note: Audit log will be created after transaction commits
+      setImmediate(async () => {
+        await this.auditService.logTransactionChange(
+          userId,
+          AuditAction.UPDATE,
+          updated.id,
+          oldValues,
+          newValues,
+          `Updated transaction: ${updated.description || 'Untitled'}`,
+        );
+      });
+
+      return updated;
+    });
   }
 
   async remove(id: string, userId: string) {
