@@ -3,6 +3,7 @@ import { ModernModal } from '@components/ui/ModernModal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
 import { useFormProtection } from '@hooks/useFormProtection';
+import { usePreferencesStore } from '@stores/preferencesStore';
 import { getAccountFormConfig, AccountFormData } from '../config/accountFormConfig';
 
 interface AccountModalProps {
@@ -13,6 +14,7 @@ interface AccountModalProps {
 
 export default function AccountModal({ account, isOpen, onClose }: AccountModalProps) {
   const formConfig = getAccountFormConfig(account);
+  const userCurrency = usePreferencesStore((state) => state.preferences.currency);
 
   // Form protection to prevent accidental data loss
   const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
@@ -30,6 +32,11 @@ export default function AccountModal({ account, isOpen, onClose }: AccountModalP
       reset(); // Clear dirty state on successful submit
       onClose();
     },
+    // Ensure currency is always set from user preference
+    transform: (data) => ({
+      ...data,
+      currency: data.currency || userCurrency,
+    }),
   });
 
   return (

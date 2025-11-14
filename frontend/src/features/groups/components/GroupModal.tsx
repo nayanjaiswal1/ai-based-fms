@@ -3,6 +3,7 @@ import { groupsApi } from '@services/api';
 import { ModernModal } from '@components/ui/ModernModal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useFormProtection } from '@hooks/useFormProtection';
+import { usePreferencesStore } from '@stores/preferencesStore';
 import { getGroupFormConfig, GroupFormData } from '../config/groupFormConfig';
 
 interface GroupModalProps {
@@ -16,6 +17,7 @@ export default function GroupModal({ group, isOpen, onClose, onSuccess }: GroupM
   const queryClient = useQueryClient();
   const formConfig = getGroupFormConfig(group);
   const isEditMode = !!group;
+  const userCurrency = usePreferencesStore((state) => state.preferences.currency);
 
   // Form protection to prevent accidental data loss
   const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
@@ -45,9 +47,15 @@ export default function GroupModal({ group, isOpen, onClose, onSuccess }: GroupM
   });
 
   const handleSubmit = async (data: GroupFormData) => {
+    // Ensure currency is always set from user preference
+    const dataWithCurrency = {
+      ...data,
+      currency: data.currency || userCurrency,
+    };
+
     return isEditMode
-      ? updateMutation.mutateAsync(data)
-      : createMutation.mutateAsync(data);
+      ? updateMutation.mutateAsync(dataWithCurrency)
+      : createMutation.mutateAsync(dataWithCurrency);
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;

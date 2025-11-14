@@ -1,7 +1,8 @@
 import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { FieldConfig } from '../../../lib/form/types';
 import { FieldWrapper } from './FieldWrapper';
-import { DollarSign, Percent } from 'lucide-react';
+import { Percent } from 'lucide-react';
+import { usePreferencesStore } from '../../../stores/preferencesStore';
 
 interface CurrencyFieldProps<TFieldValues extends FieldValues> {
   field: FieldConfig<TFieldValues>;
@@ -16,7 +17,8 @@ export function CurrencyField<TFieldValues extends FieldValues>({
 }: CurrencyFieldProps<TFieldValues>) {
   const { register } = form;
   const isCurrency = field.type === 'currency';
-  const Icon = isCurrency ? DollarSign : Percent;
+  const currencyInfo = usePreferencesStore((state) => state.getCurrencyInfo());
+  const currencySymbol = isCurrency ? currencyInfo.symbol : '%';
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Prevent invalid characters for number input
@@ -35,7 +37,11 @@ export function CurrencyField<TFieldValues extends FieldValues>({
     >
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-          <Icon className="h-4 w-4 text-gray-400" />
+          {isCurrency ? (
+            <span className="text-sm font-medium text-gray-500">{currencySymbol}</span>
+          ) : (
+            <Percent className="h-4 w-4 text-gray-400" />
+          )}
         </div>
         <input
           {...register(field.name, {

@@ -2,29 +2,39 @@
  * Locale-aware formatting utilities using the Intl API
  */
 
+import { usePreferencesStore, SUPPORTED_CURRENCIES } from '../stores/preferencesStore';
+
 /**
  * Format a number according to locale
  */
 export function formatNumber(
   value: number,
-  locale: string = 'en-US',
+  locale?: string,
   options?: Intl.NumberFormatOptions
 ): string {
-  return new Intl.NumberFormat(locale, options).format(value);
+  const userLocale = locale || usePreferencesStore.getState().preferences.locale;
+  return new Intl.NumberFormat(userLocale, options).format(value);
 }
 
 /**
  * Format currency according to locale and currency code
+ * If no currency/locale specified, uses user preference (defaults to INR)
  */
 export function formatCurrency(
   amount: number,
-  currency: string = 'USD',
-  locale: string = 'en-US',
+  currency?: string,
+  locale?: string,
   options?: Intl.NumberFormatOptions
 ): string {
-  return new Intl.NumberFormat(locale, {
+  // Get user preferences if not explicitly provided
+  const preferences = usePreferencesStore.getState().preferences;
+  const userCurrency = currency || preferences.currency;
+  const currencyInfo = SUPPORTED_CURRENCIES[userCurrency];
+  const userLocale = locale || currencyInfo?.locale || preferences.locale;
+
+  return new Intl.NumberFormat(userLocale, {
     style: 'currency',
-    currency,
+    currency: userCurrency,
     ...options,
   }).format(amount);
 }
