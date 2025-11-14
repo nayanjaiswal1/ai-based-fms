@@ -112,6 +112,30 @@ export default function BudgetsPage() {
     return category?.name || 'All Categories';
   };
 
+  // Group budgets by month
+  const groupBudgetsByMonth = () => {
+    if (!budgets?.data) return {};
+
+    const grouped: Record<string, any[]> = {};
+
+    budgets.data.forEach((budget: any) => {
+      const monthKey = format(parseISO(budget.startDate), 'MMMM yyyy');
+      if (!grouped[monthKey]) {
+        grouped[monthKey] = [];
+      }
+      grouped[monthKey].push(budget);
+    });
+
+    return grouped;
+  };
+
+  const groupedBudgets = groupBudgetsByMonth();
+  const monthKeys = Object.keys(groupedBudgets).sort((a, b) => {
+    const dateA = new Date(a);
+    const dateB = new Date(b);
+    return dateB.getTime() - dateA.getTime(); // Most recent first
+  });
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Usage Limit Warning */}
@@ -173,17 +197,51 @@ export default function BudgetsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-          {budgets?.data?.map((budget: any) => {
-            const percentage = (budget.spent / budget.amount) * 100;
-            const remaining = budget.amount - budget.spent;
-            const isOverBudget = percentage > 100;
+        <div className="space-y-6">
+          {monthKeys.map((monthKey) => {
+            const monthBudgets = groupedBudgets[monthKey];
+            const totalBudget = monthBudgets.reduce((sum: number, b: any) => sum + b.amount, 0);
+            const totalSpent = monthBudgets.reduce((sum: number, b: any) => sum + b.spent, 0);
+            const monthPercentage = (totalSpent / totalBudget) * 100;
 
             return (
-              <div
-                key={budget.id}
-                className="rounded-lg bg-white p-4 sm:p-6 shadow-sm transition-shadow hover:shadow-md"
-              >
+              <div key={monthKey} className="space-y-3">
+                {/* Month Header */}
+                <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 text-white shadow-md">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-6 w-6" />
+                      <div>
+                        <h2 className="text-lg font-bold">{monthKey}</h2>
+                        <p className="text-sm text-gray-300">
+                          {monthBudgets.length} {monthBudgets.length === 1 ? 'budget' : 'budgets'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-300">Total Budget</p>
+                      <p className="text-xl font-bold">${totalBudget.toFixed(0)}</p>
+                      <p className={`text-sm font-medium ${
+                        monthPercentage > 100 ? 'text-red-300' : monthPercentage > 75 ? 'text-yellow-300' : 'text-green-300'
+                      }`}>
+                        ${totalSpent.toFixed(0)} spent ({monthPercentage.toFixed(0)}%)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Month Budgets Grid */}
+                <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+                  {monthBudgets.map((budget: any) => {
+                    const percentage = (budget.spent / budget.amount) * 100;
+                    const remaining = budget.amount - budget.spent;
+                    const isOverBudget = percentage > 100;
+
+                    return (
+                      <div
+                        key={budget.id}
+                        className="rounded-lg bg-white p-4 shadow-sm transition-shadow hover:shadow-md border border-gray-200"
+                      >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -264,6 +322,10 @@ export default function BudgetsPage() {
                     </div>
                   </div>
                 )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

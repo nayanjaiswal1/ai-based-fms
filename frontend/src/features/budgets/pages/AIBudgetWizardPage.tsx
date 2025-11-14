@@ -22,6 +22,7 @@ interface FinancialInfo {
   debtPayments: number;
   regularExpenses: string[];
   additionalContext: string;
+  budgetMonth: string; // Format: YYYY-MM
 }
 
 interface GeneratedBudget {
@@ -61,12 +62,17 @@ export default function AIBudgetWizardPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
+
+  // Get current month in YYYY-MM format
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
   const [financialInfo, setFinancialInfo] = useState<FinancialInfo>({
     monthlyIncome: 0,
     savingsGoal: 0,
     debtPayments: 0,
     regularExpenses: [],
     additionalContext: '',
+    budgetMonth: currentMonth,
   });
   const [generatedBudgets, setGeneratedBudgets] = useState<BudgetResponse | null>(null);
   const [editedBudgets, setEditedBudgets] = useState<GeneratedBudget[]>([]);
@@ -89,17 +95,20 @@ export default function AIBudgetWizardPage() {
   // Mutation to save budgets
   const saveBudgetsMutation = useMutation({
     mutationFn: async (budgets: GeneratedBudget[]) => {
+      // Calculate start and end dates based on selected month
+      const [year, month] = financialInfo.budgetMonth.split('-').map(Number);
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0); // Last day of the month
+
       const promises = budgets.map((budget) =>
         budgetsApi.create({
-          name: `${budget.categoryName} Budget`,
+          name: `${budget.categoryName} - ${startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`,
           amount: budget.amount,
           period: 'monthly',
           type: 'category',
           categoryId: budget.categoryId,
-          startDate: new Date().toISOString().split('T')[0],
-          endDate: new Date(new Date().setMonth(new Date().getMonth() + 1))
-            .toISOString()
-            .split('T')[0],
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
           alertEnabled: true,
           alertThreshold: 80,
           aiGenerated: true,
@@ -226,6 +235,27 @@ export default function AIBudgetWizardPage() {
           </h2>
 
           <div className="space-y-3.5">
+            {/* Budget Month */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Budget Month <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="month"
+                value={financialInfo.budgetMonth}
+                onChange={(e) =>
+                  setFinancialInfo({
+                    ...financialInfo,
+                    budgetMonth: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Select the month for which you want to create budgets
+              </p>
+            </div>
+
             {/* Monthly Income */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -376,6 +406,22 @@ export default function AIBudgetWizardPage() {
       {/* Step 2: Review & Edit */}
       {step === 2 && generatedBudgets && (
         <div className="space-y-4">
+          {/* Month Banner */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow p-4 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm opacity-90">Creating budgets for</p>
+                <h2 className="text-xl font-bold">
+                  {new Date(financialInfo.budgetMonth + '-01').toLocaleDateString('en-US', {
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </h2>
+              </div>
+              <Calendar className="h-10 w-10 opacity-80" />
+            </div>
+          </div>
+
           {/* Summary Card */}
           <div className="bg-white rounded-lg shadow p-4 sm:p-5">
             <h2 className="text-lg font-semibold text-gray-900 mb-3">Budget Summary</h2>
