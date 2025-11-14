@@ -1,5 +1,5 @@
 import { accountsApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
 import { useFormProtection } from '@hooks/useFormProtection';
@@ -40,7 +40,7 @@ export default function AccountModal({ account, isOpen, onClose }: AccountModalP
   });
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
@@ -56,6 +56,6 @@ export default function AccountModal({ account, isOpen, onClose }: AccountModalP
         submitLabel={account ? 'Update Account' : 'Add Account'}
         onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

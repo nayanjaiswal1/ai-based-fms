@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { lendBorrowApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
 import { useFormProtection } from '@hooks/useFormProtection';
@@ -42,7 +42,7 @@ export default function LendBorrowModal({ record, isOpen, onClose }: LendBorrowM
   });
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
@@ -58,6 +58,6 @@ export default function LendBorrowModal({ record, isOpen, onClose }: LendBorrowM
         submitLabel={record ? 'Update Record' : 'Add Record'}
         onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

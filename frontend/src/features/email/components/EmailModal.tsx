@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { emailApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { getEmailFormConfig, EmailFormData } from '../config/emailFormConfig';
 
@@ -30,7 +30,7 @@ export default function EmailModal({ isOpen, onClose }: EmailModalProps) {
   };
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
@@ -44,6 +44,6 @@ export default function EmailModal({ isOpen, onClose }: EmailModalProps) {
         onCancel={onClose}
         submitLabel="Connect Account"
       />
-    </ModernModal>
+    </Modal>
   );
 }

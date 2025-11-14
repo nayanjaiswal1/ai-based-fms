@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { categoriesApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
 import { useFormProtection } from '@hooks/useFormProtection';
@@ -42,7 +42,7 @@ export default function CategoryModal({ category, isOpen, onClose }: CategoryMod
   });
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
@@ -58,6 +58,6 @@ export default function CategoryModal({ category, isOpen, onClose }: CategoryMod
         submitLabel={category ? 'Update Category' : 'Add Category'}
         onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

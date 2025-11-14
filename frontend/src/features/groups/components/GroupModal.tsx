@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { groupsApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useFormProtection } from '@hooks/useFormProtection';
 import { usePreferencesStore } from '@stores/preferencesStore';
@@ -61,7 +61,7 @@ export default function GroupModal({ group, isOpen, onClose, onSuccess }: GroupM
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
@@ -77,6 +77,6 @@ export default function GroupModal({ group, isOpen, onClose, onSuccess }: GroupM
         submitLabel={group ? 'Update Group' : 'Create Group'}
         onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

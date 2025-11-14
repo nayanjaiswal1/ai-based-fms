@@ -1,5 +1,5 @@
 import { remindersApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
 import { useFormProtection } from '@hooks/useFormProtection';
@@ -33,7 +33,7 @@ export default function ReminderModal({ reminder, isOpen, onClose }: ReminderMod
   });
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
@@ -49,6 +49,6 @@ export default function ReminderModal({ reminder, isOpen, onClose }: ReminderMod
         submitLabel={reminder ? 'Update Reminder' : 'Add Reminder'}
         onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

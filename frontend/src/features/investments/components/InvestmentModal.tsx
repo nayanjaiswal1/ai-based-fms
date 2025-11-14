@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { investmentsApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
 import { useFormProtection } from '@hooks/useFormProtection';
@@ -43,7 +43,7 @@ export default function InvestmentModal({ investment, isOpen, onClose }: Investm
   });
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
@@ -59,6 +59,6 @@ export default function InvestmentModal({ investment, isOpen, onClose }: Investm
         submitLabel={investment ? 'Update Investment' : 'Add Investment'}
         onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

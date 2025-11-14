@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { lendBorrowApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useFormProtection } from '@hooks/useFormProtection';
 import { getPaymentFormConfig, PaymentFormData } from '../config/paymentFormConfig';
@@ -40,7 +40,7 @@ export default function PaymentModal({ record, isOpen, onClose }: PaymentModalPr
   };
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
@@ -78,6 +78,6 @@ export default function PaymentModal({ record, isOpen, onClose }: PaymentModalPr
         submitLabel="Record Payment"
         onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

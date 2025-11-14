@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { accountsApi, categoriesApi, tagsApi, transactionsApi } from '@services/api';
-import { ModernModal } from '@components/ui/ModernModal';
+import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
 import { useFormProtection } from '@hooks/useFormProtection';
@@ -94,7 +94,7 @@ export default function TransactionModal({ transaction, isOpen, onClose }: Trans
   });
 
   return (
-    <ModernModal
+    <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={formConfig.title || ''}
@@ -110,6 +110,6 @@ export default function TransactionModal({ transaction, isOpen, onClose }: Trans
         submitLabel={transaction ? 'Update Transaction' : 'Add Transaction'}
         onDirtyChange={setIsDirty}
       />
-    </ModernModal>
+    </Modal>
   );
 }

@@ -36,7 +36,7 @@ export default function Disable2FAModal({ isOpen, onClose, onSuccess }: Disable2
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Disable Two-Factor Authentication" maxWidth="md">
+    <Modal isOpen={isOpen} onClose={onClose} title="Disable Two-Factor Authentication" size="md">
       <div className="space-y-6">
         {/* Warning Message */}
         <div className="rounded-md bg-amber-50 p-4">
