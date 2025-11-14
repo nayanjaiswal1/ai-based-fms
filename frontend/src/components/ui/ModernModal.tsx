@@ -18,6 +18,11 @@ interface ModernModalProps {
   footer?: ReactNode;
   closeOnOverlayClick?: boolean;
   fullScreenOnMobile?: boolean;
+  /**
+   * Callback to check before closing. Return false to prevent close.
+   * Use with useFormProtection hook for unsaved changes protection.
+   */
+  onBeforeClose?: () => boolean;
 }
 
 const sizeClasses = {
@@ -38,11 +43,13 @@ export function ModernModal({
   size = 'md',
   footer,
   closeOnOverlayClick = true,
+  onBeforeClose,
 }: ModernModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={`${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col`}
+        onBeforeClose={onBeforeClose}
         onPointerDownOutside={(e) => {
           if (!closeOnOverlayClick) {
             e.preventDefault();

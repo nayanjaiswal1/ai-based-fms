@@ -2,6 +2,7 @@ import { tagsApi } from '@services/api';
 import { ModernModal } from '@components/ui/ModernModal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
+import { useFormProtection } from '@hooks/useFormProtection';
 import { getTagFormConfig, TagFormData } from '../../tags/config/tagFormConfig';
 
 interface TagModalProps {
@@ -14,6 +15,11 @@ export default function TagModal({ tag, isOpen, onClose }: TagModalProps) {
   // Get form config
   const formConfig = getTagFormConfig(tag);
 
+  // Form protection to prevent accidental data loss
+  const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
+    confirmMessage: 'You have unsaved changes. Are you sure you want to close this form?',
+  });
+
   // Use entity form hook
   const { handleSubmit, isLoading } = useEntityForm<TagFormData>({
     api: {
@@ -22,7 +28,10 @@ export default function TagModal({ tag, isOpen, onClose }: TagModalProps) {
     },
     queryKey: ['tags'],
     entityId: tag?.id,
-    onSuccess: onClose,
+    onSuccess: () => {
+      reset(); // Clear dirty state on successful submit
+      onClose();
+    },
   });
 
   return (
@@ -32,6 +41,7 @@ export default function TagModal({ tag, isOpen, onClose }: TagModalProps) {
       title={formConfig.title || ''}
       description={formConfig.description}
       size="md"
+      onBeforeClose={checkBeforeClose}
     >
       <ConfigurableForm
         config={formConfig}
@@ -39,6 +49,7 @@ export default function TagModal({ tag, isOpen, onClose }: TagModalProps) {
         isLoading={isLoading}
         onCancel={onClose}
         submitLabel={tag ? 'Update Tag' : 'Create Tag'}
+        onDirtyChange={setIsDirty}
       />
     </ModernModal>
   );

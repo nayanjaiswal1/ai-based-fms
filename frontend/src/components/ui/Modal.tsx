@@ -12,6 +12,11 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /**
+   * Callback to check before closing. Return false to prevent close.
+   * Use with useFormProtection hook for unsaved changes protection.
+   */
+  onBeforeClose?: () => boolean;
 }
 
 const maxWidthClasses = {
@@ -22,10 +27,10 @@ const maxWidthClasses = {
   '2xl': 'max-w-2xl',
 };
 
-export default function Modal({ isOpen, onClose, title, children, maxWidth = 'lg' }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, children, maxWidth = 'lg', onBeforeClose }: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${maxWidthClasses[maxWidth]}`}>
+      <DialogContent className={`${maxWidthClasses[maxWidth]}`} onBeforeClose={onBeforeClose}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

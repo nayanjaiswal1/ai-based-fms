@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { groupsApi } from '@services/api';
 import { ModernModal } from '@components/ui/ModernModal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
+import { useFormProtection } from '@hooks/useFormProtection';
 import { getGroupFormConfig, GroupFormData } from '../config/groupFormConfig';
 
 interface GroupModalProps {
@@ -16,10 +17,16 @@ export default function GroupModal({ group, isOpen, onClose, onSuccess }: GroupM
   const formConfig = getGroupFormConfig(group);
   const isEditMode = !!group;
 
+  // Form protection to prevent accidental data loss
+  const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
+    confirmMessage: 'You have unsaved changes. Are you sure you want to close this form?',
+  });
+
   const createMutation = useMutation({
     mutationFn: groupsApi.create,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      reset(); // Clear dirty state on successful submit
       if (onSuccess && data?.data?.id) {
         onSuccess(data.data.id);
       } else {
@@ -32,6 +39,7 @@ export default function GroupModal({ group, isOpen, onClose, onSuccess }: GroupM
     mutationFn: (data: GroupFormData) => groupsApi.update(group.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      reset(); // Clear dirty state on successful submit
       onClose();
     },
   });
@@ -51,6 +59,7 @@ export default function GroupModal({ group, isOpen, onClose, onSuccess }: GroupM
       title={formConfig.title || ''}
       description={formConfig.description}
       size="lg"
+      onBeforeClose={checkBeforeClose}
     >
       <ConfigurableForm
         config={formConfig}
@@ -58,6 +67,7 @@ export default function GroupModal({ group, isOpen, onClose, onSuccess }: GroupM
         isLoading={isLoading}
         onCancel={onClose}
         submitLabel={group ? 'Update Group' : 'Create Group'}
+        onDirtyChange={setIsDirty}
       />
     </ModernModal>
   );

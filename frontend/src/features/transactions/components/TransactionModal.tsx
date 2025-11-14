@@ -3,6 +3,7 @@ import { accountsApi, categoriesApi, tagsApi, transactionsApi } from '@services/
 import { ModernModal } from '@components/ui/ModernModal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useEntityForm } from '@hooks/useEntityForm';
+import { useFormProtection } from '@hooks/useFormProtection';
 import { getTransactionFormConfig, TransactionFormData } from '../config/transactionFormConfig';
 
 interface TransactionModalProps {
@@ -13,6 +14,11 @@ interface TransactionModalProps {
 
 export default function TransactionModal({ transaction, isOpen, onClose }: TransactionModalProps) {
   const queryClient = useQueryClient();
+
+  // Form protection to prevent accidental data loss
+  const { setIsDirty, checkBeforeClose, reset } = useFormProtection({
+    confirmMessage: 'You have unsaved changes. Are you sure you want to close this form?',
+  });
 
   // Fetch dropdown data using hooks
   const { data: accounts } = useQuery({
@@ -81,7 +87,10 @@ export default function TransactionModal({ transaction, isOpen, onClose }: Trans
     },
     queryKey: ['transactions'],
     entityId: transaction?.id,
-    onSuccess: onClose,
+    onSuccess: () => {
+      reset(); // Clear dirty state on successful submit
+      onClose();
+    },
   });
 
   return (
@@ -91,6 +100,7 @@ export default function TransactionModal({ transaction, isOpen, onClose }: Trans
       title={formConfig.title || ''}
       description={formConfig.description}
       size="xl"
+      onBeforeClose={checkBeforeClose}
     >
       <ConfigurableForm
         config={formConfig}
@@ -98,6 +108,7 @@ export default function TransactionModal({ transaction, isOpen, onClose }: Trans
         isLoading={isLoading}
         onCancel={onClose}
         submitLabel={transaction ? 'Update Transaction' : 'Add Transaction'}
+        onDirtyChange={setIsDirty}
       />
     </ModernModal>
   );
