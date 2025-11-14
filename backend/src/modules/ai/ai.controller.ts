@@ -12,6 +12,7 @@ import {
   GenerateInsightsDto,
   NaturalLanguageQueryDto,
   SmartSuggestionsDto,
+  GenerateBudgetDto,
 } from './dto/ai.dto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
@@ -71,6 +72,14 @@ export class AiController {
   @ApiResponse({ status: 200, description: 'Returns AI-generated suggestions' })
   getSmartSuggestions(@CurrentUser('id') userId: string, @Query() dto: SmartSuggestionsDto) {
     return this.aiService.getSmartSuggestions(userId, dto.limit || 3);
+  }
+
+  @Post('generate-budget')
+  @ApiOperation({ summary: 'Generate AI-powered budget distribution with auto-tagging' })
+  @ApiResponse({ status: 200, description: 'Returns personalized budget plan with categories and tags' })
+  @ApiResponse({ status: 400, description: 'AI service unavailable or invalid input' })
+  generateBudget(@CurrentUser('id') userId: string, @Body() dto: GenerateBudgetDto) {
+    return this.aiService.generateBudget(userId, dto);
   }
 
   // NEW: Categorization Feedback Endpoints

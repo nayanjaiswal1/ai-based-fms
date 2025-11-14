@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { budgetsApi, categoriesApi } from '@services/api';
-import { Plus, Edit, Trash2, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle, TrendingUp, Calendar, Sparkles } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import BudgetModal from '../components/BudgetModal';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -64,7 +64,7 @@ export default function BudgetsPage() {
   // Fetch selected budget for edit mode
   const { data: selectedBudgetData } = useQuery({
     queryKey: ['budget', budgetId],
-    queryFn: () => budgetsApi.getById(budgetId!),
+    queryFn: () => budgetsApi.getOne(budgetId!),
     enabled: !!budgetId && modalMode === 'edit',
   });
 
@@ -212,12 +212,21 @@ export default function BudgetsPage() {
           <p className="mt-2 text-sm text-gray-500">
             Create your first budget to start tracking spending
           </p>
-          <button
-            onClick={() => navigate('/budgets/new')}
-            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Create Your First Budget
-          </button>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <button
+              onClick={() => navigate('/budgets/ai-wizard')}
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:from-purple-700 hover:to-blue-700 shadow-md hover:shadow-lg transition-all"
+            >
+              <Sparkles className="h-4 w-4" />
+              Try AI Budget Wizard
+            </button>
+            <button
+              onClick={() => navigate('/budgets/new')}
+              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Create Manually
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
