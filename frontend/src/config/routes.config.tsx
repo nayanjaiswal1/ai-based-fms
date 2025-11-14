@@ -24,6 +24,8 @@ const ImportPage = lazy(() => import('@features/import/pages/ImportPage'));
 const EmailPage = lazy(() => import('@features/email/pages/EmailPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/pages/NotificationsPage'));
 const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage'));
+const CategoryDetailPage = lazy(() => import('@features/settings/pages/CategoryDetailPage'));
+const TagDetailPage = lazy(() => import('@features/settings/pages/TagDetailPage'));
 const ActivityLogPage = lazy(() => import('@features/audit/pages/ActivityLogPage'));
 const JobsPage = lazy(() => import('@features/admin/pages/JobsPage'));
 const GoodbyePage = lazy(() => import('../pages/GoodbyePage'));
@@ -219,6 +221,14 @@ export const protectedRoutes: RouteObject[] = [
   {
     path: '/admin/jobs',
     element: <JobsPage />,
+  },
+  {
+    path: '/categories/:id',
+    element: <CategoryDetailPage />,
+  },
+  {
+    path: '/tags/:id',
+    element: <TagDetailPage />,
   },
   {
     path: '/settings',

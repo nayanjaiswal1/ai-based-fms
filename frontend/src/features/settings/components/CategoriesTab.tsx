@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { categoriesApi } from '@services/api';
 import { Plus, Edit, Trash2, ChevronRight } from 'lucide-react';
 import CategoryModal from './CategoryModal';
@@ -8,6 +9,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function CategoriesTab() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
@@ -47,8 +49,9 @@ export default function CategoriesTab() {
     return filtered.map((category: any) => (
       <div key={category.id}>
         <div
-          className="flex items-center justify-between py-4 px-4 hover:bg-accent/50 transition-colors"
+          className="flex items-center justify-between py-4 px-4 hover:bg-accent/50 transition-colors cursor-pointer group"
           style={{ paddingLeft: `${16 + level * 24}px` }}
+          onClick={() => navigate(`/categories/${category.id}`)}
         >
           <div className="flex items-center gap-3 flex-1">
             {level > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
@@ -64,16 +67,22 @@ export default function CategoriesTab() {
               </div>
             </div>
           </div>
-          <div className="flex gap-1 flex-shrink-0 ml-2">
+          <div className="flex gap-1 flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              onClick={() => handleEdit(category)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(category);
+              }}
               className="p-2 text-primary hover:bg-primary/10 rounded-md transition-colors"
               aria-label="Edit category"
             >
               <Edit className="h-4 w-4" />
             </button>
             <button
-              onClick={() => handleDelete(category.id, category.name)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(category.id, category.name);
+              }}
               className="p-2 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
               aria-label="Delete category"
             >

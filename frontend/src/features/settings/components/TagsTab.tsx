@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { tagsApi } from '@services/api';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import TagModal from './TagModal';
@@ -8,6 +9,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function TagsTab() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<any>(null);
@@ -76,20 +78,27 @@ export default function TagsTab() {
           {tags?.data?.map((tag: any) => (
             <div
               key={tag.id}
-              className="group relative flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-sm hover:shadow-md transition-all"
+              onClick={() => navigate(`/tags/${tag.id}`)}
+              className="group relative flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-sm hover:shadow-md transition-all cursor-pointer"
               style={{ backgroundColor: tag.color }}
             >
               <span className="truncate flex-1">{tag.name}</span>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => handleEdit(tag)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(tag);
+                  }}
                   className="rounded p-1.5 hover:bg-white hover:bg-opacity-20 transition-colors"
                   aria-label="Edit tag"
                 >
                   <Edit className="h-3.5 w-3.5" />
                 </button>
                 <button
-                  onClick={() => handleDelete(tag.id, tag.name)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(tag.id, tag.name);
+                  }}
                   className="rounded p-1.5 hover:bg-white hover:bg-opacity-20 transition-colors"
                   aria-label="Delete tag"
                 >
