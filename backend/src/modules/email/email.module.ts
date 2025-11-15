@@ -6,13 +6,13 @@ import { EmailController } from './email.controller';
 import { GmailOAuthService } from './gmail-oauth.service';
 import { EmailParserService } from './email-parser.service';
 import { EmailConnection, Transaction } from '@database/entities';
-import { AiModule } from '@modules/ai/ai.module';
+// import { AiModule } from '@modules/ai/ai.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([EmailConnection, Transaction]),
     ConfigModule,
-    AiModule,
+    // AiModule, // Temporarily disabled due to compilation errors
   ],
   controllers: [EmailController],
   providers: [EmailService, GmailOAuthService, EmailParserService],

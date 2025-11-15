@@ -23,17 +23,17 @@ import { AccountsModule } from '@modules/accounts/accounts.module';
 import { TransactionsModule } from '@modules/transactions/transactions.module';
 import { CategoriesModule } from '@modules/categories/categories.module';
 import { TagsModule } from '@modules/tags/tags.module';
-import { BudgetsModule } from '@modules/budgets/budgets.module';
+// import { BudgetsModule } from '@modules/budgets/budgets.module';
 import { GroupsModule } from '@modules/groups/groups.module';
-import { InvestmentsModule } from '@modules/investments/investments.module';
-import { LendBorrowModule } from '@modules/lend-borrow/lend-borrow.module';
+// import { InvestmentsModule } from '@modules/investments/investments.module';
+// import { LendBorrowModule } from '@modules/lend-borrow/lend-borrow.module';
 import { SharedExpensesModule } from '@modules/shared-expenses/shared-expenses.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
-import { AnalyticsModule } from '@modules/analytics/analytics.module';
-import { AiModule } from '@modules/ai/ai.module';
+// import { AnalyticsModule } from '@modules/analytics/analytics.module';
+// import { AiModule } from '@modules/ai/ai.module';
 import { ImportModule } from '@modules/import/import.module';
-// import { EmailModule } from '@modules/email/email.module';
-import { ChatModule } from '@modules/chat/chat.module';
+import { EmailModule } from '@modules/email/email.module';
+// import { ChatModule } from '@modules/chat/chat.module';
 import { AdminModule } from '@modules/admin/admin.module';
 import { SessionsModule } from '@modules/sessions/sessions.module';
 import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module';
@@ -94,18 +94,18 @@ import { DashboardPreferencesModule } from '@modules/dashboard-preferences/dashb
     TransactionsModule,
     CategoriesModule,
     TagsModule,
-    BudgetsModule,
+    // BudgetsModule,
     GroupsModule,
     SharedExpensesModule,
-    InvestmentsModule,
-    LendBorrowModule,
+    // InvestmentsModule,
+    // LendBorrowModule,
     NotificationsModule.forRoot(),
-    AnalyticsModule,
-    AiModule,
+    // AnalyticsModule,
+    // AiModule,
     // InsightsModule,
     ImportModule,
-    // EmailModule,
-    ChatModule,
+    EmailModule,
+    // ChatModule,
     AdminModule,
     SessionsModule,
     SubscriptionsModule,

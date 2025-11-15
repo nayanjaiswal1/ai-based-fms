@@ -14,7 +14,7 @@ export const databaseConfig = registerAs(
     database: process.env.DATABASE_NAME || 'fms_db',
     entities: [path.join(__dirname, '../database/entities/**/*.entity{.ts,.js}')],
     migrations: [path.join(__dirname, '../database/migrations/**/*{.ts,.js}')],
-    synchronize: process.env.NODE_ENV === 'development',
+    synchronize: false, // Disabled - use migrations instead
     logging: process.env.NODE_ENV === 'development',
     ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
     extra: {

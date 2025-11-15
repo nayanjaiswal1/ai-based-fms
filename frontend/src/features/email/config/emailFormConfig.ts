@@ -28,8 +28,8 @@ export type EmailFormData = z.infer<typeof emailSchema>;
 
 export function getEmailFormConfig(): FormConfig<EmailFormData> {
   return {
-    title: 'Connect Email Account',
-    description: 'Link your email account to track expenses from receipts',
+    title: 'Connect Email for Transaction Import',
+    description: 'Connect your email inbox to automatically scan and import transaction receipts',
     sections: [
       {
         fields: [
@@ -64,9 +64,10 @@ export function getEmailFormConfig(): FormConfig<EmailFormData> {
             label: 'Authentication Method',
             type: 'select',
             required: true,
+            description: 'OAuth allows secure access to your inbox without sharing your password',
             options: [
-              { value: 'oauth', label: 'OAuth (Recommended)' },
-              { value: 'basic', label: 'Password/App Password' },
+              { value: 'oauth', label: 'OAuth (Recommended - Secure)' },
+              { value: 'basic', label: 'App Password (Less Secure)' },
             ],
           },
         ],
