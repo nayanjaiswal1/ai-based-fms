@@ -1,5 +1,6 @@
 import { Calendar, Clock } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Bill {
   id: string;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function UpcomingBillsWidget({ bills = [], config }: Props) {
+  const { symbol } = useCurrency();
   const upcomingBills = bills
     .filter(bill => !bill.isPaid)
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
@@ -46,7 +48,7 @@ export function UpcomingBillsWidget({ bills = [], config }: Props) {
 
       <div className="mb-4 p-3 bg-blue-50 rounded-lg">
         <p className="text-xs text-gray-600">Total Due</p>
-        <p className="text-xl font-bold text-blue-600">${totalAmount.toFixed(2)}</p>
+        <p className="text-xl font-bold text-blue-600">{symbol()}{totalAmount.toFixed(2)}</p>
       </div>
 
       <div className="space-y-2">
@@ -63,7 +65,7 @@ export function UpcomingBillsWidget({ bills = [], config }: Props) {
               </div>
               <div className="text-right ml-2">
                 <p className="text-sm font-semibold text-gray-900">
-                  ${bill.amount.toFixed(2)}
+                  {symbol()}{bill.amount.toFixed(2)}
                 </p>
                 <p className={`text-xs ${getDueDateColor(bill.dueDate)}`}>
                   {daysUntil < 0 && 'Overdue'}

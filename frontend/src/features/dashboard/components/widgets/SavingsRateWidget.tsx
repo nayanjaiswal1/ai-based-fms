@@ -1,4 +1,5 @@
 import { PiggyBank } from 'lucide-react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Props {
   income?: number;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function SavingsRateWidget({ income = 0, expenses = 0, savings = 0, config }: Props) {
+  const { symbol } = useCurrency();
   const savingsRate = income > 0 ? ((savings / income) * 100) : 0;
   const targetRate = config?.targetRate || 20;
 
@@ -56,15 +58,15 @@ export function SavingsRateWidget({ income = 0, expenses = 0, savings = 0, confi
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-gray-600">Income</span>
-          <span className="font-semibold text-gray-900">${income.toFixed(2)}</span>
+          <span className="font-semibold text-gray-900">{symbol()}{income.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Expenses</span>
-          <span className="font-semibold text-gray-900">${expenses.toFixed(2)}</span>
+          <span className="font-semibold text-gray-900">{symbol()}{expenses.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Saved</span>
-          <span className="font-semibold text-green-600">${savings.toFixed(2)}</span>
+          <span className="font-semibold text-green-600">{symbol()}{savings.toFixed(2)}</span>
         </div>
         <div className="pt-2 border-t border-gray-200">
           <div className="flex justify-between">

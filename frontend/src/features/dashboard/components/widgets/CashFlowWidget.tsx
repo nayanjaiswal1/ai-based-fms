@@ -1,5 +1,6 @@
 import { ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface CashFlowData {
   month: string;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function CashFlowWidget({ data = [], config }: Props) {
+  const { symbol } = useCurrency();
   const latestMonth = data[data.length - 1];
   const netCashFlow = latestMonth?.net || 0;
   const isPositive = netCashFlow >= 0;
@@ -34,7 +36,7 @@ export function CashFlowWidget({ data = [], config }: Props) {
             <span className="text-xs text-gray-600">Income</span>
           </div>
           <p className="text-lg font-bold text-green-600">
-            ${latestMonth?.income?.toFixed(2) || '0.00'}
+            {symbol()}{latestMonth?.income?.toFixed(2) || '0.00'}
           </p>
         </div>
 
@@ -44,7 +46,7 @@ export function CashFlowWidget({ data = [], config }: Props) {
             <span className="text-xs text-gray-600">Expenses</span>
           </div>
           <p className="text-lg font-bold text-red-600">
-            ${latestMonth?.expenses?.toFixed(2) || '0.00'}
+            {symbol()}{latestMonth?.expenses?.toFixed(2) || '0.00'}
           </p>
         </div>
       </div>
@@ -52,7 +54,7 @@ export function CashFlowWidget({ data = [], config }: Props) {
       <div className="mb-3 p-3 bg-gray-50 rounded-lg">
         <p className="text-xs text-gray-600 mb-1">Net Cash Flow</p>
         <p className={`text-xl font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-          {isPositive ? '+' : ''}${netCashFlow.toFixed(2)}
+          {isPositive ? '+' : ''}{symbol()}{netCashFlow.toFixed(2)}
         </p>
       </div>
 
