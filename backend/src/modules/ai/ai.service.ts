@@ -382,12 +382,29 @@ If a field cannot be determined, use null.`;
       .slice(0, 5)
       .map(([name, amount]) => `${name}: $${amount.toFixed(2)}`);
 
-    const budgetStatus = budgets.map((b) => ({
-      name: b.name,
-      spent: b.spent,
-      budget: b.amount,
-      percentage: ((b.spent / b.amount) * 100).toFixed(1),
-    }));
+    // Calculate spent for each budget based on fetched transactions
+    const budgetStatus = budgets.map((b) => {
+      const budgetTransactions = transactions.filter((t) => {
+        if (t.type !== 'expense') return false;
+        if (t.date < b.startDate || t.date > b.endDate) return false;
+
+        if (b.type === 'category' && b.categoryId) {
+          return t.categoryId === b.categoryId;
+        } else if (b.type === 'overall') {
+          return true;
+        }
+        return false;
+      });
+
+      const spent = budgetTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+
+      return {
+        name: b.name,
+        spent,
+        budget: Number(b.amount),
+        percentage: ((spent / Number(b.amount)) * 100).toFixed(1),
+      };
+    });
 
     const prompt = `You are a personal financial advisor AI. Analyze the following financial data and provide 3-5 actionable insights and recommendations.
 

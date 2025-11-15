@@ -1,12 +1,12 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { OpenAI } from 'openai';
-import { Transaction, Category } from '@database/entities';
+import { Transaction, Category, TransactionType, TransactionSource } from '@database/entities';
 import { SendMessageDto, ProcessCommandDto } from './dto/chat.dto';
 
-interface ChatMessage {
+export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
@@ -83,12 +83,12 @@ For other queries, respond conversationally.`,
       // Get AI response
       const completion = await this.openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
-        messages: context.messages,
+        messages: context.messages as any, // OpenAI SDK type compatibility
         temperature: 0.7,
         max_tokens: 500,
       });
 
-      const aiResponse = completion.choices[0]?.message?.content?.trim();
+      const aiResponse = completion.choices[0]?.message?.content?.trim() || '';
 
       // Add AI response to context
       context.messages.push({
@@ -99,9 +99,11 @@ For other queries, respond conversationally.`,
       // Check if response contains action
       let action = null;
       try {
-        const jsonMatch = aiResponse.match(/\{[\s\S]*"action"[\s\S]*\}/);
-        if (jsonMatch) {
-          action = JSON.parse(jsonMatch[0]);
+        if (aiResponse) {
+          const jsonMatch = aiResponse.match(/\{[\s\S]*"action"[\s\S]*\}/);
+          if (jsonMatch) {
+            action = JSON.parse(jsonMatch[0]);
+          }
         }
       } catch (e) {
         // Not a JSON action, just regular text
@@ -186,10 +188,10 @@ For other queries, respond conversationally.`,
         ...data,
         userId,
         date: data.date || new Date().toISOString().split('T')[0],
-        source: 'chat',
+        source: TransactionSource.CHAT,
       });
 
-      const saved = await this.transactionRepository.save(transaction);
+      const saved = await this.transactionRepository.save(transaction) as unknown as Transaction;
 
       return {
         success: true,
@@ -209,11 +211,11 @@ For other queries, respond conversationally.`,
     // Simplified - would need to join with accounts
     const transactions = await this.transactionRepository.find({
       where: accountId ? { userId, accountId } : { userId },
-      select: ['amount', 'type'],
+      select: ['amount', 'type'] as any,
     });
 
     const balance = transactions.reduce((sum, t) => {
-      return t.type === 'income' ? sum + Number(t.amount) : sum - Number(t.amount);
+      return t.type === TransactionType.INCOME ? sum + Number(t.amount) : sum - Number(t.amount);
     }, 0);
 
     return {
@@ -233,8 +235,8 @@ For other queries, respond conversationally.`,
     const transactions = await this.transactionRepository.find({
       where: {
         userId,
-        type: 'expense',
-        date: Between(startDate, endDate),
+        type: TransactionType.EXPENSE,
+        date: Between(startDate, endDate) as any,
       },
     });
 
@@ -254,11 +256,4 @@ For other queries, respond conversationally.`,
       );
     }
   }
-}
-
-function Between(startDate: Date, endDate: Date) {
-  return {
-    _type: 'between',
-    _value: [startDate, endDate],
-  };
 }
