@@ -5,6 +5,7 @@ import { Plus, Trash2, Save, X } from 'lucide-react';
 import { transactionsApi } from '@services/api';
 import { InlineEditableCell } from './InlineEditableCell';
 import { toast } from 'react-hot-toast';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface InlineEditableTransactionTableProps {
   transactions: any[];
@@ -41,6 +42,7 @@ export function InlineEditableTransactionTable({
   loading,
 }: InlineEditableTransactionTableProps) {
   const queryClient = useQueryClient();
+  const { symbol } = useCurrency();
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newTransaction, setNewTransaction] = useState<NewTransaction>({
@@ -361,7 +363,7 @@ export function InlineEditableTransactionTable({
                       <span className={`text-sm font-semibold ${
                         transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {transaction.type === 'income' ? '+' : '-'}${Number(value).toFixed(2)}
+                        {transaction.type === 'income' ? '+' : '-'}{symbol()}{Number(value).toFixed(2)}
                       </span>
                     )}
                   />
