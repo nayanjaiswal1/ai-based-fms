@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { Tabs } from '@components/tabs';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { BarChart3, Lightbulb, FileText } from 'lucide-react';
+import { useUrlParams } from '@hooks/useUrlParams';
 import AnalyticsPage from './AnalyticsPage';
 import InsightsDashboardPage from '@features/insights/pages/InsightsDashboardPage';
 import ReportsPage from '@features/reports/pages/ReportsPage';
@@ -9,7 +9,8 @@ import ReportsPage from '@features/reports/pages/ReportsPage';
 type AnalyticsTab = 'analytics' | 'insights' | 'reports';
 
 export default function CombinedAnalyticsPage() {
-  const [activeTab, setActiveTab] = useState<AnalyticsTab>('analytics');
+  const { getParam, setParam } = useUrlParams();
+  const activeTab = (getParam('tab', 'analytics') as AnalyticsTab) || 'analytics';
 
   const tabs = [
     {
@@ -30,7 +31,7 @@ export default function CombinedAnalyticsPage() {
   ];
 
   const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId as AnalyticsTab);
+    setParam('tab', tabId);
   };
 
   return (

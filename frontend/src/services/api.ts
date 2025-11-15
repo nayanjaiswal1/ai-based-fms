@@ -402,4 +402,30 @@ export const insightsApi = {
   generate: (options?: any) => api.post('/insights/generate', options),
 };
 
+export const reportsApi = {
+  // Report CRUD operations
+  getReports: (query?: any) => api.get('/reports', { params: query }),
+  getReport: (id: string) => api.get(`/reports/${id}`),
+  createReport: (data: any) => api.post('/reports', data),
+  updateReport: (id: string, data: any) => api.put(`/reports/${id}`, data),
+  deleteReport: (id: string) => api.delete(`/reports/${id}`),
+  duplicateReport: (id: string) => api.post(`/reports/${id}/duplicate`),
+  toggleFavorite: (id: string) => api.post(`/reports/${id}/favorite`),
+
+  // Report generation
+  generateReport: (id: string, data: any) => api.post(`/reports/${id}/generate`, data),
+  previewReport: (id: string) => api.get(`/reports/${id}/preview`),
+
+  // Generated reports
+  getGeneratedReports: (reportId: string) => api.get(`/reports/${reportId}/generated`),
+  getGeneratedReport: (id: string) => api.get(`/reports/generated/${id}`),
+  downloadGeneratedReport: (id: string) => api.get(`/reports/generated/${id}/download`, { responseType: 'blob' }),
+  deleteGeneratedReport: (id: string) => api.delete(`/reports/generated/${id}`),
+
+  // Templates
+  getTemplates: () => api.get('/reports/templates'),
+  getTemplate: (type: string) => api.get(`/reports/templates/${type}`),
+  createFromTemplate: (type: string, name?: string) => api.post(`/reports/templates/${type}`, { name }),
+};
+
 export default api;

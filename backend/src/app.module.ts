@@ -40,10 +40,10 @@ import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module
 // import { GdprModule } from '@modules/gdpr/gdpr.module';
 // import { ExportModule } from '@modules/export/export.module';
 import { AuditModule } from '@modules/audit/audit.module';
-// import { InsightsModule } from '@modules/insights/insights.module';
+import { InsightsModule } from '@modules/insights/insights.module';
 // import { ReconciliationModule } from '@modules/reconciliation/reconciliation.module';
 import { DashboardPreferencesModule } from '@modules/dashboard-preferences/dashboard-preferences.module';
-// import { ReportsModule } from '@modules/reports/reports.module';
+import { ReportsModule } from '@modules/reports/reports.module';
 // import { JobMonitorModule } from '@modules/job-monitor/job-monitor.module';
 
 @Module({
@@ -102,7 +102,7 @@ import { DashboardPreferencesModule } from '@modules/dashboard-preferences/dashb
     NotificationsModule.forRoot(),
     AnalyticsModule,
     AiModule,
-    // InsightsModule,
+    InsightsModule,
     ImportModule,
     // EmailModule,
     ChatModule,
@@ -114,7 +114,7 @@ import { DashboardPreferencesModule } from '@modules/dashboard-preferences/dashb
     AuditModule,
     // ReconciliationModule,
     DashboardPreferencesModule,
-    // ReportsModule,
+    ReportsModule,
     // JobMonitorModule,
   ],
   providers: [

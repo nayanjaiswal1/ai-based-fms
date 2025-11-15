@@ -153,7 +153,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="space-y-6 p-6">
       {/* Page Header with Search and Buttons */}
       <PageHeader
         showSearch={true}
