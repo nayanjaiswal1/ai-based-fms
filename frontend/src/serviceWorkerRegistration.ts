@@ -59,18 +59,8 @@ function registerValidSW(swUrl: string, config?: Config) {
               // Show update notification
               if (config && config.onUpdate) {
                 config.onUpdate(registration);
-              } else {
-                // Default update notification
-                if (
-                  window.confirm(
-                    'New version available! Click OK to update.',
-                  )
-                ) {
-                  // Tell the service worker to skip waiting
-                  installingWorker.postMessage({ type: 'SKIP_WAITING' });
-                  window.location.reload();
-                }
               }
+              // Note: Default update notification removed - should be handled by onUpdate callback
             } else {
               console.log('Content is cached for offline use.');
 

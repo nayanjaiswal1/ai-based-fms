@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { groupsApi } from '@services/api';
 import {
@@ -22,9 +22,13 @@ import { toast } from 'react-hot-toast';
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [activeTab, setActiveTab] = useState<'expenses' | 'balances' | 'members'>('expenses');
+
+  // Determine base path for navigation
+  const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/groups' : '/groups';
 
   const { data: group, isLoading } = useQuery({
     queryKey: ['group', id],
@@ -72,7 +76,7 @@ export default function GroupDetailPage() {
       <div className="text-center py-12">
         <p className="text-muted-foreground">Group not found</p>
         <button
-          onClick={() => navigate('/groups')}
+          onClick={() => navigate(basePath)}
           className="mt-4 text-primary hover:underline"
         >
           Back to Groups
@@ -130,7 +134,7 @@ export default function GroupDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/groups')}
+            onClick={() => navigate(basePath)}
             className="p-2 hover:bg-accent rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />

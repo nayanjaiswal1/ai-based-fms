@@ -28,8 +28,8 @@ export default function LendBorrowPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Detect modal state from URL path
-  const isNewModal = location.pathname === '/lend-borrow/new';
-  const isEditModal = location.pathname.startsWith('/lend-borrow/edit/');
+  const isNewModal = location.pathname === '/lend-borrow/new' || location.pathname === '/shared-finance/lend-borrow/new';
+  const isEditModal = location.pathname.startsWith('/lend-borrow/edit/') || location.pathname.startsWith('/shared-finance/lend-borrow/edit/');
   const modalMode = isNewModal ? 'new' : isEditModal ? 'edit' : null;
   const recordId = id;
 
@@ -59,11 +59,13 @@ export default function LendBorrowPage() {
   });
 
   const handleEdit = (record: any) => {
-    navigate(`/lend-borrow/edit/${record.id}`);
+    const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/lend-borrow' : '/lend-borrow';
+    navigate(`${basePath}/edit/${record.id}`);
   };
 
   const handleCloseModal = () => {
-    navigate('/lend-borrow');
+    const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/lend-borrow' : '/lend-borrow';
+    navigate(basePath);
   };
 
   const handleDelete = async (id: string) => {
@@ -161,7 +163,10 @@ export default function LendBorrowPage() {
           {
             label: 'Add Record',
             icon: Plus,
-            onClick: () => navigate('/lend-borrow/new'),
+            onClick: () => {
+              const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/lend-borrow' : '/lend-borrow';
+              navigate(`${basePath}/new`);
+            },
             variant: 'primary' as const,
           },
         ]}

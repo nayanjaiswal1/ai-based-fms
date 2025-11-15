@@ -72,13 +72,6 @@ export const formatDate = (date: string | Date, format: 'short' | 'long' = 'shor
 };
 
 /**
- * Show confirmation dialog
- */
-export const confirm = (message: string): boolean => {
-  return window.confirm(message);
-};
-
-/**
  * Calculate percentage
  */
 export const calculatePercentage = (value: number, total: number): number => {

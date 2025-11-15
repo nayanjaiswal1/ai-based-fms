@@ -49,9 +49,8 @@ const navigationGroups = [
     label: 'Finance',
     defaultOpen: false,
     items: [
-      { name: 'Groups', href: '/groups', icon: Users, feature: FeatureFlag.GROUPS },
+      { name: 'Money & People', href: '/shared-finance/groups', icon: Users, feature: FeatureFlag.GROUPS },
       { name: 'Investments', href: '/investments', icon: TrendingUp, feature: FeatureFlag.INVESTMENTS },
-      { name: 'Lend/Borrow', href: '/lend-borrow', icon: HandCoins, feature: FeatureFlag.LEND_BORROW },
     ],
   },
   {

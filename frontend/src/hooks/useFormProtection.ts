@@ -15,7 +15,7 @@ export interface FormProtectionOptions {
 
   /**
    * Custom confirm function (e.g., from useConfirm hook)
-   * If not provided, will use default window.confirm (not recommended)
+   * IMPORTANT: Must be provided to show confirmation dialogs
    */
   onConfirm?: (message: string) => Promise<boolean>;
 }
@@ -51,8 +51,9 @@ export function useFormProtection(options: FormProtectionOptions = {}) {
       return await options.onConfirm(confirmMessageRef.current);
     }
 
-    // Fallback to window.confirm if no custom confirm provided
-    return window.confirm(confirmMessageRef.current);
+    // No confirm function provided - log warning and allow close
+    console.warn('useFormProtection: No onConfirm callback provided. Please use useConfirm hook.');
+    return true;
   }, [isDirty, options]);
 
   /**

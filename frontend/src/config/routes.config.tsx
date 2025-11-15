@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import { FeatureGate } from '@/components/feature-gate';
 import { FeatureFlag } from './features.config';
+import { RedirectWithParams } from '@/components/RedirectWithParams';
 
 // Lazy load pages
 const DashboardPage = lazy(() => import('@features/dashboard/pages/DashboardPage'));
@@ -21,6 +22,7 @@ const GroupDetailPage = lazy(() => import('@features/groups/pages/GroupDetailPag
 const SharedExpensesPage = lazy(() => import('@features/shared-expenses/pages/SharedExpensesPage'));
 const InvestmentsPage = lazy(() => import('@features/investments/pages/InvestmentsPage'));
 const LendBorrowPage = lazy(() => import('@features/lend-borrow/pages/LendBorrowPage'));
+const SharedFinancePage = lazy(() => import('@features/shared-finance/pages/SharedFinancePage'));
 const CombinedAnalyticsPage = lazy(() => import('@features/analytics/pages/CombinedAnalyticsPage'));
 const AIPage = lazy(() => import('@features/ai/pages/AIPage'));
 const ImportPage = lazy(() => import('@features/import/pages/ImportPage'));
@@ -106,7 +108,23 @@ export const protectedRoutes: RouteObject[] = [
     element: <AIBudgetWizardPage />,
   },
   {
-    path: '/groups',
+    path: '/shared-finance',
+    element: (
+      <FeatureGate feature={FeatureFlag.GROUPS}>
+        <SharedFinancePage />
+      </FeatureGate>
+    ),
+  },
+  {
+    path: '/shared-finance/groups',
+    element: (
+      <FeatureGate feature={FeatureFlag.GROUPS}>
+        <SharedFinancePage />
+      </FeatureGate>
+    ),
+  },
+  {
+    path: '/shared-finance/groups/new',
     element: (
       <FeatureGate feature={FeatureFlag.GROUPS}>
         <GroupsPage />
@@ -114,15 +132,7 @@ export const protectedRoutes: RouteObject[] = [
     ),
   },
   {
-    path: '/groups/new',
-    element: (
-      <FeatureGate feature={FeatureFlag.GROUPS}>
-        <GroupsPage />
-      </FeatureGate>
-    ),
-  },
-  {
-    path: '/groups/:id',
+    path: '/shared-finance/groups/:id',
     element: (
       <FeatureGate feature={FeatureFlag.GROUPS}>
         <GroupDetailPage />
@@ -130,10 +140,26 @@ export const protectedRoutes: RouteObject[] = [
     ),
   },
   {
-    path: '/groups/edit/:id',
+    path: '/shared-finance/lend-borrow',
     element: (
-      <FeatureGate feature={FeatureFlag.GROUPS}>
-        <GroupsPage />
+      <FeatureGate feature={FeatureFlag.LEND_BORROW}>
+        <SharedFinancePage />
+      </FeatureGate>
+    ),
+  },
+  {
+    path: '/shared-finance/lend-borrow/new',
+    element: (
+      <FeatureGate feature={FeatureFlag.LEND_BORROW}>
+        <LendBorrowPage />
+      </FeatureGate>
+    ),
+  },
+  {
+    path: '/shared-finance/lend-borrow/edit/:id',
+    element: (
+      <FeatureGate feature={FeatureFlag.LEND_BORROW}>
+        <LendBorrowPage />
       </FeatureGate>
     ),
   },
@@ -169,29 +195,30 @@ export const protectedRoutes: RouteObject[] = [
       </FeatureGate>
     ),
   },
+  // Backward compatibility redirects for old URLs
+  {
+    path: '/groups',
+    element: <Navigate to="/shared-finance/groups" replace />,
+  },
+  {
+    path: '/groups/new',
+    element: <Navigate to="/shared-finance/groups/new" replace />,
+  },
+  {
+    path: '/groups/:id',
+    element: <RedirectWithParams to="/shared-finance/groups/:id" />,
+  },
   {
     path: '/lend-borrow',
-    element: (
-      <FeatureGate feature={FeatureFlag.LEND_BORROW}>
-        <LendBorrowPage />
-      </FeatureGate>
-    ),
+    element: <Navigate to="/shared-finance/lend-borrow" replace />,
   },
   {
     path: '/lend-borrow/new',
-    element: (
-      <FeatureGate feature={FeatureFlag.LEND_BORROW}>
-        <LendBorrowPage />
-      </FeatureGate>
-    ),
+    element: <Navigate to="/shared-finance/lend-borrow/new" replace />,
   },
   {
     path: '/lend-borrow/edit/:id',
-    element: (
-      <FeatureGate feature={FeatureFlag.LEND_BORROW}>
-        <LendBorrowPage />
-      </FeatureGate>
-    ),
+    element: <RedirectWithParams to="/shared-finance/lend-borrow/edit/:id" />,
   },
   {
     path: '/analytics',

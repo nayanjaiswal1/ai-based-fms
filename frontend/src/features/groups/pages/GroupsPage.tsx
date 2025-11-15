@@ -13,7 +13,7 @@ export default function GroupsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Detect modal state from URL path
-  const isNewModal = location.pathname === '/groups/new';
+  const isNewModal = location.pathname === '/groups/new' || location.pathname === '/shared-finance/groups/new';
   const modalMode = isNewModal ? 'new' : null;
 
   const { data: allGroups, isLoading } = useQuery({
@@ -39,11 +39,15 @@ export default function GroupsPage() {
   }, [allGroups, searchTerm]);
 
   const handleGroupClick = (groupId: string) => {
-    navigate(`/groups/${groupId}`);
+    // Use new route structure
+    const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/groups' : '/groups';
+    navigate(`${basePath}/${groupId}`);
   };
 
   const handleCloseModal = () => {
-    navigate('/groups');
+    // Return to correct base path
+    const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/groups' : '/groups';
+    navigate(basePath);
   };
 
   return (
@@ -58,7 +62,10 @@ export default function GroupsPage() {
           {
             label: 'Create Group',
             icon: Plus,
-            onClick: () => navigate('/groups/new'),
+            onClick: () => {
+              const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/groups' : '/groups';
+              navigate(`${basePath}/new`);
+            },
             variant: 'primary' as const,
           },
         ]}
@@ -77,7 +84,10 @@ export default function GroupsPage() {
             Create a group to start sharing expenses with others
           </p>
           <button
-            onClick={() => navigate('/groups/new')}
+            onClick={() => {
+              const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/groups' : '/groups';
+              navigate(`${basePath}/new`);
+            }}
             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Create Your First Group
@@ -172,7 +182,8 @@ export default function GroupsPage() {
         isOpen={!!modalMode}
         onClose={handleCloseModal}
         onSuccess={(groupId) => {
-          navigate(`/groups/${groupId}`);
+          const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/groups' : '/groups';
+          navigate(`${basePath}/${groupId}`);
         }}
       />
     </div>

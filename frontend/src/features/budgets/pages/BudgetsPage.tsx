@@ -61,6 +61,45 @@ export default function BudgetsPage() {
     queryFn: categoriesApi.getAll,
   });
 
+  const { groupedBudgets, monthOrder } = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    const order: Record<string, number> = {};
+    const data = budgets?.data || [];
+
+    data.forEach((b: any) => {
+      let date: Date;
+      if (b.startDate) {
+        try {
+          date = parseISO(b.startDate);
+        } catch {
+          date = new Date();
+        }
+      } else if (b.createdAt) {
+        try {
+          date = parseISO(b.createdAt);
+        } catch {
+          date = new Date();
+        }
+      } else {
+        date = new Date();
+      }
+
+      const key = format(date, 'MMMM yyyy');
+      const ord = date.getFullYear() * 12 + date.getMonth();
+      if (!groups[key]) {
+        groups[key] = [];
+        order[key] = ord;
+      }
+      groups[key].push(b);
+    });
+
+    return { groupedBudgets: groups, monthOrder: order };
+  }, [budgets]);
+
+  const monthKeys = useMemo(() => {
+    return Object.keys(groupedBudgets).sort((a, b) => (monthOrder[b] - monthOrder[a]));
+  }, [groupedBudgets, monthOrder]);
+
   // Fetch selected budget for edit mode
   const { data: selectedBudgetData } = useQuery({
     queryKey: ['budget', budgetId],
@@ -232,9 +271,23 @@ export default function BudgetsPage() {
         <div className="space-y-6">
           {monthKeys.map((monthKey) => {
             const monthBudgets = groupedBudgets[monthKey];
-            const totalBudget = monthBudgets.reduce((sum: number, b: any) => sum + b.amount, 0);
-            const totalSpent = monthBudgets.reduce((sum: number, b: any) => sum + b.spent, 0);
-            const monthPercentage = (totalSpent / totalBudget) * 100;
+            const totalBudget = monthBudgets.reduce(
+              (sum: number, b: any) => {
+                const val = typeof b.amount === 'string' ? Number(b.amount.replace(/,/g, '')) : Number(b.amount);
+                return sum + (isFinite(val) ? val : 0);
+              },
+              0
+            );
+            const totalSpent = monthBudgets.reduce(
+              (sum: number, b: any) => {
+                const val = typeof b.spent === 'string' ? Number(b.spent.replace(/,/g, '')) : Number(b.spent);
+                return sum + (isFinite(val) ? val : 0);
+              },
+              0
+            );
+            const totalBudgetNum = typeof totalBudget === 'number' && !isNaN(totalBudget) ? totalBudget : 0;
+            const totalSpentNum = typeof totalSpent === 'number' && !isNaN(totalSpent) ? totalSpent : 0;
+            const monthPercentage = totalBudgetNum > 0 ? (totalSpentNum / totalBudgetNum) * 100 : 0;
 
             return (
               <div key={monthKey} className="space-y-3">
@@ -252,11 +305,11 @@ export default function BudgetsPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-300">Total Budget</p>
-                      <p className="text-xl font-bold">${totalBudget.toFixed(0)}</p>
+                      <p className="text-xl font-bold">${totalBudgetNum.toFixed(0)}</p>
                       <p className={`text-sm font-medium ${
                         monthPercentage > 100 ? 'text-red-300' : monthPercentage > 75 ? 'text-yellow-300' : 'text-green-300'
                       }`}>
-                        ${totalSpent.toFixed(0)} spent ({monthPercentage.toFixed(0)}%)
+                        ${totalSpentNum.toFixed(0)} spent ({monthPercentage.toFixed(0)}%)
                       </p>
                     </div>
                   </div>
@@ -265,8 +318,10 @@ export default function BudgetsPage() {
                 {/* Month Budgets Grid */}
                 <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
                   {monthBudgets.map((budget: any) => {
-                    const percentage = (budget.spent / budget.amount) * 100;
-                    const remaining = budget.amount - budget.spent;
+                    const amount = Number(budget.amount) || 0;
+                    const spent = Number(budget.spent) || 0;
+                    const percentage = amount > 0 ? (spent / amount) * 100 : 0;
+                    const remaining = amount - spent;
                     const isOverBudget = percentage > 100;
 
                     return (
@@ -318,7 +373,7 @@ export default function BudgetsPage() {
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-xs sm:text-sm">
                     <span className={`font-medium ${getBudgetProgressTextColor(percentage)}`}>
-                      ${budget.spent.toFixed(2)} / ${budget.amount.toFixed(2)}
+                      ${spent.toFixed(2)} / ${amount.toFixed(2)}
                     </span>
                     <span className={`font-semibold ${getBudgetProgressTextColor(percentage)}`}>
                       {percentage.toFixed(0)}%

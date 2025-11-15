@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { queryClient } from '@config/queryClient';
 import { register as registerServiceWorker } from './serviceWorkerRegistration';
+import { toast, Toaster } from 'react-hot-toast';
 import App from './App';
 import './styles/index.css';
 import './i18n/config';
@@ -28,11 +29,29 @@ registerServiceWorker({
   },
   onUpdate: (registration) => {
     console.log('New version available!');
-    // You can show a toast/notification here to inform users about the update
-    if (window.confirm('New version available! Reload to update?')) {
-      registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
-      window.location.reload();
-    }
+    // Show toast notification for app update
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-2">
+          <span className="font-semibold">New version available!</span>
+          <span className="text-sm text-gray-600">Click to reload and update the app.</span>
+          <button
+            onClick={() => {
+              registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+              window.location.reload();
+              toast.dismiss(t.id);
+            }}
+            className="mt-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Reload Now
+          </button>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        position: 'bottom-right',
+      }
+    );
   },
 });
 
@@ -49,6 +68,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           </QueryClientProvider>
         </ThemeProvider>
       </Suspense>
+      <Toaster />
     </ErrorBoundary>
   </React.StrictMode>,
 );

@@ -5,6 +5,8 @@ import { StatementUpload } from './StatementUpload';
 import { TransactionMatching } from './TransactionMatching';
 import { ReconciliationSummary } from './ReconciliationSummary';
 import { useReconciliation } from '../hooks/useReconciliation';
+import { useConfirm } from '@/hooks/useConfirm';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface ReconciliationWizardProps {
   accountId: string;
@@ -18,6 +20,7 @@ export const ReconciliationWizard: React.FC<ReconciliationWizardProps> = ({
   reconciliationId: initialReconciliationId,
 }) => {
   const navigate = useNavigate();
+  const { confirmState, confirm, closeConfirm } = useConfirm();
   const [currentStep, setCurrentStep] = useState(1);
   const [reconciliationId, setReconciliationId] = useState<string | undefined>(
     initialReconciliationId
@@ -137,14 +140,20 @@ export const ReconciliationWizard: React.FC<ReconciliationWizardProps> = ({
       return;
     }
 
-    if (window.confirm('Are you sure you want to cancel this reconciliation?')) {
-      try {
-        await cancelReconciliation(reconciliationId);
-        navigate('/accounts');
-      } catch (error) {
-        console.error('Failed to cancel reconciliation:', error);
-      }
-    }
+    confirm({
+      title: 'Cancel Reconciliation',
+      message: 'Are you sure you want to cancel this reconciliation? All progress will be lost.',
+      variant: 'danger',
+      confirmLabel: 'Cancel Reconciliation',
+      onConfirm: async () => {
+        try {
+          await cancelReconciliation(reconciliationId);
+          navigate('/accounts');
+        } catch (error) {
+          console.error('Failed to cancel reconciliation:', error);
+        }
+      },
+    });
   };
 
   return (
@@ -326,6 +335,9 @@ export const ReconciliationWizard: React.FC<ReconciliationWizardProps> = ({
           </div>
         )}
       </div>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog {...confirmState} onClose={closeConfirm} />
     </div>
   );
 };
