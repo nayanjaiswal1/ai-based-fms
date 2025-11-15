@@ -1,5 +1,6 @@
 import { Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Goal {
   id: string;
@@ -17,6 +18,7 @@ interface Props {
 
 export function GoalProgressWidget({ goals = [], config }: Props) {
   const navigate = useNavigate();
+  const { symbol } = useCurrency();
 
   const activeGoals = goals.slice(0, 3);
 
@@ -60,8 +62,8 @@ export function GoalProgressWidget({ goals = [], config }: Props) {
                 </div>
               </div>
               <div className="flex items-center justify-between text-xs text-gray-600">
-                <span>${goal.currentAmount.toFixed(2)}</span>
-                <span>of ${goal.targetAmount.toFixed(2)}</span>
+                <span>{symbol()}{goal.currentAmount.toFixed(2)}</span>
+                <span>of {symbol()}{goal.targetAmount.toFixed(2)}</span>
               </div>
             </div>
           );
