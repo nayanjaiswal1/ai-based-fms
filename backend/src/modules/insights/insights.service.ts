@@ -268,6 +268,13 @@ export class InsightsService {
       where: { userId, isActive: true },
     });
 
+    // Calculate spent amounts for all budgets upfront
+    const budgetSpentMap = new Map<string, number>();
+    for (const budget of budgets) {
+      const spent = await this.calculateBudgetSpent(budget, userId);
+      budgetSpentMap.set(budget.id, spent);
+    }
+
     const now = new Date();
 
     for (const budget of budgets) {
@@ -279,7 +286,9 @@ export class InsightsService {
       const daysElapsed = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const daysRemaining = totalDays - daysElapsed;
 
-      const percentageUsed = (Number(budget.spent) / Number(budget.amount)) * 100;
+      // Get spent amount from map
+      const spent = budgetSpentMap.get(budget.id) || 0;
+      const percentageUsed = (Number(spent) / Number(budget.amount)) * 100;
       const percentageTimeElapsed = (daysElapsed / totalDays) * 100;
 
       // Budget on track
@@ -301,7 +310,7 @@ export class InsightsService {
       }
       // Budget at risk
       else if (percentageUsed > percentageTimeElapsed + 10) {
-        const projectedSpending = (Number(budget.spent) / daysElapsed) * totalDays;
+        const projectedSpending = (Number(spent) / daysElapsed) * totalDays;
         const overspend = projectedSpending - Number(budget.amount);
 
         insights.push({
@@ -335,7 +344,7 @@ export class InsightsService {
     }
 
     // Check for consistent budget adherence
-    const budgetsOverLimit = budgets.filter((b) => Number(b.spent) > Number(b.amount)).length;
+    const budgetsOverLimit = budgets.filter((b) => Number(budgetSpentMap.get(b.id) || 0) > Number(b.amount)).length;
 
     if (budgets.length >= 3 && budgetsOverLimit === 0) {
       insights.push({
@@ -580,6 +589,13 @@ export class InsightsService {
 
     const savings = income - expenses;
 
+    // Calculate spent amounts for all budgets
+    const budgetSpentMap = new Map<string, number>();
+    for (const budget of budgets) {
+      const spent = await this.calculateBudgetSpent(budget, userId);
+      budgetSpentMap.set(budget.id, spent);
+    }
+
     // Calculate score components (each out of 25 points)
 
     // 1. Savings Rate (0-25 points)
@@ -589,7 +605,7 @@ export class InsightsService {
     // 2. Budget Adherence (0-25 points)
     let budgetAdherenceScore = 0;
     if (budgets.length > 0) {
-      const budgetsOnTrack = budgets.filter((b) => Number(b.spent) <= Number(b.amount)).length;
+      const budgetsOnTrack = budgets.filter((b) => Number(budgetSpentMap.get(b.id) || 0) <= Number(b.amount)).length;
       budgetAdherenceScore = (budgetsOnTrack / budgets.length) * 25;
     } else {
       budgetAdherenceScore = 15; // Default score if no budgets set
@@ -656,7 +672,7 @@ export class InsightsService {
           score: Math.round(budgetAdherenceScore),
           value:
             budgets.length > 0
-              ? (budgets.filter((b) => Number(b.spent) <= Number(b.amount)).length /
+              ? (budgets.filter((b) => Number(budgetSpentMap.get(b.id) || 0) <= Number(b.amount)).length /
                   budgets.length) *
                 100
               : 0,
@@ -1139,5 +1155,25 @@ Focus on unique insights not covered in existing analysis. Be specific and actio
     const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
     const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
     return Math.sqrt(variance);
+  }
+
+  /**
+   * Calculate spent amount for a budget from transactions
+   */
+  private async calculateBudgetSpent(budget: Budget, userId: string): Promise<number> {
+    const where: any = {
+      userId,
+      type: TransactionType.EXPENSE,
+      date: Between(budget.startDate, budget.endDate),
+      isDeleted: false,
+    };
+
+    // Add category filter if budget is category-specific
+    if (budget.categoryId) {
+      where.categoryId = budget.categoryId;
+    }
+
+    const transactions = await this.transactionRepository.find({ where });
+    return transactions.reduce((sum, t) => sum + Number(t.amount), 0);
   }
 }

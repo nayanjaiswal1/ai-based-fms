@@ -245,7 +245,7 @@ export class ReportsService {
         metadata: {
           summary: reportData.summary,
           recordCount: reportData.metadata.recordCount,
-        },
+        } as any,
         expiresAt,
       });
 
