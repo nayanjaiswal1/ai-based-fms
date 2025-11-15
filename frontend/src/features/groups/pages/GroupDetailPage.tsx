@@ -26,6 +26,10 @@ export default function GroupDetailPage() {
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [activeTab, setActiveTab] = useState<'expenses' | 'balances' | 'members'>('expenses');
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newExpense, setNewExpense] = useState({ description: '', amount: '', date: new Date().toISOString().split('T')[0], splitType: 'equal' });
 
   // Determine base path for navigation
   const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/groups' : '/groups';
@@ -59,6 +63,55 @@ export default function GroupDetailPage() {
       toast.error(error.response?.data?.message || 'Failed to settle up');
     },
   });
+
+  const addMemberMutation = useMutation({
+    mutationFn: (data: any) => groupsApi.addMember(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group', id] });
+      toast.success('Member added successfully');
+      setIsAddMemberModalOpen(false);
+      setNewMemberEmail('');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to add member');
+    },
+  });
+
+  const createExpenseMutation = useMutation({
+    mutationFn: (data: any) => groupsApi.createExpense(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group', id] });
+      queryClient.invalidateQueries({ queryKey: ['group-expenses', id] });
+      queryClient.invalidateQueries({ queryKey: ['group-balances', id] });
+      toast.success('Expense added successfully');
+      setIsAddExpenseModalOpen(false);
+      setNewExpense({ description: '', amount: '', date: new Date().toISOString().split('T')[0], splitType: 'equal' });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to add expense');
+    },
+  });
+
+  const handleAddMember = () => {
+    if (!newMemberEmail.trim()) {
+      toast.error('Please enter an email address');
+      return;
+    }
+    addMemberMutation.mutate({ email: newMemberEmail });
+  };
+
+  const handleAddExpense = () => {
+    if (!newExpense.description.trim() || !newExpense.amount) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    createExpenseMutation.mutate({
+      description: newExpense.description,
+      amount: parseFloat(newExpense.amount),
+      date: newExpense.date,
+      splitType: newExpense.splitType,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -154,10 +207,7 @@ export default function GroupDetailPage() {
             Settings
           </button>
           <button
-            onClick={() => {
-              // TODO: Add expense to group
-              toast('Add expense feature coming soon');
-            }}
+            onClick={() => setIsAddExpenseModalOpen(true)}
             className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <Plus className="h-4 w-4" />
@@ -308,30 +358,161 @@ export default function GroupDetailPage() {
         )}
 
         {activeTab === 'members' && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {groupData.members?.map((member: any) => (
-              <div
-                key={member.id}
-                className="rounded-lg border border-border bg-card p-4"
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsAddMemberModalOpen(true)}
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <User className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">{member.name}</p>
-                    <p className="text-sm text-muted-foreground capitalize">
-                      {member.role}
-                    </p>
+                <Plus className="h-4 w-4" />
+                Add Member
+              </button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {groupData.members?.map((member: any) => (
+                <div
+                  key={member.id}
+                  className="rounded-lg border border-border bg-card p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                      <User className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">{member.name}</p>
+                      <p className="text-sm text-muted-foreground capitalize">
+                        {member.role}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
+
+      {/* Add Member Modal */}
+      {isAddMemberModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-lg bg-white p-6 shadow-xl w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Member</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={newMemberEmail}
+                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                  placeholder="member@example.com"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setIsAddMemberModalOpen(false);
+                    setNewMemberEmail('');
+                  }}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddMember}
+                  disabled={addMemberMutation.isPending}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {addMemberMutation.isPending ? 'Adding...' : 'Add Member'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Expense Modal */}
+      {isAddExpenseModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-lg bg-white p-6 shadow-xl w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Expense</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <input
+                  type="text"
+                  value={newExpense.description}
+                  onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
+                  placeholder="Dinner, groceries, etc."
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Amount
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={newExpense.amount}
+                  onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+                  placeholder="0.00"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={newExpense.date}
+                  onChange={(e) => setNewExpense({ ...newExpense, date: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Split Type
+                </label>
+                <select
+                  value={newExpense.splitType}
+                  onChange={(e) => setNewExpense({ ...newExpense, splitType: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="equal">Equal Split</option>
+                  <option value="percentage">Percentage Split</option>
+                  <option value="custom">Custom Split</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setIsAddExpenseModalOpen(false);
+                    setNewExpense({ description: '', amount: '', date: new Date().toISOString().split('T')[0], splitType: 'equal' });
+                  }}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddExpense}
+                  disabled={createExpenseMutation.isPending}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {createExpenseMutation.isPending ? 'Adding...' : 'Add Expense'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Excel-style Status Bar */}
       <StatusBar items={statusBarItems} />

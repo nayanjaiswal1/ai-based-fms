@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { budgetsApi, categoriesApi } from '@services/api';
+import { budgetsApi, categoriesApi, exportApi } from '@services/api';
+
+type ExportFormat = 'csv' | 'excel' | 'pdf';
 import { Plus, Edit, Trash2, AlertTriangle, TrendingUp, Calendar, Sparkles } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import BudgetModal from '../components/BudgetModal';

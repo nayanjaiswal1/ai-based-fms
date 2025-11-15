@@ -7,6 +7,7 @@ import TransactionModal from '../components/TransactionModal';
 import TransactionHistoryModal from '../components/TransactionHistoryModal';
 import TransactionCards from '../components/TransactionCards';
 import FilterModal from '../components/FilterModal';
+import FileUploadModal from '../components/FileUploadModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@components/table';
@@ -30,6 +31,7 @@ export default function TransactionsPage() {
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [historyTransaction, setHistoryTransaction] = useState<any>(null);
+  const [isFileUploadModalOpen, setIsFileUploadModalOpen] = useState(false);
   const isMobile = useIsMobile();
   const { handleTransactionClick } = useTransactionNavigation();
 
@@ -387,6 +389,12 @@ export default function TransactionsPage() {
             className: 'hidden sm:flex',
           },
           {
+            label: 'Upload File',
+            icon: Upload,
+            onClick: () => setIsFileUploadModalOpen(true),
+            variant: 'outline' as const,
+          },
+          {
             label: 'Add Transaction',
             icon: Plus,
             onClick: () => navigate('/transactions/new'),
@@ -521,6 +529,11 @@ export default function TransactionsPage() {
       )}
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
+
+      <FileUploadModal
+        isOpen={isFileUploadModalOpen}
+        onClose={() => setIsFileUploadModalOpen(false)}
+      />
 
       {/* Excel-style Status Bar */}
       {transactionData.length > 0 && <StatusBar items={statusBarItems} />}
