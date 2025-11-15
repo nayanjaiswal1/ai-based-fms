@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface MatchCardProps {
   statementTransaction: {
@@ -23,6 +24,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   onUnmatch,
   availableTransactions = [],
 }) => {
+  const { symbol } = useCurrency();
+
   const getConfidenceBadge = (confidence?: string, score?: number) => {
     if (!confidence) return null;
 
@@ -58,7 +61,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
           <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-2">
             <div>
-              <span className="font-medium">Amount:</span> $
+              <span className="font-medium">Amount:</span> {symbol()}
               {Math.abs(statementTransaction.statementAmount).toFixed(2)}
             </div>
             <div>
@@ -82,7 +85,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               <div className="text-sm">
                 <div className="font-medium">{statementTransaction.transaction.description}</div>
                 <div className="text-gray-600">
-                  ${Math.abs(statementTransaction.transaction.amount).toFixed(2)} on{' '}
+                  {symbol()}{Math.abs(statementTransaction.transaction.amount).toFixed(2)} on{' '}
                   {new Date(statementTransaction.transaction.date).toLocaleDateString()}
                 </div>
               </div>
@@ -106,7 +109,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                 <option value="">Select a transaction...</option>
                 {availableTransactions.map((tx) => (
                   <option key={tx.id} value={tx.id}>
-                    {tx.description} - ${Math.abs(tx.amount).toFixed(2)} ({new Date(tx.date).toLocaleDateString()})
+                    {tx.description} - {symbol()}{Math.abs(tx.amount).toFixed(2)} ({new Date(tx.date).toLocaleDateString()})
                   </option>
                 ))}
               </select>

@@ -24,6 +24,7 @@ export default function GroupDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { symbol } = useCurrency();
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [activeTab, setActiveTab] = useState<'expenses' | 'balances' | 'members'>('expenses');
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
@@ -288,7 +289,7 @@ export default function GroupDetailPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-semibold text-foreground">
-                          ${Number(expense.amount).toFixed(2)}
+                          {symbol()}{Number(expense.amount).toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Split {expense.splitType}
@@ -326,13 +327,13 @@ export default function GroupDetailPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-semibold text-foreground">
-                          ${Number(balance.amount).toFixed(2)}
+                          {symbol()}{Number(balance.amount).toFixed(2)}
                         </p>
                         <button
                           onClick={() => {
                             confirm({
                               title: 'Settle Up',
-                              message: `Mark ${balance.from} as having paid ${balance.to} $${Number(balance.amount).toFixed(2)}?`,
+                              message: `Mark ${balance.from} as having paid ${balance.to} ${symbol()}${Number(balance.amount).toFixed(2)}?`,
                               variant: 'info',
                               confirmLabel: 'Settle',
                               onConfirm: async () => {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle, XCircle, Clock, Calendar, DollarSign, Eye } from 'lucide-react';
 import { useReconciliationHistory } from '../hooks/useReconciliation';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface ReconciliationHistoryProps {
   accountId: string;
@@ -11,6 +12,7 @@ export const ReconciliationHistory: React.FC<ReconciliationHistoryProps> = ({
   accountId,
   onViewDetails,
 }) => {
+  const { symbol } = useCurrency();
   const { history, isLoading } = useReconciliationHistory(accountId);
 
   const getStatusBadge = (status: string) => {
@@ -110,7 +112,7 @@ export const ReconciliationHistory: React.FC<ReconciliationHistoryProps> = ({
                     <div>
                       <div className="text-xs text-gray-500">Statement Balance</div>
                       <div className="font-medium text-gray-900">
-                        ${reconciliation.statementBalance.toFixed(2)}
+                        {symbol()}{reconciliation.statementBalance.toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -138,7 +140,7 @@ export const ReconciliationHistory: React.FC<ReconciliationHistoryProps> = ({
                                 : 'text-red-600'
                             }`}
                           >
-                            ${Math.abs(reconciliation.difference).toFixed(2)}
+                            {symbol()}{Math.abs(reconciliation.difference).toFixed(2)}
                           </div>
                         </div>
                       </div>
