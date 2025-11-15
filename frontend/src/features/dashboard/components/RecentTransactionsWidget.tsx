@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Transaction {
   id: string;
@@ -14,6 +15,7 @@ interface RecentTransactionsWidgetProps {
 }
 
 export function RecentTransactionsWidget({ transactions, onViewAll }: RecentTransactionsWidgetProps) {
+  const { symbol } = useCurrency();
   return (
     <div className="rounded-lg bg-white p-6 shadow">
       <div className="flex items-center justify-between">
@@ -40,7 +42,7 @@ export function RecentTransactionsWidget({ transactions, onViewAll }: RecentTran
                   transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                 }`}
               >
-                {transaction.type === 'income' ? '+' : '-'}${Number(transaction.amount).toFixed(2)}
+                {transaction.type === 'income' ? '+' : '-'}{symbol()}{Number(transaction.amount).toFixed(2)}
               </p>
             </div>
           ))

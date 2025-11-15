@@ -12,12 +12,15 @@ import {
 } from 'recharts';
 import { CategoryTrend } from '../types/insights.types';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface TrendChartsProps {
   trends: CategoryTrend[];
 }
 
 export const TrendCharts: React.FC<TrendChartsProps> = ({ trends }) => {
+  const { symbol } = useCurrency();
+
   // Prepare data for the chart
   const chartData = trends.slice(0, 8).map((trend) => ({
     category: trend.category.length > 15 ? trend.category.substring(0, 12) + '...' : trend.category,
@@ -72,7 +75,7 @@ export const TrendCharts: React.FC<TrendChartsProps> = ({ trends }) => {
                 borderRadius: '8px',
                 color: '#fff',
               }}
-              formatter={(value: number) => `$${value.toFixed(2)}`}
+              formatter={(value: number) => `${symbol()}${value.toFixed(2)}`}
             />
             <Legend />
             <Bar
@@ -129,7 +132,7 @@ export const TrendCharts: React.FC<TrendChartsProps> = ({ trends }) => {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-gray-900 dark:text-white">
-                    ${trend.currentMonth.toFixed(0)}
+                    {symbol()}{trend.currentMonth.toFixed(0)}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     this month
@@ -138,8 +141,8 @@ export const TrendCharts: React.FC<TrendChartsProps> = ({ trends }) => {
               </div>
 
               <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
-                <span>Last month: ${trend.lastMonth.toFixed(0)}</span>
-                <span>3mo avg: ${trend.threeMonthAvg.toFixed(0)}</span>
+                <span>Last month: {symbol()}{trend.lastMonth.toFixed(0)}</span>
+                <span>3mo avg: {symbol()}{trend.threeMonthAvg.toFixed(0)}</span>
               </div>
             </div>
           ))}

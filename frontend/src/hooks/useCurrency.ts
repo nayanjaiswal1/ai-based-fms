@@ -3,16 +3,16 @@ import {
   formatCurrency,
   formatCurrencyLocale,
   getCurrencySymbol,
-  getDefaultCurrency,
   type CurrencyCode,
 } from '@/utils/currency';
+import { usePreferencesStore } from '@/stores/preferencesStore';
 
 /**
- * Hook to format currency values
- * Can be extended later to use user's currency preference from store
+ * Hook to format currency values based on user preferences
  */
 export function useCurrency() {
-  const currency = useMemo(() => getDefaultCurrency(), []);
+  const { preferences } = usePreferencesStore();
+  const currency = (preferences.currency as CurrencyCode) || 'INR';
 
   const format = useMemo(
     () => (amount: number, customCurrency?: CurrencyCode, options?: any) => {

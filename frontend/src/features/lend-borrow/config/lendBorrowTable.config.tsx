@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { Edit, Trash2, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { ColumnConfig } from '@components/table';
+import { getCurrencySymbol } from '@/stores/preferencesStore';
 
 const getStatusIcon = (status: string) => {
   switch (status) {
@@ -66,7 +67,7 @@ export const getLendBorrowColumns = (
     label: 'Amount',
     sortable: true,
     render: (value) => (
-      <span className="text-sm text-gray-900">${Number(value).toFixed(2)}</span>
+      <span className="text-sm text-gray-900">{getCurrencySymbol()}{Number(value).toFixed(2)}</span>
     ),
     width: '120px',
   },
@@ -75,7 +76,7 @@ export const getLendBorrowColumns = (
     label: 'Paid',
     sortable: true,
     render: (value) => (
-      <span className="text-sm text-gray-900">${Number(value || 0).toFixed(2)}</span>
+      <span className="text-sm text-gray-900">{getCurrencySymbol()}{Number(value || 0).toFixed(2)}</span>
     ),
     width: '120px',
   },
@@ -84,7 +85,7 @@ export const getLendBorrowColumns = (
     label: 'Remaining',
     sortable: true,
     render: (value) => (
-      <span className="text-sm font-semibold text-gray-900">${Number(value || 0).toFixed(2)}</span>
+      <span className="text-sm font-semibold text-gray-900">{getCurrencySymbol()}{Number(value || 0).toFixed(2)}</span>
     ),
     width: '120px',
   },

@@ -20,7 +20,7 @@ export type LendBorrowFormData = z.infer<typeof lendBorrowSchema>;
 export function getLendBorrowFormConfig(record?: any): FormConfig<LendBorrowFormData> {
   return {
     title: record ? 'Edit Record' : 'Add Lend/Borrow Record',
-    description: 'Track money you lent or borrowed',
+    description: 'Quick entry - just the essentials',
     sections: [
       {
         fields: [
@@ -30,8 +30,8 @@ export function getLendBorrowFormConfig(record?: any): FormConfig<LendBorrowForm
             type: 'radio',
             required: true,
             options: [
-              { value: 'lend', label: 'Lend (I gave money)' },
-              { value: 'borrow', label: 'Borrow (I received money)' },
+              { value: 'lend', label: 'I Lent Money' },
+              { value: 'borrow', label: 'I Borrowed Money' },
             ],
           },
         ],
@@ -43,24 +43,7 @@ export function getLendBorrowFormConfig(record?: any): FormConfig<LendBorrowForm
             label: 'Person Name',
             type: 'text',
             required: true,
-            placeholder: 'e.g., John Doe',
-          },
-          {
-            name: 'personEmail',
-            label: 'Email',
-            type: 'email',
-            placeholder: 'person@example.com',
-          },
-        ],
-        columns: 2,
-      },
-      {
-        fields: [
-          {
-            name: 'personPhone',
-            label: 'Phone',
-            type: 'text',
-            placeholder: '+1234567890',
+            placeholder: 'Who did you lend to / borrow from?',
           },
           {
             name: 'amount',
@@ -79,25 +62,6 @@ export function getLendBorrowFormConfig(record?: any): FormConfig<LendBorrowForm
             label: 'Date',
             type: 'date',
             required: true,
-            description: 'Date when money was lent/borrowed',
-          },
-          {
-            name: 'dueDate',
-            label: 'Due Date',
-            type: 'date',
-            description: 'Optional: When the money should be returned',
-          },
-        ],
-        columns: 2,
-      },
-      {
-        fields: [
-          {
-            name: 'description',
-            label: 'Description',
-            type: 'textarea',
-            placeholder: 'Add any additional details or notes...',
-            rows: 3,
           },
         ],
       },

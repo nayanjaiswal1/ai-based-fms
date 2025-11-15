@@ -1,5 +1,6 @@
 import { PiggyBank, Clock, Zap, TrendingUp } from 'lucide-react';
 import { SavingsOpportunity } from '../types/insights.types';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface SavingsOpportunitiesProps {
   opportunities: SavingsOpportunity[];
@@ -8,6 +9,8 @@ interface SavingsOpportunitiesProps {
 export const SavingsOpportunities: React.FC<SavingsOpportunitiesProps> = ({
   opportunities,
 }) => {
+  const { symbol } = useCurrency();
+
   const getDifficultyBadge = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
@@ -115,7 +118,7 @@ export const SavingsOpportunities: React.FC<SavingsOpportunitiesProps> = ({
             Potential Monthly Savings
           </p>
           <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-            ${totalPotentialSavings.toFixed(2)}
+            {symbol()}{totalPotentialSavings.toFixed(2)}
           </p>
         </div>
       </div>
@@ -164,7 +167,7 @@ export const SavingsOpportunities: React.FC<SavingsOpportunitiesProps> = ({
                 <div className="ml-4 text-right">
                   <p className="text-sm text-gray-600 dark:text-gray-400">Save</p>
                   <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                    ${opportunity.potentialSavings.toFixed(2)}
+                    {symbol()}{opportunity.potentialSavings.toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">/month</p>
                 </div>
@@ -183,7 +186,7 @@ export const SavingsOpportunities: React.FC<SavingsOpportunitiesProps> = ({
                 Annual Savings Potential
               </p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                ${(totalPotentialSavings * 12).toFixed(2)}
+                {symbol()}{(totalPotentialSavings * 12).toFixed(2)}
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                 If you implement all recommendations

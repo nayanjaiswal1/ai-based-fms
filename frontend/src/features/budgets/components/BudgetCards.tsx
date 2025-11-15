@@ -1,5 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { Edit, Trash2, AlertTriangle, Calendar, TrendingUp } from 'lucide-react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Budget {
   id: string;
@@ -33,6 +34,8 @@ export default function BudgetCards({
   getBudgetProgressTextColor,
   formatBudgetPeriod,
 }: BudgetCardsProps) {
+  const { symbol } = useCurrency();
+
   if (budgets.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
@@ -104,7 +107,7 @@ export default function BudgetCards({
             <div className="mt-4">
               <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span className={`font-medium ${getBudgetProgressTextColor(percentage)}`}>
-                  ${budget.spent.toFixed(2)} / ${budget.amount.toFixed(2)}
+                  {symbol()}{budget.spent.toFixed(2)} / {symbol()}{budget.amount.toFixed(2)}
                 </span>
                 <span className={`font-semibold ${getBudgetProgressTextColor(percentage)}`}>
                   {percentage.toFixed(0)}%
@@ -123,11 +126,11 @@ export default function BudgetCards({
               {isOverBudget ? (
                 <div className="mt-2 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-red-600">
                   <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span>Over by ${Math.abs(remaining).toFixed(2)}</span>
+                  <span>Over by {symbol()}{Math.abs(remaining).toFixed(2)}</span>
                 </div>
               ) : (
                 <p className="mt-2 text-xs sm:text-sm text-gray-600">
-                  ${remaining.toFixed(2)} remaining
+                  {symbol()}{remaining.toFixed(2)} remaining
                 </p>
               )}
             </div>
@@ -139,7 +142,7 @@ export default function BudgetCards({
                   <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span className="truncate">
                     Alert at {budget.alertThreshold}% (
-                    ${((budget.amount * budget.alertThreshold) / 100).toFixed(2)})
+                    {symbol()}{((budget.amount * budget.alertThreshold) / 100).toFixed(2)})
                   </span>
                 </div>
               </div>

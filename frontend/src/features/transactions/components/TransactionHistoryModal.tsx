@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, History, Download } from 'lucide-react';
 import { auditApi } from '@services/api';
 import { AuditTrail } from '@components/audit/AuditTrail';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Transaction {
   id: string;
@@ -30,6 +31,7 @@ export const TransactionHistoryModal: React.FC<TransactionHistoryModalProps> = (
   isOpen,
   onClose,
 }) => {
+  const { symbol } = useCurrency();
   if (!isOpen) return null;
 
   return (
@@ -70,7 +72,7 @@ export const TransactionHistoryModal: React.FC<TransactionHistoryModalProps> = (
               <div>
                 <p className="text-xs text-gray-500 mb-1">Current Amount</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  ${transaction.amount.toFixed(2)}
+                  {symbol()}{transaction.amount.toFixed(2)}
                 </p>
               </div>
               <div>

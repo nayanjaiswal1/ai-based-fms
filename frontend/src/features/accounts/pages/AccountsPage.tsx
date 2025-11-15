@@ -22,6 +22,7 @@ export default function AccountsPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const { symbol } = useCurrency();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -397,7 +398,7 @@ export default function AccountsPage() {
 
                 <div className="mt-4">
                   <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                    ${Number(account.balance).toFixed(2)}
+                    {symbol()}{Number(account.balance).toFixed(2)}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">Current Balance</p>
                 </div>

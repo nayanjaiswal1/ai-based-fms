@@ -1,4 +1,5 @@
 import { ColumnConfig } from '@components/table';
+import { getCurrencySymbol } from '@/stores/preferencesStore';
 
 export const getImportPreviewColumns = (): ColumnConfig[] => [
   {
@@ -19,7 +20,7 @@ export const getImportPreviewColumns = (): ColumnConfig[] => [
     sortable: true,
     align: 'right',
     render: (value) => (
-      <span className="text-sm text-gray-900">${Number(value).toFixed(2)}</span>
+      <span className="text-sm text-gray-900">{getCurrencySymbol()}{Number(value).toFixed(2)}</span>
     ),
   },
   {

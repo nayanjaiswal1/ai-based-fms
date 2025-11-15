@@ -6,6 +6,7 @@ import {
   SharedExpenseDisplayData,
   DebtDirection,
 } from '../types';
+import { getCurrencySymbol } from '@/stores/preferencesStore';
 
 export function useSharedExpenses(filters?: {
   isOneToOne?: boolean;
@@ -59,9 +60,9 @@ function getDebtSubtitle(balance: number, expense: SharedExpenseGroup): string {
   const absBalance = Math.abs(balance);
 
   if (balance > 0) {
-    return `Owes you $${absBalance.toFixed(2)}`;
+    return `Owes you ${getCurrencySymbol()}${absBalance.toFixed(2)}`;
   } else if (balance < 0) {
-    return `You owe $${absBalance.toFixed(2)}`;
+    return `You owe ${getCurrencySymbol()}${absBalance.toFixed(2)}`;
   } else {
     return 'Settled';
   }

@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown, DollarSign, PieChart } from 'lucide-react';
 import { SummaryCardConfig } from '@components/cards';
+import { getCurrencySymbol } from '@/stores/preferencesStore';
 
 export interface AnalyticsSummaryData {
   totalIncome: number;
@@ -27,7 +28,7 @@ export const getAnalyticsSummaryCards = (
       valueColor: 'text-green-600',
       formatter: (value) => {
         const num = Number(value ?? 0);
-        return `$${num.toFixed(2)}`;
+        return `${getCurrencySymbol()}${num.toFixed(2)}`;
       },
     },
     {
@@ -40,7 +41,7 @@ export const getAnalyticsSummaryCards = (
       valueColor: 'text-red-600',
       formatter: (value) => {
         const num = Number(value ?? 0);
-        return `$${num.toFixed(2)}`;
+        return `${getCurrencySymbol()}${num.toFixed(2)}`;
       },
     },
     {
@@ -53,7 +54,7 @@ export const getAnalyticsSummaryCards = (
       valueColor: data.netSavings >= 0 ? 'text-blue-600' : 'text-yellow-600',
       formatter: (value) => {
         const num = Number(value ?? 0);
-        return `$${num.toFixed(2)}`;
+        return `${getCurrencySymbol()}${num.toFixed(2)}`;
       },
     },
     {

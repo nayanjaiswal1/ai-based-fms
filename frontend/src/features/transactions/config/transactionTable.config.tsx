@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { Edit, Trash2, GitMerge, Undo, History, ExternalLink } from 'lucide-react';
 import { ColumnConfig } from '@components/table';
+import { getCurrencySymbol } from '@/stores/preferencesStore';
 
 export const getTransactionColumns = (
   getCategoryName: (id: string) => string,
@@ -90,7 +91,7 @@ export const getTransactionColumns = (
           row.type === 'income' ? 'text-green-600' : 'text-red-600'
         }`}
       >
-        {row.type === 'income' ? '+' : '-'}${Number(value).toFixed(2)}
+        {row.type === 'income' ? '+' : '-'}{getCurrencySymbol()}{Number(value).toFixed(2)}
       </span>
     ),
     width: '120px',

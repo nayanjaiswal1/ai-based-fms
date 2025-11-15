@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import { Edit, Trash2, History, ArrowUpRight, ArrowDownRight, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 import { VirtualCardList } from '@/components/virtual';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Transaction {
   id: string;
@@ -43,6 +44,7 @@ export default function TransactionCards({
   onSelectOne,
 }: TransactionCardsProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { symbol } = useCurrency();
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -119,7 +121,7 @@ export default function TransactionCards({
                       isIncome ? 'text-green-600' : 'text-red-600'
                     }`}
                   >
-                    {isIncome ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
+                    {isIncome ? '+' : '-'}{symbol()}{Math.abs(transaction.amount).toFixed(2)}
                   </p>
                 </div>
               </div>

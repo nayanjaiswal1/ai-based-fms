@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle, AlertCircle, DollarSign, Calendar } from 'lucide-react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface ReconciliationSummaryProps {
   reconciliation: any;
@@ -12,6 +13,8 @@ export const ReconciliationSummary: React.FC<ReconciliationSummaryProps> = ({
   onComplete,
   onCancel,
 }) => {
+  const { symbol } = useCurrency();
+
   if (!reconciliation) return null;
 
   const difference = reconciliation.difference || 0;
@@ -47,7 +50,7 @@ export const ReconciliationSummary: React.FC<ReconciliationSummaryProps> = ({
             <p className={isBalanced ? 'text-green-700' : 'text-yellow-700'}>
               {isBalanced
                 ? 'Your account is perfectly reconciled. All transactions match the statement.'
-                : `There is a difference of $${Math.abs(difference).toFixed(2)} between your account and the statement.`}
+                : `There is a difference of ${symbol()}${Math.abs(difference).toFixed(2)} between your account and the statement.`}
             </p>
           </div>
         </div>
@@ -63,7 +66,7 @@ export const ReconciliationSummary: React.FC<ReconciliationSummaryProps> = ({
             <div>
               <p className="text-xs text-gray-600">Statement Balance</p>
               <p className="text-lg font-bold text-gray-900">
-                ${reconciliation.statementBalance.toFixed(2)}
+                {symbol()}{reconciliation.statementBalance.toFixed(2)}
               </p>
             </div>
           </div>
@@ -77,7 +80,7 @@ export const ReconciliationSummary: React.FC<ReconciliationSummaryProps> = ({
             <div>
               <p className="text-xs text-gray-600">Reconciled Balance</p>
               <p className="text-lg font-bold text-gray-900">
-                ${(reconciliation.reconciledBalance || 0).toFixed(2)}
+                {symbol()}{(reconciliation.reconciledBalance || 0).toFixed(2)}
               </p>
             </div>
           </div>
@@ -95,7 +98,7 @@ export const ReconciliationSummary: React.FC<ReconciliationSummaryProps> = ({
               <p
                 className={`text-lg font-bold ${isBalanced ? 'text-green-600' : 'text-red-600'}`}
               >
-                ${Math.abs(difference).toFixed(2)}
+                {symbol()}{Math.abs(difference).toFixed(2)}
               </p>
             </div>
           </div>

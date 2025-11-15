@@ -1,5 +1,6 @@
 import { Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Account {
   id: string;
@@ -16,6 +17,7 @@ interface Props {
 
 export function AccountBalancesWidget({ accounts = [], config }: Props) {
   const navigate = useNavigate();
+  const { symbol } = useCurrency();
 
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
 
@@ -30,7 +32,7 @@ export function AccountBalancesWidget({ accounts = [], config }: Props) {
 
       <div className="mb-4">
         <p className="text-sm text-gray-600">Total Balance</p>
-        <p className="text-2xl font-bold text-gray-900">${totalBalance.toFixed(2)}</p>
+        <p className="text-2xl font-bold text-gray-900">{symbol()}{totalBalance.toFixed(2)}</p>
       </div>
 
       <div className="space-y-2">
@@ -45,7 +47,7 @@ export function AccountBalancesWidget({ accounts = [], config }: Props) {
               <p className="text-xs text-gray-500">{account.type}</p>
             </div>
             <p className="text-sm font-semibold text-gray-900">
-              ${Number(account.balance).toFixed(2)}
+              {symbol()}{Number(account.balance).toFixed(2)}
             </p>
           </div>
         ))}

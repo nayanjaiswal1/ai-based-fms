@@ -1,5 +1,6 @@
 import { TrendingUp, AlertTriangle, Target, DollarSign } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface PredictionsProps {
   predictions: {
@@ -18,6 +19,8 @@ interface PredictionsProps {
 }
 
 export const Predictions: React.FC<PredictionsProps> = ({ predictions }) => {
+  const { symbol } = useCurrency();
+
   const chartData = predictions.byCategory.slice(0, 8).map((pred) => ({
     category: pred.category.length > 15 ? pred.category.substring(0, 12) + '...' : pred.category,
     predicted: pred.predictedAmount,
@@ -67,7 +70,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ predictions }) => {
                 Projected Expenses
               </p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                ${predictions.nextMonthExpenses.toFixed(2)}
+                {symbol()}{predictions.nextMonthExpenses.toFixed(2)}
               </p>
             </div>
             <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
@@ -83,7 +86,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ predictions }) => {
                 Expected Savings
               </p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                ${predictions.expectedSavings.toFixed(2)}
+                {symbol()}{predictions.expectedSavings.toFixed(2)}
               </p>
             </div>
             <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
@@ -135,7 +138,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ predictions }) => {
                 borderRadius: '8px',
                 color: '#fff',
               }}
-              formatter={(value: number) => `$${value.toFixed(2)}`}
+              formatter={(value: number) => `${symbol()}${value.toFixed(2)}`}
             />
             <Legend />
             <Bar
@@ -190,7 +193,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ predictions }) => {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-gray-900 dark:text-white">
-                      ${pred.predictedAmount.toFixed(2)}
+                      {symbol()}{pred.predictedAmount.toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       predicted
@@ -199,7 +202,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ predictions }) => {
                 </div>
 
                 <div className="text-xs text-gray-600 dark:text-gray-400">
-                  Historical avg: ${pred.historicalAverage.toFixed(2)}
+                  Historical avg: {symbol()}{pred.historicalAverage.toFixed(2)}
                 </div>
               </div>
             );

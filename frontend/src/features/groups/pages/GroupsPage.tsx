@@ -5,11 +5,13 @@ import { Plus, Users, DollarSign, TrendingUp, ArrowRight } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import GroupModal from '../components/GroupModal';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function GroupsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
+  const { symbol } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Detect modal state from URL path
@@ -135,7 +137,7 @@ export default function GroupsPage() {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">
-                        ${Number(totalExpenses).toFixed(2)}
+                        {symbol()}{Number(totalExpenses).toFixed(2)}
                       </p>
                       <p className="text-xs text-gray-500">Total expenses</p>
                     </div>
@@ -159,7 +161,7 @@ export default function GroupsPage() {
                           yourBalance >= 0 ? 'text-green-600' : 'text-red-600'
                         }`}
                       >
-                        {yourBalance >= 0 ? 'You are owed' : 'You owe'} $
+                        {yourBalance >= 0 ? 'You are owed' : 'You owe'} {symbol()}
                         {Math.abs(yourBalance).toFixed(2)}
                       </p>
                       <p className="text-xs text-gray-500">Your balance</p>
