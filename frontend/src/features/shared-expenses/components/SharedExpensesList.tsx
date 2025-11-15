@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useSharedExpenses } from '../hooks/useSharedExpenses';
 import { SharedExpenseDisplayData } from '../types';
+import { getCurrencySymbol } from '@/stores/preferencesStore';
 
 interface SharedExpensesListProps {
   filter?: 'all' | 'debts' | 'groups';
@@ -134,5 +135,5 @@ function formatBalance(expense: SharedExpenseDisplayData): string {
 
   if (balance === 0) return 'Settled';
 
-  return `$${absBalance.toFixed(2)}`;
+  return `${getCurrencySymbol()}${absBalance.toFixed(2)}`;
 }

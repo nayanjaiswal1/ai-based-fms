@@ -14,8 +14,10 @@ import { toast } from 'react-hot-toast';
 import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function BudgetsPage() {
+  const { symbol } = useCurrency();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -307,11 +309,11 @@ export default function BudgetsPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-300">Total Budget</p>
-                      <p className="text-xl font-bold">${totalBudgetNum.toFixed(0)}</p>
+                      <p className="text-xl font-bold">{symbol()}{totalBudgetNum.toFixed(0)}</p>
                       <p className={`text-sm font-medium ${
                         monthPercentage > 100 ? 'text-red-300' : monthPercentage > 75 ? 'text-yellow-300' : 'text-green-300'
                       }`}>
-                        ${totalSpentNum.toFixed(0)} spent ({monthPercentage.toFixed(0)}%)
+                        {symbol()}{totalSpentNum.toFixed(0)} spent ({monthPercentage.toFixed(0)}%)
                       </p>
                     </div>
                   </div>
@@ -375,7 +377,7 @@ export default function BudgetsPage() {
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-xs sm:text-sm">
                     <span className={`font-medium ${getBudgetProgressTextColor(percentage)}`}>
-                      ${spent.toFixed(2)} / ${amount.toFixed(2)}
+                      {symbol()}{spent.toFixed(2)} / {symbol()}{amount.toFixed(2)}
                     </span>
                     <span className={`font-semibold ${getBudgetProgressTextColor(percentage)}`}>
                       {percentage.toFixed(0)}%
@@ -390,11 +392,11 @@ export default function BudgetsPage() {
                   {isOverBudget ? (
                     <div className="mt-2 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-red-600">
                       <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-                      <span>Over by ${Math.abs(remaining).toFixed(2)}</span>
+                      <span>Over by {symbol()}{Math.abs(remaining).toFixed(2)}</span>
                     </div>
                   ) : (
                     <p className="mt-2 text-xs sm:text-sm text-gray-600">
-                      ${remaining.toFixed(2)} remaining
+                      {symbol()}{remaining.toFixed(2)} remaining
                     </p>
                   )}
                 </div>
@@ -406,7 +408,7 @@ export default function BudgetsPage() {
                       <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                       <span className="truncate">
                         Alert at {budget.alertThreshold}% (
-                        ${((budget.amount * budget.alertThreshold) / 100).toFixed(2)})
+                        {symbol()}{((budget.amount * budget.alertThreshold) / 100).toFixed(2)})
                       </span>
                     </div>
                   </div>

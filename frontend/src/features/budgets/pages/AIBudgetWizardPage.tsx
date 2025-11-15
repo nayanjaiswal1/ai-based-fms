@@ -14,6 +14,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useCurrency } from '@/hooks/useCurrency';
 
 // Types
 interface FinancialInfo {
@@ -59,6 +60,7 @@ interface BudgetResponse {
 }
 
 export default function AIBudgetWizardPage() {
+  const { symbol } = useCurrency();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
@@ -429,19 +431,19 @@ export default function AIBudgetWizardPage() {
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-xs text-gray-600 mb-1">Monthly Income</p>
                 <p className="text-lg sm:text-xl font-bold text-gray-900">
-                  ${generatedBudgets.income.toFixed(0)}
+                  {symbol()}{generatedBudgets.income.toFixed(0)}
                 </p>
               </div>
               <div className="bg-orange-50 rounded-lg p-3">
                 <p className="text-xs text-gray-600 mb-1">Fixed Expenses</p>
                 <p className="text-lg sm:text-xl font-bold text-orange-600">
-                  ${generatedBudgets.fixedExpenses.total.toFixed(0)}
+                  {symbol()}{generatedBudgets.fixedExpenses.total.toFixed(0)}
                 </p>
               </div>
               <div className="bg-blue-50 rounded-lg p-3">
                 <p className="text-xs text-gray-600 mb-1">Total Allocated</p>
                 <p className="text-lg sm:text-xl font-bold text-blue-600">
-                  ${totalAllocated.toFixed(0)}
+                  {symbol()}{totalAllocated.toFixed(0)}
                 </p>
               </div>
               <div className={`${remaining >= 0 ? 'bg-green-50' : 'bg-red-50'} rounded-lg p-3`}>
@@ -451,7 +453,7 @@ export default function AIBudgetWizardPage() {
                     remaining >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}
                 >
-                  ${remaining.toFixed(0)}
+                  {symbol()}{remaining.toFixed(0)}
                 </p>
               </div>
             </div>
