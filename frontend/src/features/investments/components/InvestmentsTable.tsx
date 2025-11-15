@@ -1,5 +1,6 @@
 import { Edit, Trash2, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface Investment {
   id: string;
@@ -26,6 +27,8 @@ export function InvestmentsTable({
   onDelete,
   onAddFirst,
 }: InvestmentsTableProps) {
+  const { symbol } = useCurrency();
+
   if (isLoading) {
     return (
       <div className="rounded-lg bg-white p-12 text-center shadow">
@@ -100,10 +103,10 @@ export function InvestmentsTable({
                   {investment.type}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                  ${Number(investment.investedAmount).toFixed(2)}
+                  {symbol()}{Number(investment.investedAmount).toFixed(2)}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                  ${Number(investment.currentValue).toFixed(2)}
+                  {symbol()}{Number(investment.currentValue).toFixed(2)}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4">
                   <span
@@ -111,7 +114,7 @@ export function InvestmentsTable({
                       roi >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}
                   >
-                    {roi >= 0 ? '+' : ''}${roi.toFixed(2)}
+                    {roi >= 0 ? '+' : ''}{symbol()}{roi.toFixed(2)}
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4">
