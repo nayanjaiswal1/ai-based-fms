@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run typeorm:*)"
+      "Bash(npm run typeorm:*)",
+      "Bash(del /Q \"src\\database\\migrations\\*.ts\")",
+      "Bash(npm run migration:generate:*)",
+      "Bash(npm run migration:run:*)",
+      "Bash(psql:*)",
+      "Bash(docker ps:*)"
     ],
     "deny": [],
     "ask": []

@@ -4,10 +4,11 @@
 -- Connect to your database first
 \c fms_db
 
--- Grant ownership of the investments table to your user
-ALTER TABLE investments OWNER TO fms_user;
+-- Grant schema permissions first
+GRANT ALL ON SCHEMA public TO fms_user;
+GRANT CREATE ON SCHEMA public TO fms_user;
 
--- Optionally, grant ownership of all tables to fms_user
+-- Grant ownership of all existing tables to fms_user
 DO $$
 DECLARE
     r RECORD;
