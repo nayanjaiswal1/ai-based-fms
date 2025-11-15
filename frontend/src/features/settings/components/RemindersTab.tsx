@@ -6,8 +6,10 @@ import { format } from 'date-fns';
 import ReminderModal from './ReminderModal';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function RemindersTab() {
+  const { symbol } = useCurrency();
   const queryClient = useQueryClient();
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -108,7 +110,7 @@ export default function RemindersTab() {
                     {reminder.amount && (
                       <>
                         <span>•</span>
-                        <span>${Number(reminder.amount).toFixed(2)}</span>
+                        <span>{symbol()}{Number(reminder.amount).toFixed(2)}</span>
                       </>
                     )}
                   </div>
