@@ -117,6 +117,7 @@ export const authApi = {
   register: (data: any) => api.post('/auth/register', data),
   login: (data: any) => api.post('/auth/login', data),
   login2FA: (data: any) => api.post('/auth/login/2fa', data),
+  googleOAuth: (code: string) => api.post('/auth/oauth/google', { code }),
   getCurrentUser: () => api.get('/auth/me'),
   refresh: () => api.post('/auth/refresh', {}),
   logout: () => api.post('/auth/logout', {}),
@@ -312,9 +313,11 @@ export const importApi = {
 
 export const emailApi = {
   getConnections: () => api.get('/email/connections'),
+  getGmailAuthUrl: () => api.get('/email/gmail/auth-url'),
+  handleGmailCallback: (code: string) => api.post('/email/gmail/callback', { code }),
   connect: (data: any) => api.post('/email/connect', data),
-  disconnect: (id: string) => api.post(`/email/disconnect/${id}`),
-  sync: (id: string) => api.post(`/email/sync/${id}`),
+  disconnect: (id: string) => api.delete(`/email/connections/${id}`),
+  sync: (connectionId: string) => api.post('/email/sync', { connectionId }),
   getPreferences: () => api.get('/email/preferences'),
   updatePreferences: (data: any) => api.patch('/email/preferences', data),
 };

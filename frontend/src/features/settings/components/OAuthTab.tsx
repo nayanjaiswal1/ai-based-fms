@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_CONFIG } from '@config/api.config';
-import { Chrome, CheckCircle, ExternalLink } from 'lucide-react';
+import { Chrome, CheckCircle, ExternalLink, Info } from 'lucide-react';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
@@ -101,10 +101,24 @@ export default function OAuthTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">OAuth Connections</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Connected Accounts</h3>
         <p className="mt-1 text-sm text-gray-600">
-          Connect your accounts for seamless authentication
+          Link external accounts to your profile (currently for future integrations)
         </p>
+      </div>
+
+      {/* Important Notice */}
+      <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
+        <div className="flex items-start gap-3">
+          <Info className="h-5 w-5 flex-shrink-0 text-blue-600 mt-0.5" />
+          <div>
+            <h4 className="font-semibold text-blue-900">This is NOT for signing in</h4>
+            <p className="mt-1 text-sm text-blue-800">
+              This section is for linking external accounts (like Google) to your <strong>existing</strong> FMS account
+              for future features like Gmail transaction import. To log in, use the regular email/password on the login page.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Google OAuth */}
@@ -117,7 +131,7 @@ export default function OAuthTab() {
             <div>
               <h4 className="font-semibold text-gray-900">Google Account</h4>
               <p className="mt-1 text-sm text-gray-600">
-                Sign in with your Google account for quick access
+                Link your Google account to this profile (for future features like Gmail import)
               </p>
 
               {!isGoogleConfigured && (
@@ -180,23 +194,23 @@ export default function OAuthTab() {
 
       {/* Benefits */}
       <div className="rounded-lg bg-white p-6 shadow">
-        <h4 className="font-semibold text-gray-900">Benefits of OAuth</h4>
+        <h4 className="font-semibold text-gray-900">Why Link Accounts?</h4>
         <ul className="mt-3 space-y-2 text-sm text-gray-600">
           <li className="flex items-start gap-2">
             <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-            <span>Secure authentication without storing passwords</span>
+            <span>Prepare for future Gmail transaction import feature</span>
           </li>
           <li className="flex items-start gap-2">
             <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-            <span>Quick sign-in with one click</span>
+            <span>Securely connect without sharing passwords</span>
           </li>
           <li className="flex items-start gap-2">
             <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-            <span>Automatic profile information sync</span>
+            <span>Easy to disconnect at any time</span>
           </li>
           <li className="flex items-start gap-2">
             <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-            <span>Enhanced security with 2FA support</span>
+            <span>One-time setup for future integrations</span>
           </li>
         </ul>
       </div>

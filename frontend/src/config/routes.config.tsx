@@ -27,6 +27,7 @@ const CombinedAnalyticsPage = lazy(() => import('@features/analytics/pages/Combi
 const AIPage = lazy(() => import('@features/ai/pages/AIPage'));
 const ImportPage = lazy(() => import('@features/import/pages/ImportPage'));
 const EmailPage = lazy(() => import('@features/email/pages/EmailPage'));
+const EmailCallbackPage = lazy(() => import('@features/email/pages/EmailCallbackPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/pages/NotificationsPage'));
 const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage'));
 const CategoryDetailPage = lazy(() => import('@features/settings/pages/CategoryDetailPage'));
@@ -41,7 +42,6 @@ const CategoriesTab = lazy(() => import('@features/settings/components/Categorie
 const TagsTab = lazy(() => import('@features/settings/components/TagsTab'));
 const RemindersTab = lazy(() => import('@features/settings/components/RemindersTab'));
 const ExportTab = lazy(() => import('@features/settings/components/ExportTab'));
-const OAuthTab = lazy(() => import('@features/settings/components/OAuthTab'));
 const SecurityTab = lazy(() => import('@features/settings/components/SecurityTab'));
 const SessionsTab = lazy(() => import('@features/settings/components/SessionsTab'));
 const PrivacyTab = lazy(() => import('@features/settings/components/PrivacyTab'));
@@ -253,6 +253,14 @@ export const protectedRoutes: RouteObject[] = [
     ),
   },
   {
+    path: '/email/callback',
+    element: (
+      <FeatureGate feature={FeatureFlag.EMAIL_INTEGRATION}>
+        <EmailCallbackPage />
+      </FeatureGate>
+    ),
+  },
+  {
     path: '/notifications',
     element: <NotificationsPage />,
   },
@@ -299,10 +307,6 @@ export const protectedRoutes: RouteObject[] = [
       {
         path: 'export',
         element: <ExportTab />,
-      },
-      {
-        path: 'oauth',
-        element: <OAuthTab />,
       },
       {
         path: 'security',

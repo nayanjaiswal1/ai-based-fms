@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AiService } from '@modules/ai/ai.service';
+// import { AiService } from '@modules/ai/ai.service';
 import * as cheerio from 'cheerio';
 
 export interface ParsedTransaction {
@@ -43,6 +43,8 @@ export interface ParsedOrder {
 export class EmailParserService {
   private readonly logger = new Logger(EmailParserService.name);
 
+  // constructor(private readonly aiService: AiService) {}
+
   // Common e-commerce senders
   private readonly knownMerchants = [
     { domain: 'amazon.com', name: 'Amazon' },
@@ -58,7 +60,7 @@ export class EmailParserService {
     { domain: 'spotify.com', name: 'Spotify' },
   ];
 
-  constructor(private readonly aiService: AiService) {}
+  // constructor(private readonly aiService: AiService) {}
 
   /**
    * Parse email for transactions using AI and pattern matching
@@ -458,9 +460,9 @@ Respond in JSON format:
 If no transaction found, return empty array.`;
 
     try {
-      const result = await this.aiService.chat([
-        { role: 'user', content: prompt },
-      ]);
+      // TODO: Implement AI extraction when AI service is available
+      // const result = await this.aiService.chat([{ role: 'user', content: prompt }]);
+      const result = '{"transactions":[]}'; // Placeholder
 
       const parsed = JSON.parse(result);
       const transactions: ParsedTransaction[] = [];

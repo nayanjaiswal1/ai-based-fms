@@ -75,14 +75,22 @@ export default function EmailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Page Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Email Transaction Import</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Connect your email to automatically import transactions from receipts and confirmations
+        </p>
+      </div>
+
+      {/* Connect Email Button */}
       <div className="flex justify-end">
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          Connect Email
+          Connect Email Account
         </button>
       </div>
 
@@ -91,12 +99,12 @@ export default function EmailPage() {
         <div className="flex gap-3">
           <Mail className="h-6 w-6 flex-shrink-0 text-blue-600" />
           <div>
-            <p className="font-medium text-blue-900">How it works</p>
+            <p className="font-medium text-blue-900">How Email Import Works</p>
             <ul className="mt-2 space-y-1 text-sm text-blue-800">
-              <li>• Connect your email account (Gmail, Outlook, Yahoo)</li>
-              <li>• We'll scan for transaction-related emails</li>
-              <li>• Transactions are automatically extracted and added</li>
-              <li>• You can sync manually or set up automatic syncing</li>
+              <li>• Connect your Gmail, Outlook, or Yahoo account</li>
+              <li>• We scan your inbox for transaction receipts and confirmations</li>
+              <li>• Purchases, bills, and payments are automatically extracted</li>
+              <li>• Sync manually or schedule automatic imports</li>
             </ul>
           </div>
         </div>

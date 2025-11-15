@@ -117,7 +117,7 @@ export class EmailService {
   async disconnectEmail(userId: string, connectionId: string) {
     const connection = await this.findConnection(userId, connectionId);
     connection.isActive = false;
-    connection.status = 'disconnected';
+    connection.status = ConnectionStatus.ERROR;
     return this.emailConnectionRepository.save(connection);
   }
 

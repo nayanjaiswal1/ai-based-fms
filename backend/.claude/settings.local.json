@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run typeorm:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
