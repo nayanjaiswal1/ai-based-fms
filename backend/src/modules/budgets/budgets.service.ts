@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
-import { Budget, Transaction, NotificationType } from '@database/entities';
+import { Budget, Transaction, NotificationType, TransactionType } from '@database/entities';
 import { CreateBudgetDto, UpdateBudgetDto } from './dto/budget.dto';
 import { NotificationsGateway } from '@modules/notifications/notifications.gateway';
 
@@ -26,9 +26,7 @@ export class BudgetsService {
 
     const saved = await this.budgetRepository.save(budget);
 
-    // Calculate initial spent amount
-    await this.updateSpentAmount(saved.id);
-
+    // Return budget with calculated spent amount
     return this.findOne(saved.id, userId);
   }
 
@@ -38,15 +36,21 @@ export class BudgetsService {
       where.isActive = isActive;
     }
 
-    return this.budgetRepository.find({
+    const budgets = await this.budgetRepository.find({
       where,
       order: { createdAt: 'DESC' },
     });
+
+    // Attach calculated spent amounts
+    return Promise.all(budgets.map(async (budget) => ({
+      ...budget,
+      spent: await this.calculateBudgetSpent(budget),
+    })));
   }
 
   async findActive(userId: string) {
     const now = new Date();
-    return this.budgetRepository.find({
+    const budgets = await this.budgetRepository.find({
       where: {
         userId,
         isActive: true,
@@ -55,6 +59,12 @@ export class BudgetsService {
       },
       order: { createdAt: 'DESC' },
     });
+
+    // Attach calculated spent amounts
+    return Promise.all(budgets.map(async (budget) => ({
+      ...budget,
+      spent: await this.calculateBudgetSpent(budget),
+    })));
   }
 
   async findOne(id: string, userId: string) {
@@ -66,7 +76,9 @@ export class BudgetsService {
       throw new NotFoundException('Budget not found');
     }
 
-    return budget;
+    // Attach calculated spent amount
+    const spent = await this.calculateBudgetSpent(budget);
+    return { ...budget, spent };
   }
 
   async update(id: string, userId: string, updateDto: UpdateBudgetDto) {
@@ -87,54 +99,16 @@ export class BudgetsService {
     });
 
     if (!budget) {
-      return;
+      return null;
     }
 
-    // Calculate spent amount based on budget type
-    const where: any = {
-      userId: budget.userId,
-      date: Between(budget.startDate, budget.endDate),
-      type: 'expense',
-      isDeleted: false,
-    };
-
-    if (budget.type === 'category' && budget.categoryId) {
-      where.categoryId = budget.categoryId;
-    } else if (budget.type === 'tag' && budget.tagId) {
-      // For tags, we need a more complex query
-      const transactions = await this.transactionRepository
-        .createQueryBuilder('transaction')
-        .innerJoin('transaction.tags', 'tag')
-        .where('transaction.userId = :userId', { userId: budget.userId })
-        .andWhere('transaction.date BETWEEN :startDate AND :endDate', {
-          startDate: budget.startDate,
-          endDate: budget.endDate,
-        })
-        .andWhere('transaction.type = :type', { type: 'expense' })
-        .andWhere('transaction.isDeleted = :isDeleted', { isDeleted: false })
-        .andWhere('tag.id = :tagId', { tagId: budget.tagId })
-        .getMany();
-
-      const spent = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
-      budget.spent = spent;
-      const savedBudget = await this.budgetRepository.save(budget);
-
-      // Check and send budget alert if threshold exceeded
-      await this.checkAndSendBudgetAlert(savedBudget);
-
-      return savedBudget;
-    }
-
-    const transactions = await this.transactionRepository.find({ where });
-    const spent = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
-
-    budget.spent = spent;
-    const savedBudget = await this.budgetRepository.save(budget);
+    // Calculate spent amount
+    const spent = await this.calculateBudgetSpent(budget);
 
     // Check and send budget alert if threshold exceeded
-    await this.checkAndSendBudgetAlert(savedBudget);
+    await this.checkAndSendBudgetAlert(budget, spent);
 
-    return savedBudget;
+    return { ...budget, spent };
   }
 
   async updateAllBudgetSpending(userId: string) {
@@ -150,12 +124,14 @@ export class BudgetsService {
 
     for (const budget of budgets) {
       if (budget.alertEnabled) {
-        const percentage = (budget.spent / budget.amount) * 100;
+        // budget.spent is already attached by findActive
+        const spent = (budget as any).spent || 0;
+        const percentage = (spent / budget.amount) * 100;
         if (percentage >= budget.alertThreshold) {
           alerts.push({
             budgetId: budget.id,
             budgetName: budget.name,
-            spent: budget.spent,
+            spent,
             amount: budget.amount,
             percentage: percentage.toFixed(1),
             exceeded: percentage >= 100,
@@ -207,12 +183,12 @@ export class BudgetsService {
    * 2. Spending percentage >= alert threshold
    * 3. This percentage hasn't been alerted before (to avoid spam)
    */
-  private async checkAndSendBudgetAlert(budget: Budget) {
+  private async checkAndSendBudgetAlert(budget: Budget, spent: number) {
     if (!budget.alertEnabled) {
       return;
     }
 
-    const percentage = (budget.spent / budget.amount) * 100;
+    const percentage = (spent / Number(budget.amount)) * 100;
     const roundedPercentage = Math.floor(percentage);
 
     // Check if we've already alerted at this percentage level
@@ -225,9 +201,9 @@ export class BudgetsService {
       // Determine alert message based on severity
       let message: string;
       if (percentage >= 100) {
-        message = `You have exceeded your "${budget.name}" budget by $${(budget.spent - budget.amount).toFixed(2)}`;
+        message = `You have exceeded your "${budget.name}" budget by $${(spent - Number(budget.amount)).toFixed(2)}`;
       } else {
-        message = `You have reached ${roundedPercentage}% of your "${budget.name}" budget ($${budget.spent.toFixed(2)} of $${budget.amount.toFixed(2)})`;
+        message = `You have reached ${roundedPercentage}% of your "${budget.name}" budget ($${spent.toFixed(2)} of $${Number(budget.amount).toFixed(2)})`;
       }
 
       // Send real-time notification (only if WebSocket is enabled)
@@ -240,13 +216,52 @@ export class BudgetsService {
             budgetId: budget.id,
             budgetName: budget.name,
             percentage: roundedPercentage,
-            spent: budget.spent,
-            amount: budget.amount,
+            spent: spent,
+            amount: Number(budget.amount),
             exceeded: percentage >= 100,
           },
           link: `/budgets/${budget.id}`,
         });
       }
     }
+  }
+
+  /**
+   * Calculate total spent amount for a budget based on its type and date range
+   */
+  private async calculateBudgetSpent(budget: Budget): Promise<number> {
+    const baseWhere: any = {
+      userId: budget.userId,
+      type: TransactionType.EXPENSE,
+      date: Between(budget.startDate, budget.endDate),
+      isDeleted: false,
+    };
+
+    let transactions: Transaction[] = [];
+
+    if (budget.type === 'category' && budget.categoryId) {
+      // Category-based budget
+      transactions = await this.transactionRepository.find({
+        where: { ...baseWhere, categoryId: budget.categoryId },
+      });
+    } else if (budget.type === 'tag' && budget.tagId) {
+      // Tag-based budget - need to join with tags
+      transactions = await this.transactionRepository
+        .createQueryBuilder('transaction')
+        .innerJoin('transaction.tags', 'tag', 'tag.id = :tagId', { tagId: budget.tagId })
+        .where('transaction.userId = :userId', { userId: budget.userId })
+        .andWhere('transaction.type = :type', { type: TransactionType.EXPENSE })
+        .andWhere('transaction.date BETWEEN :startDate AND :endDate', {
+          startDate: budget.startDate,
+          endDate: budget.endDate,
+        })
+        .andWhere('transaction.isDeleted = :isDeleted', { isDeleted: false })
+        .getMany();
+    } else {
+      // Overall budget - all expenses
+      transactions = await this.transactionRepository.find({ where: baseWhere });
+    }
+
+    return transactions.reduce((sum, t) => sum + Number(t.amount), 0);
   }
 }

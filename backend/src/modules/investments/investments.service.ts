@@ -12,14 +12,9 @@ export class InvestmentsService {
   ) {}
 
   async create(userId: string, createDto: CreateInvestmentDto) {
-    const returns = createDto.currentValue - createDto.investedAmount;
-    const returnPercentage = (returns / createDto.investedAmount) * 100;
-
     const investment = this.investmentRepository.create({
       ...createDto,
       userId,
-      returns,
-      returnPercentage: Number(returnPercentage.toFixed(2)),
     });
 
     return this.investmentRepository.save(investment);
@@ -61,15 +56,20 @@ export class InvestmentsService {
 
     Object.assign(investment, updateDto);
 
-    // Recalculate returns if current value changed
-    if (updateDto.currentValue) {
-      investment.returns = investment.currentValue - investment.investedAmount;
-      investment.returnPercentage = Number(
-        ((investment.returns / investment.investedAmount) * 100).toFixed(2),
-      );
-    }
-
     return this.investmentRepository.save(investment);
+  }
+
+  // Helper method to calculate returns for an investment
+  private calculateReturns(investment: Investment) {
+    const returns = Number(investment.currentValue) - Number(investment.investedAmount);
+    const returnPercentage =
+      Number(investment.investedAmount) > 0
+        ? (returns / Number(investment.investedAmount)) * 100
+        : 0;
+    return {
+      returns,
+      returnPercentage: Number(returnPercentage.toFixed(2)),
+    };
   }
 
   async remove(id: string, userId: string) {
@@ -88,6 +88,7 @@ export class InvestmentsService {
 
     // Group by type
     const byType = investments.reduce((acc, inv) => {
+      const calculated = this.calculateReturns(inv);
       if (!acc[inv.type]) {
         acc[inv.type] = {
           type: inv.type,
@@ -100,13 +101,19 @@ export class InvestmentsService {
       acc[inv.type].count++;
       acc[inv.type].invested += Number(inv.investedAmount);
       acc[inv.type].current += Number(inv.currentValue);
-      acc[inv.type].returns += Number(inv.returns);
+      acc[inv.type].returns += calculated.returns;
       return acc;
     }, {});
 
     const composition = Object.values(byType).map((item: any) => ({
       ...item,
       percentage: totalCurrent > 0 ? ((item.current / totalCurrent) * 100).toFixed(1) : 0,
+    }));
+
+    // Calculate returns for sorting
+    const investmentsWithReturns = investments.map(inv => ({
+      ...inv,
+      ...this.calculateReturns(inv)
     }));
 
     return {
@@ -118,7 +125,7 @@ export class InvestmentsService {
         overallReturnPercentage: Number(overallReturnPercentage.toFixed(2)),
       },
       composition,
-      topPerformers: investments
+      topPerformers: investmentsWithReturns
         .sort((a, b) => b.returnPercentage - a.returnPercentage)
         .slice(0, 5)
         .map((inv) => ({
@@ -134,29 +141,35 @@ export class InvestmentsService {
   async getPerformanceMetrics(userId: string) {
     const investments = await this.findAll(userId, true);
 
-    const profitable = investments.filter((inv) => inv.returns > 0);
-    const losing = investments.filter((inv) => inv.returns < 0);
+    // Calculate returns for all investments
+    const investmentsWithReturns = investments.map(inv => ({
+      ...inv,
+      ...this.calculateReturns(inv)
+    }));
+
+    const profitable = investmentsWithReturns.filter((inv) => inv.returns > 0);
+    const losing = investmentsWithReturns.filter((inv) => inv.returns < 0);
 
     return {
       profitableInvestments: profitable.length,
       losingInvestments: losing.length,
       averageReturn:
-        investments.length > 0
+        investmentsWithReturns.length > 0
           ? Number(
               (
-                investments.reduce((sum, inv) => sum + inv.returnPercentage, 0) / investments.length
+                investmentsWithReturns.reduce((sum, inv) => sum + inv.returnPercentage, 0) / investmentsWithReturns.length
               ).toFixed(2),
             )
           : 0,
       bestPerformer:
-        investments.length > 0
-          ? investments.reduce((best, inv) =>
+        investmentsWithReturns.length > 0
+          ? investmentsWithReturns.reduce((best, inv) =>
               inv.returnPercentage > best.returnPercentage ? inv : best,
             )
           : null,
       worstPerformer:
-        investments.length > 0
-          ? investments.reduce((worst, inv) =>
+        investmentsWithReturns.length > 0
+          ? investmentsWithReturns.reduce((worst, inv) =>
               inv.returnPercentage < worst.returnPercentage ? inv : worst,
             )
           : null,

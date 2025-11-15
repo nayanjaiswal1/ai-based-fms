@@ -66,17 +66,34 @@ export class AnalyticsService {
     const totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0);
 
     const totalBudgeted = budgets.reduce((sum, b) => sum + Number(b.amount), 0);
-    const totalSpent = budgets.reduce((sum, b) => sum + Number(b.spent), 0);
+
+    // Calculate spent for each budget based on transactions
+    const totalSpent = budgets.reduce((sum, b) => {
+      const budgetTransactions = transactions.filter((t) => {
+        if (t.type !== TransactionType.EXPENSE) return false;
+        if (t.date < b.startDate || t.date > b.endDate) return false;
+
+        if (b.type === 'category' && b.categoryId) {
+          return t.categoryId === b.categoryId;
+        } else if (b.type === 'overall') {
+          return true;
+        }
+        return false;
+      });
+
+      const spent = budgetTransactions.reduce((s, t) => s + Number(t.amount), 0);
+      return sum + spent;
+    }, 0);
 
     const totalInvested = investments.reduce((sum, i) => sum + Number(i.currentValue), 0);
 
     const lentAmount = lendBorrowRecords
       .filter((r) => r.type === 'lend' && r.status !== 'settled')
-      .reduce((sum, r) => sum + Number(r.amountRemaining), 0);
+      .reduce((sum, r) => sum + (Number(r.amount) - Number(r.amountPaid)), 0);
 
     const borrowedAmount = lendBorrowRecords
       .filter((r) => r.type === 'borrow' && r.status !== 'settled')
-      .reduce((sum, r) => sum + Number(r.amountRemaining), 0);
+      .reduce((sum, r) => sum + (Number(r.amount) - Number(r.amountPaid)), 0);
 
     return {
       period: {
@@ -570,7 +587,7 @@ export class AnalyticsService {
       where: { userId },
     });
     const lendBorrowBalance = lendBorrowRecords.reduce((sum, record) => {
-      const remaining = Number(record.amountRemaining || 0);
+      const remaining = Number(record.amount) - Number(record.amountPaid);
       return sum + (record.type === 'lend' ? remaining : -remaining);
     }, 0);
 

@@ -15,7 +15,6 @@ export class LendBorrowService {
     const lendBorrow = this.lendBorrowRepository.create({
       ...createDto,
       userId,
-      amountRemaining: createDto.amount,
     });
 
     return this.lendBorrowRepository.save(lendBorrow);
@@ -70,17 +69,18 @@ export class LendBorrowService {
       throw new BadRequestException('This record is already settled');
     }
 
-    if (paymentDto.amount > lendBorrow.amountRemaining) {
+    const amountRemaining = Number(lendBorrow.amount) - Number(lendBorrow.amountPaid);
+    if (paymentDto.amount > amountRemaining) {
       throw new BadRequestException('Payment amount exceeds remaining amount');
     }
 
-    lendBorrow.amountPaid += paymentDto.amount;
-    lendBorrow.amountRemaining -= paymentDto.amount;
+    lendBorrow.amountPaid = Number(lendBorrow.amountPaid) + Number(paymentDto.amount);
 
     // Update status
-    if (lendBorrow.amountRemaining <= 0) {
+    const newAmountRemaining = Number(lendBorrow.amount) - Number(lendBorrow.amountPaid);
+    if (newAmountRemaining <= 0) {
       lendBorrow.status = LendBorrowStatus.SETTLED;
-      lendBorrow.amountRemaining = 0;
+      lendBorrow.amountPaid = lendBorrow.amount;
     } else if (lendBorrow.amountPaid > 0) {
       lendBorrow.status = LendBorrowStatus.PARTIAL;
     }
@@ -92,7 +92,6 @@ export class LendBorrowService {
     const lendBorrow = await this.findOne(id, userId);
 
     lendBorrow.amountPaid = lendBorrow.amount;
-    lendBorrow.amountRemaining = 0;
     lendBorrow.status = LendBorrowStatus.SETTLED;
 
     return this.lendBorrowRepository.save(lendBorrow);
@@ -107,12 +106,12 @@ export class LendBorrowService {
     const totalLent = lentRecords.reduce((sum, r) => sum + Number(r.amount), 0);
     const totalLentOutstanding = lentRecords
       .filter((r) => r.status !== LendBorrowStatus.SETTLED)
-      .reduce((sum, r) => sum + Number(r.amountRemaining), 0);
+      .reduce((sum, r) => sum + (Number(r.amount) - Number(r.amountPaid)), 0);
 
     const totalBorrowed = borrowedRecords.reduce((sum, r) => sum + Number(r.amount), 0);
     const totalBorrowedOutstanding = borrowedRecords
       .filter((r) => r.status !== LendBorrowStatus.SETTLED)
-      .reduce((sum, r) => sum + Number(r.amountRemaining), 0);
+      .reduce((sum, r) => sum + (Number(r.amount) - Number(r.amountPaid)), 0);
 
     return {
       lending: {
@@ -149,7 +148,7 @@ export class LendBorrowService {
       id: record.id,
       type: record.type,
       personName: record.personName,
-      amount: record.amountRemaining,
+      amount: Number(record.amount) - Number(record.amountPaid),
       dueDate: record.dueDate,
       description: record.description,
       daysUntilDue: Math.ceil(
@@ -173,7 +172,7 @@ export class LendBorrowService {
       id: record.id,
       type: record.type,
       personName: record.personName,
-      amount: record.amountRemaining,
+      amount: Number(record.amount) - Number(record.amountPaid),
       dueDate: record.dueDate,
       description: record.description,
       daysOverdue: Math.ceil(

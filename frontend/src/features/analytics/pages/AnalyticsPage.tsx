@@ -107,20 +107,20 @@ export default function AnalyticsPage() {
   const summaryCards = getAnalyticsSummaryCards(overviewData);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Date Range Selector */}
-      <div className="rounded-lg bg-white p-4 shadow">
+      <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
         <div className="flex flex-wrap items-center gap-3">
-          <Calendar className="h-5 w-5 text-gray-400" />
+          <Calendar className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           <div className="flex flex-wrap gap-2">
             {['last7days', 'last30days', 'thisMonth', 'lastMonth', 'thisYear'].map((preset) => (
               <button
                 key={preset}
                 onClick={() => handleDatePreset(preset)}
-                className={`rounded-lg px-3 py-1 text-sm ${
+                className={`rounded-lg px-3 py-1 text-sm transition-colors ${
                   dateRange === preset
                     ? 'bg-blue-600 text-white'
-                    : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                    : 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                 }`}
               >
                 {preset === 'last7days' && 'Last 7 days'}
@@ -136,14 +136,14 @@ export default function AnalyticsPage() {
               type="date"
               value={startDate}
               onChange={(e) => handleStartDateChange(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-1 text-sm"
+              className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-1 text-sm"
             />
-            <span className="flex items-center text-gray-500">to</span>
+            <span className="flex items-center text-gray-500 dark:text-gray-400">to</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => handleEndDateChange(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-1 text-sm"
+              className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-1 text-sm"
             />
           </div>
         </div>
@@ -175,18 +175,18 @@ export default function AnalyticsPage() {
       )}
 
       {/* Category Breakdown */}
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold text-gray-900">Spending by Category</h2>
+      <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Spending by Category</h2>
         <div className="mt-4 space-y-4">
           {categoryBreakdown?.data?.expenses?.map((category: any) => (
             <div key={category.categoryId}>
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-gray-900">{category.categoryName}</span>
-                <span className="text-gray-600">
+                <span className="font-medium text-gray-900 dark:text-white">{category.categoryName}</span>
+                <span className="text-gray-600 dark:text-gray-400">
                   ${(category.amount ?? 0).toFixed(2)} ({(category.percentage ?? 0).toFixed(1)}%)
                 </span>
               </div>
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                 <div
                   className="h-full bg-blue-600"
                   style={{ width: `${Math.min(category.percentage ?? 0, 100)}%` }}
@@ -196,33 +196,33 @@ export default function AnalyticsPage() {
           ))}
           {(!categoryBreakdown?.data?.expenses ||
             categoryBreakdown.data.expenses.length === 0) && (
-            <p className="text-center text-gray-500">No expense data for this period</p>
+            <p className="text-center text-gray-500 dark:text-gray-400">No expense data for this period</p>
           )}
         </div>
       </div>
 
       {/* Monthly Trends */}
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold text-gray-900">Monthly Trends</h2>
+      <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Monthly Trends</h2>
         <div className="mt-4">
           {trends?.data && trends.data.length > 0 ? (
             <div className="space-y-3">
               {trends.data.map((month: any) => (
                 <div
                   key={month.month}
-                  className="flex items-center justify-between border-b pb-3"
+                  className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3"
                 >
-                  <span className="text-sm font-medium text-gray-900">{month.month}</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{month.month}</span>
                   <div className="flex gap-4 text-sm">
-                    <span className="text-green-600">
+                    <span className="text-green-600 dark:text-green-400">
                       Income: ${(month.income ?? 0).toFixed(2)}
                     </span>
-                    <span className="text-red-600">
+                    <span className="text-red-600 dark:text-red-400">
                       Expenses: ${(month.expense ?? 0).toFixed(2)}
                     </span>
                     <span
                       className={`font-semibold ${
-                        (month.savings ?? 0) >= 0 ? 'text-blue-600' : 'text-yellow-600'
+                        (month.savings ?? 0) >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-yellow-600 dark:text-yellow-400'
                       }`}
                     >
                       Savings: ${(month.savings ?? 0).toFixed(2)}
@@ -232,25 +232,25 @@ export default function AnalyticsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500">No trend data available</p>
+            <p className="text-center text-gray-500 dark:text-gray-400">No trend data available</p>
           )}
         </div>
       </div>
 
       {/* Transaction Stats */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h3 className="text-lg font-semibold text-gray-900">Transaction Summary</h3>
+        <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Transaction Summary</h3>
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Total Transactions</span>
-              <span className="text-lg font-semibold text-gray-900">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Total Transactions</span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
                 {overviewData.transactionCount}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Average Transaction</span>
-              <span className="text-lg font-semibold text-gray-900">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Average Transaction</span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
                 $
                 {overviewData.transactionCount > 0
                   ? (
@@ -263,13 +263,13 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h3 className="text-lg font-semibold text-gray-900">Income vs Expenses</h3>
+        <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Income vs Expenses</h3>
           <div className="mt-4">
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <p className="text-sm text-gray-600">Income</p>
-                <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Income</p>
+                <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                   <div
                     className="h-full bg-green-500"
                     style={{
@@ -285,8 +285,8 @@ export default function AnalyticsPage() {
                 </div>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-600">Expenses</p>
-                <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Expenses</p>
+                <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                   <div
                     className="h-full bg-red-500"
                     style={{

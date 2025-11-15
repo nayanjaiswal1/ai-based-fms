@@ -12,7 +12,7 @@ import { startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, subYears, 
 
 interface ReportData {
   summary: Record<string, any>;
-  details: any[];
+  details: any; // Can be array or object depending on report type
   charts?: any[];
   metadata: {
     generatedAt: Date;
@@ -351,7 +351,6 @@ export class ReportGeneratorService {
   ): Promise<ReportData> {
     const budgets = await this.budgetRepository.find({
       where: { userId },
-      relations: ['category'],
     });
 
     const transactions = await this.getTransactions(userId, config, dateRange);
@@ -366,7 +365,7 @@ export class ReportGeneratorService {
       const variancePercent = budgetAmount > 0 ? (variance / budgetAmount) * 100 : 0;
 
       return {
-        category: budget.category?.name || 'Uncategorized',
+        category: budget.name || budget.categoryId || 'Uncategorized',
         budget: budgetAmount,
         actual,
         variance,
@@ -496,21 +495,30 @@ export class ReportGeneratorService {
   ): Promise<ReportData> {
     const groupTransactions = await this.groupTransactionRepository.find({
       where: {
-        userId,
         createdAt: Between(dateRange.start, dateRange.end),
       },
       relations: ['group'],
     });
 
-    const settlementData = groupTransactions.map((gt) => ({
-      group: gt.group?.name || 'Unknown',
-      description: gt.description,
-      amount: Number(gt.amount),
-      yourShare: Number(gt.userShare),
-      paid: Number(gt.paidAmount),
-      balance: Number(gt.userShare) - Number(gt.paidAmount),
-      date: gt.date,
-    }));
+    // Filter transactions where the user is involved (either paid or owes)
+    const userTransactions = groupTransactions.filter(
+      (gt) => gt.paidBy === userId || (gt.splits && gt.splits[userId])
+    );
+
+    const settlementData = userTransactions.map((gt) => {
+      const userShare = gt.splits && gt.splits[userId] ? Number(gt.splits[userId]) : 0;
+      const userPaid = gt.paidBy === userId ? Number(gt.amount) : 0;
+
+      return {
+        group: gt.group?.name || 'Unknown',
+        description: gt.description,
+        amount: Number(gt.amount),
+        yourShare: userShare,
+        paid: userPaid,
+        balance: userPaid - userShare,
+        date: gt.date,
+      };
+    });
 
     const totalOwed = settlementData
       .filter((s) => s.balance > 0)
@@ -599,7 +607,7 @@ export class ReportGeneratorService {
       .reduce((sum, a) => sum + Math.abs(Number(a.balance)), 0);
 
     const netLendBorrow = lendBorrowRecords.reduce((sum, lb) => {
-      const amount = Number(lb.amount) - Number(lb.paidAmount);
+      const amount = Number(lb.amount) - Number(lb.amountPaid);
       return sum + (lb.type === 'lend' ? amount : -amount);
     }, 0);
 
@@ -738,9 +746,10 @@ export class ReportGeneratorService {
 
     // Apply sorting
     if (config.sortBy) {
+      const sortOrder = (config.sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
       queryBuilder.orderBy(
         `transaction.${config.sortBy}`,
-        config.sortOrder || 'DESC',
+        sortOrder,
       );
     } else {
       queryBuilder.orderBy('transaction.date', 'DESC');
