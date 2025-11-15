@@ -17,6 +17,14 @@ export enum EmailProvider {
   OTHER = 'other',
 }
 
+export enum ConnectionStatus {
+  CONNECTED = 'connected',
+  DISCONNECTED = 'disconnected',
+  ERROR = 'error',
+  SYNCING = 'syncing',
+  EXPIRED = 'expired',
+}
+
 @Entity('email_connections')
 export class EmailConnection {
   @PrimaryGeneratedColumn('uuid')
@@ -28,8 +36,17 @@ export class EmailConnection {
   @Column({ type: 'enum', enum: EmailProvider })
   provider: EmailProvider;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   encryptedPassword: string;
+
+  @Column({ type: 'text', nullable: true })
+  accessToken: string;
+
+  @Column({ type: 'text', nullable: true })
+  refreshToken: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  tokenExpiresAt: Date;
 
   @Column({ nullable: true })
   imapHost: string;
@@ -43,17 +60,52 @@ export class EmailConnection {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({
+    type: 'enum',
+    enum: ConnectionStatus,
+    default: ConnectionStatus.DISCONNECTED
+  })
+  status: ConnectionStatus;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  errorMessage: string;
+
   @Column({ nullable: true })
   lastSyncAt: Date;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  lastSyncHistoryId: string;
+
   @Column({ default: 0 })
   transactionsExtracted: number;
+
+  @Column({ default: 0 })
+  ordersExtracted: number;
 
   @Column({ type: 'text', nullable: true })
   syncError: string;
 
   @Column({ default: true })
   autoSync: boolean;
+
+  @Column({ type: 'jsonb', nullable: true })
+  preferences: {
+    autoSync?: boolean;
+    syncIntervalMinutes?: number;
+    parseTransactions?: boolean;
+    parseOrders?: boolean;
+    filterLabels?: string[];
+    filterSenders?: string[];
+    notifyOnNewTransactions?: boolean;
+  };
+
+  @Column({ type: 'jsonb', nullable: true })
+  syncStats: {
+    totalEmailsProcessed?: number;
+    transactionsExtracted?: number;
+    ordersExtracted?: number;
+    lastError?: string;
+  };
 
   @Column()
   userId: string;

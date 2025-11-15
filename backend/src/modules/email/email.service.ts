@@ -1,20 +1,36 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { EmailConnection, EmailProvider, Transaction } from '@database/entities';
+import { EmailConnection, EmailProvider, Transaction, ConnectionStatus } from '@database/entities';
 import { ConnectEmailDto, SyncEmailDto, EmailPreferencesDto } from './dto/email.dto';
-import * as Imap from 'imap';
-import { simpleParser } from 'mailparser';
+import { GmailOAuthService } from './gmail-oauth.service';
+import { EmailParserService } from './email-parser.service';
 
 @Injectable()
 export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
+
   constructor(
     @InjectRepository(EmailConnection)
     private emailConnectionRepository: Repository<EmailConnection>,
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
+    private gmailOAuthService: GmailOAuthService,
+    private emailParserService: EmailParserService,
   ) {}
 
+  /**
+   * Get Gmail OAuth authorization URL
+   */
+  getGmailAuthUrl() {
+    return {
+      authUrl: this.gmailOAuthService.getAuthUrl(),
+    };
+  }
+
+  /**
+   * Complete Gmail OAuth connection
+   */
   async connectEmail(userId: string, connectDto: ConnectEmailDto) {
     // Check if connection already exists
     const existing = await this.emailConnectionRepository.findOne({
@@ -25,24 +41,77 @@ export class EmailService {
       throw new BadRequestException('Email connection already exists');
     }
 
-    // Create connection
-    const connection = this.emailConnectionRepository.create({
-      ...connectDto,
-      userId,
-      isActive: true,
-      lastSyncAt: null,
-    });
+    let connection: EmailConnection;
 
-    // Test connection
-    try {
-      await this.testConnection(connection);
-      connection.status = 'connected';
-    } catch (error) {
-      connection.status = 'error';
-      connection.errorMessage = error.message;
+    if (connectDto.provider === EmailProvider.GMAIL && connectDto.accessToken) {
+      // OAuth flow
+      connection = this.emailConnectionRepository.create({
+        userId,
+        provider: connectDto.provider,
+        email: connectDto.email,
+        accessToken: connectDto.accessToken,
+        refreshToken: connectDto.refreshToken,
+        tokenExpiresAt: connectDto.tokenExpiresAt,
+        status: ConnectionStatus.CONNECTED,
+        isActive: true,
+        preferences: {
+          autoSync: true,
+          syncIntervalMinutes: 60,
+          parseTransactions: true,
+          parseOrders: true,
+        },
+      });
+    } else {
+      throw new BadRequestException('Only Gmail OAuth is supported currently');
     }
 
     return this.emailConnectionRepository.save(connection);
+  }
+
+  /**
+   * Handle OAuth callback
+   */
+  async handleOAuthCallback(userId: string, code: string) {
+    try {
+      const tokens = await this.gmailOAuthService.getTokensFromCode(code);
+
+      // Check if connection already exists
+      let connection = await this.emailConnectionRepository.findOne({
+        where: { userId, email: tokens.email },
+      });
+
+      if (connection) {
+        // Update existing connection
+        connection.accessToken = tokens.accessToken;
+        connection.refreshToken = tokens.refreshToken;
+        connection.tokenExpiresAt = tokens.expiresAt;
+        connection.status = ConnectionStatus.CONNECTED;
+        connection.isActive = true;
+      } else {
+        // Create new connection
+        connection = this.emailConnectionRepository.create({
+          userId,
+          provider: EmailProvider.GMAIL,
+          email: tokens.email,
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          tokenExpiresAt: tokens.expiresAt,
+          status: ConnectionStatus.CONNECTED,
+          isActive: true,
+          preferences: {
+            autoSync: true,
+            syncIntervalMinutes: 60,
+            parseTransactions: true,
+            parseOrders: true,
+          },
+        });
+      }
+
+      return this.emailConnectionRepository.save(connection);
+    } catch (error) {
+      this.logger.error('OAuth callback failed', error);
+      throw new BadRequestException('Failed to connect Gmail account');
+    }
   }
 
   async disconnectEmail(userId: string, connectionId: string) {
@@ -59,6 +128,9 @@ export class EmailService {
     });
   }
 
+  /**
+   * Sync emails and extract transactions/orders
+   */
   async syncEmails(userId: string, syncDto: SyncEmailDto) {
     const connection = await this.findConnection(userId, syncDto.connectionId);
 
@@ -66,34 +138,142 @@ export class EmailService {
       throw new BadRequestException('Email connection is not active');
     }
 
+    if (connection.provider !== EmailProvider.GMAIL) {
+      throw new BadRequestException('Only Gmail is supported currently');
+    }
+
     try {
-      connection.status = 'syncing';
+      connection.status = ConnectionStatus.SYNCING;
       await this.emailConnectionRepository.save(connection);
 
-      const emails = await this.fetchEmails(connection, syncDto.daysBack || 7);
-      const extractedTransactions = [];
+      // Refresh token if needed
+      const accessToken = await this.ensureValidToken(connection);
 
-      for (const email of emails) {
-        const transactions = await this.extractTransactionsFromEmail(email, userId);
-        extractedTransactions.push(...transactions);
+      // Fetch emails using Gmail API
+      let emailData;
+      if (connection.lastSyncHistoryId) {
+        // Incremental sync using history API
+        emailData = await this.gmailOAuthService.fetchEmailsSinceHistory(
+          accessToken,
+          connection.lastSyncHistoryId,
+        );
+      } else {
+        // Full sync
+        const query = this.buildGmailQuery(connection.preferences);
+        emailData = await this.gmailOAuthService.fetchEmails(accessToken, {
+          maxResults: 100,
+          query,
+        });
       }
 
-      connection.status = 'connected';
+      const { messages, historyId } = emailData;
+      const extractedTransactions = [];
+      const extractedOrders = [];
+
+      // Parse each email
+      for (const message of messages) {
+        const headers = this.gmailOAuthService.extractHeaders(message);
+        const body = this.gmailOAuthService.extractEmailBody(message);
+
+        // Extract transactions
+        if (connection.preferences?.parseTransactions) {
+          const transactions = await this.emailParserService.parseTransactions(
+            headers.from,
+            headers.subject,
+            body.text,
+            body.html,
+          );
+          extractedTransactions.push(...transactions);
+        }
+
+        // Extract orders
+        if (connection.preferences?.parseOrders) {
+          const orders = await this.emailParserService.parseOrders(
+            headers.from,
+            headers.subject,
+            body.text,
+            body.html,
+          );
+          extractedOrders.push(...orders);
+        }
+      }
+
+      // Update connection status
+      connection.status = ConnectionStatus.CONNECTED;
       connection.lastSyncAt = new Date();
+      if (historyId) {
+        connection.lastSyncHistoryId = historyId;
+      }
+      connection.syncStats = {
+        totalEmailsProcessed: (connection.syncStats?.totalEmailsProcessed || 0) + messages.length,
+        transactionsExtracted: (connection.syncStats?.transactionsExtracted || 0) + extractedTransactions.length,
+        ordersExtracted: (connection.syncStats?.ordersExtracted || 0) + extractedOrders.length,
+      };
       await this.emailConnectionRepository.save(connection);
 
       return {
         success: true,
-        emailsProcessed: emails.length,
+        emailsProcessed: messages.length,
         transactionsExtracted: extractedTransactions.length,
+        ordersExtracted: extractedOrders.length,
         transactions: extractedTransactions,
+        orders: extractedOrders,
       };
     } catch (error) {
-      connection.status = 'error';
+      this.logger.error('Email sync failed', error);
+      connection.status = ConnectionStatus.ERROR;
       connection.errorMessage = error.message;
       await this.emailConnectionRepository.save(connection);
       throw new BadRequestException('Email sync failed: ' + error.message);
     }
+  }
+
+  /**
+   * Ensure access token is valid, refresh if needed
+   */
+  private async ensureValidToken(connection: EmailConnection): Promise<string> {
+    const now = new Date();
+    const expiresAt = connection.tokenExpiresAt;
+
+    // If token expires in next 5 minutes, refresh it
+    if (!expiresAt || expiresAt.getTime() - now.getTime() < 5 * 60 * 1000) {
+      if (!connection.refreshToken) {
+        throw new BadRequestException('Refresh token not available');
+      }
+
+      const refreshed = await this.gmailOAuthService.refreshAccessToken(connection.refreshToken);
+      connection.accessToken = refreshed.accessToken;
+      connection.tokenExpiresAt = refreshed.expiresAt;
+      await this.emailConnectionRepository.save(connection);
+
+      return refreshed.accessToken;
+    }
+
+    return connection.accessToken;
+  }
+
+  /**
+   * Build Gmail search query from preferences
+   */
+  private buildGmailQuery(preferences: any): string {
+    const queries: string[] = [];
+
+    // Default: last 30 days
+    queries.push('newer_than:30d');
+
+    // Filter by labels
+    if (preferences?.filterLabels && preferences.filterLabels.length > 0) {
+      const labels = preferences.filterLabels.map(l => `label:${l}`).join(' OR ');
+      queries.push(`(${labels})`);
+    }
+
+    // Filter by senders
+    if (preferences?.filterSenders && preferences.filterSenders.length > 0) {
+      const senders = preferences.filterSenders.map(s => `from:${s}`).join(' OR ');
+      queries.push(`(${senders})`);
+    }
+
+    return queries.join(' ');
   }
 
   async updatePreferences(userId: string, connectionId: string, preferencesDto: EmailPreferencesDto) {
@@ -132,173 +312,4 @@ export class EmailService {
     return connection;
   }
 
-  private async testConnection(connection: EmailConnection): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const imap = new Imap({
-        user: connection.email,
-        password: connection.password || '',
-        host: connection.imapHost || this.getImapHost(connection.provider),
-        port: connection.imapPort || 993,
-        tls: true,
-        authTimeout: 10000,
-      });
-
-      imap.once('ready', () => {
-        imap.end();
-        resolve(true);
-      });
-
-      imap.once('error', (err) => {
-        reject(err);
-      });
-
-      imap.connect();
-    });
-  }
-
-  private async fetchEmails(connection: EmailConnection, daysBack: number): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-      const emails = [];
-      const imap = new Imap({
-        user: connection.email,
-        password: connection.password || connection.accessToken || '',
-        host: connection.imapHost || this.getImapHost(connection.provider),
-        port: connection.imapPort || 993,
-        tls: true,
-      });
-
-      imap.once('ready', () => {
-        imap.openBox('INBOX', true, (err, box) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-
-          const searchDate = new Date();
-          searchDate.setDate(searchDate.getDate() - daysBack);
-
-          imap.search(['ALL', ['SINCE', searchDate]], (err, results) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-
-            if (results.length === 0) {
-              imap.end();
-              resolve([]);
-              return;
-            }
-
-            const fetch = imap.fetch(results, { bodies: '' });
-
-            fetch.on('message', (msg, seqno) => {
-              msg.on('body', (stream, info) => {
-                simpleParser(stream, (err, parsed) => {
-                  if (!err) {
-                    emails.push({
-                      from: parsed.from?.text,
-                      subject: parsed.subject,
-                      text: parsed.text,
-                      html: parsed.html,
-                      date: parsed.date,
-                    });
-                  }
-                });
-              });
-            });
-
-            fetch.once('end', () => {
-              imap.end();
-              resolve(emails);
-            });
-
-            fetch.once('error', (err) => {
-              reject(err);
-            });
-          });
-        });
-      });
-
-      imap.once('error', (err) => {
-        reject(err);
-      });
-
-      imap.connect();
-    });
-  }
-
-  private async extractTransactionsFromEmail(email: any, userId: string): Promise<any[]> {
-    const transactions = [];
-    const text = email.text || '';
-    const subject = email.subject || '';
-
-    // Simple keyword matching for transaction detection
-    const transactionKeywords = [
-      'purchase', 'payment', 'transaction', 'charged', 'paid',
-      'receipt', 'invoice', 'bill', 'statement', 'balance',
-    ];
-
-    const hasTransactionKeyword = transactionKeywords.some(keyword =>
-      text.toLowerCase().includes(keyword) || subject.toLowerCase().includes(keyword)
-    );
-
-    if (!hasTransactionKeyword) {
-      return [];
-    }
-
-    // Extract amounts (simple pattern matching)
-    const amountPattern = /\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/g;
-    const amounts = text.match(amountPattern);
-
-    // Extract dates
-    const datePattern = /\d{1,2}\/\d{1,2}\/\d{2,4}/g;
-    const dates = text.match(datePattern);
-
-    // Extract merchant names (from email sender or subject)
-    const merchantName = email.from?.replace(/<.*>/, '').trim() || 'Unknown';
-
-    if (amounts && amounts.length > 0) {
-      const amount = parseFloat(amounts[0].replace(/[$,]/g, ''));
-      const date = dates && dates.length > 0 ? dates[0] : new Date().toISOString().split('T')[0];
-
-      transactions.push({
-        description: `${subject.substring(0, 100)}`,
-        amount,
-        date: this.parseEmailDate(date),
-        type: 'expense',
-        source: 'email',
-        metadata: {
-          from: email.from,
-          subject: email.subject,
-          merchant: merchantName,
-          extractedAt: new Date().toISOString(),
-        },
-      });
-    }
-
-    return transactions;
-  }
-
-  private getImapHost(provider: EmailProvider): string {
-    const hosts = {
-      [EmailProvider.GMAIL]: 'imap.gmail.com',
-      [EmailProvider.OUTLOOK]: 'outlook.office365.com',
-      [EmailProvider.YAHOO]: 'imap.mail.yahoo.com',
-      [EmailProvider.CUSTOM]: 'imap.gmail.com', // fallback
-    };
-
-    return hosts[provider] || 'imap.gmail.com';
-  }
-
-  private parseEmailDate(dateStr: string): string {
-    try {
-      const date = new Date(dateStr);
-      if (!isNaN(date.getTime())) {
-        return date.toISOString().split('T')[0];
-      }
-    } catch (e) {
-      // ignore
-    }
-    return new Date().toISOString().split('T')[0];
-  }
 }

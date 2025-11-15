@@ -22,7 +22,7 @@ export { SharedExpenseParticipant, ParticipantRole } from './shared-expense-part
 export { SharedExpenseTransaction, SplitType as SharedExpenseSplitType } from './shared-expense-transaction.entity';
 export { Notification, NotificationType, NotificationStatus } from './notification.entity';
 export { Reminder, ReminderType, ReminderFrequency, ReminderStatus } from './reminder.entity';
-export { EmailConnection, EmailProvider } from './email-connection.entity';
+export { EmailConnection, EmailProvider, ConnectionStatus } from './email-connection.entity';
 export { ImportLog, ImportStatus, ImportType } from './import-log.entity';
 export { AuditLog, AuditAction } from './audit-log.entity';
 export { AiCategorizationFeedback, FeedbackType } from './ai-categorization-feedback.entity';

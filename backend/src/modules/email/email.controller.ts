@@ -21,6 +21,23 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 export class EmailController {
   constructor(private readonly emailService: EmailService) {}
 
+  @Get('gmail/auth-url')
+  @ApiOperation({ summary: 'Get Gmail OAuth authorization URL' })
+  @ApiResponse({ status: 200, description: 'Returns OAuth URL' })
+  getGmailAuthUrl() {
+    return this.emailService.getGmailAuthUrl();
+  }
+
+  @Post('gmail/callback')
+  @ApiOperation({ summary: 'Handle Gmail OAuth callback' })
+  @ApiResponse({ status: 201, description: 'Gmail connection created' })
+  handleGmailCallback(
+    @CurrentUser('id') userId: string,
+    @Body('code') code: string,
+  ) {
+    return this.emailService.handleOAuthCallback(userId, code);
+  }
+
   @Post('connect')
   @ApiOperation({ summary: 'Connect email account' })
   @ApiResponse({ status: 201, description: 'Email connection created' })

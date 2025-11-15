@@ -10,6 +10,21 @@ export const api = axios.create({
   },
 });
 
+// Track if a refresh is in progress to prevent multiple simultaneous refresh attempts
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (value?: any) => void; reject: (reason?: any) => void }> = [];
+
+const processQueue = (error: any = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  failedQueue = [];
+};
+
 // Request interceptor - cookies are sent automatically
 api.interceptors.request.use(
   (config) => {
@@ -26,8 +41,33 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't retry if:
+    // 1. Already retried (_retry flag is set)
+    // 2. Request is to the refresh endpoint itself (prevent infinite loop)
+    // 3. Request is to login/register endpoints
+    const isRefreshEndpoint = originalRequest.url?.includes('/auth/refresh');
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
+                          originalRequest.url?.includes('/auth/register');
+
+    if (error.response?.status === 401 &&
+        !originalRequest._retry &&
+        !isRefreshEndpoint &&
+        !isAuthEndpoint) {
+
+      // If already refreshing, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            originalRequest.withCredentials = true;
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
         // Attempt to refresh token using cookie-based refresh endpoint
@@ -37,14 +77,34 @@ api.interceptors.response.use(
           { withCredentials: true }
         );
 
+        // Refresh succeeded, process queued requests
+        processQueue();
+        isRefreshing = false;
+
         // Retry the original request with new cookie
         originalRequest.withCredentials = true;
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh failed - clear auth and redirect to login
-        useAuthStore.getState().logout();
-        window.location.href = '/login';
+        // Refresh failed - clear queue and logout
+        processQueue(refreshError);
+        isRefreshing = false;
+
+        // Only redirect once to prevent multiple redirects
+        const authStore = useAuthStore.getState();
+        if (authStore.isAuthenticated) {
+          authStore.logout();
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
+      }
+    }
+
+    // If it's a 401 on the refresh endpoint itself, just logout
+    if (error.response?.status === 401 && isRefreshEndpoint) {
+      const authStore = useAuthStore.getState();
+      if (authStore.isAuthenticated) {
+        authStore.logout();
+        window.location.href = '/login';
       }
     }
 

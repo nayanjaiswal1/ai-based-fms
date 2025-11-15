@@ -272,7 +272,17 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'User successfully logged out' })
-  async logout(@Res({ passthrough: true }) res: Response) {
+  async logout(@CurrentUser() user: any, @Res({ passthrough: true }) res: Response) {
+    // Revoke the session if sessionId is present
+    if (user.sessionId) {
+      try {
+        await this.authService.revokeSession(user.sessionId, user.id);
+      } catch (error) {
+        // Session might already be revoked or not found, continue with logout
+        console.error('Error revoking session during logout:', error);
+      }
+    }
+
     // Clear auth cookies
     this.clearAuthCookies(res);
 

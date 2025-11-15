@@ -114,7 +114,39 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      return this.generateTokens(user);
+      // Get the session associated with this refresh token
+      const session = await this.sessionsService.getSessionByRefreshToken(refreshToken);
+
+      if (!session) {
+        throw new UnauthorizedException('Session not found or expired');
+      }
+
+      // Generate new tokens with the existing session
+      const newRefreshTokenPayload = { sub: user.id, email: user.email };
+      const newRefreshToken = this.jwtService.sign(newRefreshTokenPayload, {
+        secret: this.configService.get<string>('jwt.refreshSecret'),
+        expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
+      });
+
+      // Update the session with the new refresh token
+      await this.sessionsService.updateSessionRefreshToken(session.id, newRefreshToken);
+
+      // Include sessionId in access token payload
+      const accessTokenPayload = {
+        sub: user.id,
+        email: user.email,
+        sessionId: session.id,
+      };
+
+      const accessToken = this.jwtService.sign(accessTokenPayload, {
+        secret: this.configService.get<string>('jwt.secret'),
+        expiresIn: this.configService.get<string>('jwt.expiresIn'),
+      });
+
+      return {
+        accessToken,
+        refreshToken: newRefreshToken,
+      };
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -526,5 +558,14 @@ export class AuthService {
     return {
       message: 'Password successfully reset',
     };
+  }
+
+  // ==================== Session Management Methods ====================
+
+  /**
+   * Revoke a session (called during logout)
+   */
+  async revokeSession(sessionId: string, userId: string): Promise<void> {
+    await this.sessionsService.revokeSession(sessionId, userId);
   }
 }

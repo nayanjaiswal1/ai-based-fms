@@ -11,30 +11,18 @@ export class ConnectEmailDto {
   @IsEmail()
   email: string;
 
-  @ApiPropertyOptional({ example: 'oauth_token_here' })
-  @IsOptional()
+  @ApiProperty({ example: 'oauth_access_token_here' })
   @IsString()
-  accessToken?: string;
+  accessToken: string;
 
-  @ApiPropertyOptional({ example: 'refresh_token_here' })
+  @ApiPropertyOptional({ example: 'oauth_refresh_token_here' })
   @IsOptional()
   @IsString()
   refreshToken?: string;
 
-  @ApiPropertyOptional({ example: 'app_password_here' })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  password?: string;
-
-  @ApiPropertyOptional({ example: 'imap.gmail.com' })
-  @IsOptional()
-  @IsString()
-  imapHost?: string;
-
-  @ApiPropertyOptional({ example: 993 })
-  @IsOptional()
-  @IsNumber()
-  imapPort?: number;
+  tokenExpiresAt?: Date;
 }
 
 export class SyncEmailDto {
