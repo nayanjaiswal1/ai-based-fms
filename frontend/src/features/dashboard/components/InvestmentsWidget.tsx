@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface PortfolioStats {
   totalCurrentValue: number;
@@ -12,6 +13,7 @@ interface InvestmentsWidgetProps {
 }
 
 export function InvestmentsWidget({ portfolioStats, onClick }: InvestmentsWidgetProps) {
+  const { symbol } = useCurrency();
   return (
     <div
       onClick={onClick}
@@ -25,7 +27,7 @@ export function InvestmentsWidget({ portfolioStats, onClick }: InvestmentsWidget
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Portfolio Value</span>
           <span className="font-semibold text-gray-900">
-            ${portfolioStats.totalCurrentValue.toFixed(2)}
+            {symbol()}{portfolioStats.totalCurrentValue.toFixed(2)}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -35,7 +37,7 @@ export function InvestmentsWidget({ portfolioStats, onClick }: InvestmentsWidget
               portfolioStats.totalROI >= 0 ? 'text-green-600' : 'text-red-600'
             }`}
           >
-            {portfolioStats.totalROI >= 0 ? '+' : ''}${portfolioStats.totalROI.toFixed(2)}
+            {portfolioStats.totalROI >= 0 ? '+' : ''}{symbol()}{portfolioStats.totalROI.toFixed(2)}
           </span>
         </div>
         <div className="flex items-center justify-between">

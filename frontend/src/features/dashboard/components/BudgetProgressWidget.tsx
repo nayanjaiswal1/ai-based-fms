@@ -1,3 +1,5 @@
+import { useCurrency } from '@/hooks/useCurrency';
+
 interface Budget {
   id: string;
   name: string;
@@ -12,6 +14,7 @@ interface BudgetProgressWidgetProps {
 }
 
 export function BudgetProgressWidget({ budgets, onViewAll, maxDisplay = 3 }: BudgetProgressWidgetProps) {
+  const { symbol } = useCurrency();
   const getColor = (percentage: number) => {
     if (percentage >= 90) return 'bg-red-500';
     if (percentage >= 75) return 'bg-yellow-500';
@@ -41,7 +44,7 @@ export function BudgetProgressWidget({ budgets, onViewAll, maxDisplay = 3 }: Bud
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-gray-900">{budget.name}</span>
                   <span className="text-gray-600">
-                    ${budget.spent.toFixed(2)} / ${budget.amount.toFixed(2)}
+                    {symbol()}{budget.spent.toFixed(2)} / {symbol()}{budget.amount.toFixed(2)}
                   </span>
                 </div>
                 <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200">

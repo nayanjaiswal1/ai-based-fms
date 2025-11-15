@@ -1,3 +1,5 @@
+import { useCurrency } from '@/hooks/useCurrency';
+
 interface Account {
   id: string;
   name: string;
@@ -12,6 +14,7 @@ interface AccountsWidgetProps {
 }
 
 export function AccountsWidget({ accounts, onViewAll, maxDisplay = 4 }: AccountsWidgetProps) {
+  const { symbol } = useCurrency();
   return (
     <div className="rounded-lg bg-white p-6 shadow">
       <div className="flex items-center justify-between">
@@ -33,7 +36,7 @@ export function AccountsWidget({ accounts, onViewAll, maxDisplay = 4 }: Accounts
                 <p className="font-medium text-gray-900">{account.name}</p>
                 <p className="text-sm capitalize text-gray-500">{account.type}</p>
               </div>
-              <p className="font-semibold text-gray-900">${Number(account.balance).toFixed(2)}</p>
+              <p className="font-semibold text-gray-900">{symbol()}{Number(account.balance).toFixed(2)}</p>
             </div>
           ))
         )}
