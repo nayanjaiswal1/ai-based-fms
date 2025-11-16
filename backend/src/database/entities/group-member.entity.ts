@@ -20,12 +20,24 @@ export class GroupMember {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ nullable: true })
   userId: string;
 
-  @ManyToOne(() => User, (user) => user.groupMemberships, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.groupMemberships, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column({ default: false })
+  isExternalContact: boolean;
+
+  @Column({ nullable: true })
+  externalName: string;
+
+  @Column({ nullable: true })
+  externalEmail: string;
+
+  @Column({ nullable: true })
+  externalPhone: string;
 
   @Column()
   groupId: string;

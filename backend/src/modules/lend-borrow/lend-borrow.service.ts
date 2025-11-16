@@ -1,14 +1,17 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LendBorrow, LendBorrowStatus } from '@database/entities';
 import { CreateLendBorrowDto, UpdateLendBorrowDto, RecordPaymentDto } from './dto/lend-borrow.dto';
+import { GroupsService } from '../groups/groups.service';
 
 @Injectable()
 export class LendBorrowService {
   constructor(
     @InjectRepository(LendBorrow)
     private lendBorrowRepository: Repository<LendBorrow>,
+    @Inject(forwardRef(() => GroupsService))
+    private groupsService: GroupsService,
   ) {}
 
   async create(userId: string, createDto: CreateLendBorrowDto) {
@@ -179,5 +182,52 @@ export class LendBorrowService {
         (now.getTime() - new Date(record.dueDate).getTime()) / (1000 * 60 * 60 * 24),
       ),
     }));
+  }
+
+  async convertToGroup(id: string, userId: string) {
+    const lendBorrow = await this.findOne(id, userId);
+
+    if (lendBorrow.convertedToGroup) {
+      throw new BadRequestException('This record has already been converted to a group');
+    }
+
+    if (lendBorrow.status === LendBorrowStatus.SETTLED) {
+      throw new BadRequestException('Cannot convert a settled record to a group');
+    }
+
+    // Create a 2-person group
+    const groupName = lendBorrow.type === 'lend'
+      ? `Lent to ${lendBorrow.personName}`
+      : `Borrowed from ${lendBorrow.personName}`;
+
+    const group = await this.groupsService.createWithExternalContact(userId, {
+      name: groupName,
+      description: lendBorrow.description || `Converted from ${lendBorrow.type} record`,
+      currency: lendBorrow.currency,
+      externalContact: {
+        name: lendBorrow.personName,
+        email: lendBorrow.personEmail,
+        phone: lendBorrow.personPhone,
+      },
+      initialTransaction: {
+        description: lendBorrow.description || `${lendBorrow.type === 'lend' ? 'Lent' : 'Borrowed'} amount`,
+        amount: Number(lendBorrow.amount),
+        date: lendBorrow.date,
+        paidBy: lendBorrow.type === 'lend' ? userId : 'external',
+        notes: lendBorrow.notes,
+        attachments: lendBorrow.attachments,
+      },
+    });
+
+    // Mark lend/borrow as converted
+    lendBorrow.convertedToGroup = true;
+    lendBorrow.groupId = group.id;
+    await this.lendBorrowRepository.save(lendBorrow);
+
+    return {
+      success: true,
+      groupId: group.id,
+      message: 'Successfully converted to shared expense group',
+    };
   }
 }

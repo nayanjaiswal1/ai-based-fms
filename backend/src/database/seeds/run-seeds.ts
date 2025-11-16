@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { dataSourceOptions } from '@config/database.config';
+import { dataSourceOptions } from '../../config/database.config';
 import { seedDefaultCategories } from './default-categories.seed';
 import { seedDefaultTags } from './default-tags.seed';
 import { seedAdminUser } from './admin-user.seed';

@@ -15,11 +15,20 @@ export const categorySchema = z.object({
 export type CategoryFormData = z.infer<typeof categorySchema>;
 
 export function getCategoryFormConfig(category?: any, categories?: any[]): FormConfig<CategoryFormData> {
-  const parentCategories = categories?.filter(c => !c.parentId && c.id !== category?.id) || [];
+  // Filter parent categories: only root categories of same type, excluding current category
+  const parentCategories = categories?.filter(c =>
+    !c.parentId &&
+    c.id !== category?.id &&
+    (!category || c.type === category.type || c.type === 'both') &&
+    !c.isReadOnly // Cannot create subcategories under default categories
+  ) || [];
+  const isEditing = !!category;
 
   return {
     title: category ? 'Edit Category' : 'Add Category',
-    description: 'Organize your transactions with categories',
+    description: category
+      ? 'Update your custom category'
+      : 'Create a custom category to organize your transactions',
     sections: [
       {
         fields: [
@@ -30,19 +39,19 @@ export function getCategoryFormConfig(category?: any, categories?: any[]): FormC
             required: true,
             placeholder: 'e.g., Groceries, Salary',
           },
-          {
+          ...(!isEditing ? [{
             name: 'type',
             label: 'Type',
-            type: 'select',
+            type: 'select' as const,
             required: true,
             options: [
               { value: 'expense', label: 'Expense' },
               { value: 'income', label: 'Income' },
               { value: 'both', label: 'Both' },
             ],
-          },
+          }] : []),
         ],
-        columns: 2,
+        columns: isEditing ? 1 : 2,
       },
       {
         fields: [

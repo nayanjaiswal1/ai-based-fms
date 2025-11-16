@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User, UserRole, SubscriptionTier } from '@database/entities';
+import { User, UserRole, SubscriptionTier } from '../entities';
 
 /**
  * Seed an admin user

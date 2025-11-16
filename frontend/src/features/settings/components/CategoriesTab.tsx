@@ -19,6 +19,12 @@ export default function CategoriesTab() {
     queryFn: categoriesApi.getAll,
   });
 
+  // Debug logging
+  console.log('📦 Categories data:', categories);
+  console.log('🔄 Is loading:', isLoading);
+  console.log('📊 Categories array:', categories?.data);
+  console.log('🔢 Categories count:', categories?.data?.length);
+
   const deleteMutation = useMutation({
     mutationFn: categoriesApi.delete,
     onSuccess: () => {
@@ -44,7 +50,25 @@ export default function CategoriesTab() {
   };
 
   const renderCategories = (parentId: string | null = null, level: number = 0) => {
-    const filtered = categories?.data?.filter((c: any) => c.parentId === parentId) || [];
+    const filtered = categories?.data?.filter((c: any) => {
+      // Handle null, undefined, and empty string as "no parent"
+      const categoryParentId = c.parentId || null;
+      const searchParentId = parentId || null;
+      return categoryParentId === searchParentId;
+    }) || [];
+
+    if (level === 0) {
+      console.log('🎯 Root categories (parentId=null):', filtered);
+      console.log('🔍 Sample category structure:', categories?.data?.[0]);
+      console.log('📊 Parent ID types:', categories?.data?.slice(0, 5).map((c: any) => ({
+        name: c.name,
+        parentId: c.parentId,
+        type: typeof c.parentId,
+        isNull: c.parentId === null,
+        isUndefined: c.parentId === undefined,
+        isEmpty: c.parentId === ''
+      })));
+    }
 
     return filtered.map((category: any) => (
       <div key={category.id}>
@@ -60,7 +84,14 @@ export default function CategoriesTab() {
               style={{ backgroundColor: category.color || '#3B82F6' }}
             />
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground truncate">{category.name}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium text-foreground truncate">{category.name}</p>
+                {category.isReadOnly && (
+                  <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-md">
+                    Default
+                  </span>
+                )}
+              </div>
               <div className="flex gap-2 text-xs text-muted-foreground">
                 <span className="capitalize">{category.type}</span>
                 {category.icon && <span>• {category.icon}</span>}
@@ -68,26 +99,30 @@ export default function CategoriesTab() {
             </div>
           </div>
           <div className="flex gap-1 flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(category);
-              }}
-              className="p-2 text-primary hover:bg-primary/10 rounded-md transition-colors"
-              aria-label="Edit category"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(category.id, category.name);
-              }}
-              className="p-2 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
-              aria-label="Delete category"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {!category.isReadOnly && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(category);
+                  }}
+                  className="p-2 text-primary hover:bg-primary/10 rounded-md transition-colors"
+                  aria-label="Edit category"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(category.id, category.name);
+                  }}
+                  className="p-2 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+                  aria-label="Delete category"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
         {renderCategories(category.id, level + 1)}
@@ -121,7 +156,7 @@ export default function CategoriesTab() {
             <p className="mt-4 text-muted-foreground">Loading categories...</p>
           </div>
         </div>
-      ) : categories?.data?.length === 0 ? (
+      ) : !categories?.data || categories?.data?.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-muted/50 p-12 text-center">
           <p className="text-muted-foreground">No categories yet. Add your first category!</p>
         </div>

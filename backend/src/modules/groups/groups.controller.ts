@@ -44,6 +44,13 @@ export class GroupsController {
     return this.groupsService.findAll(userId);
   }
 
+  @Get('unified-balances')
+  @ApiOperation({ summary: 'Get unified balances across all groups and lend/borrow' })
+  @ApiResponse({ status: 200, description: 'Returns combined balances from groups and lend/borrow' })
+  getUnifiedBalances(@CurrentUser('id') userId: string) {
+    return this.groupsService.getUnifiedBalances(userId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a group by ID' })
   findOne(@Param('id') id: string, @CurrentUser('id') userId: string) {

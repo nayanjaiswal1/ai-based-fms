@@ -6,8 +6,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, TreeRepository, IsNull, DataSource } from 'typeorm';
-import { Category, CategoryType, Transaction } from '@database/entities';
+import { Repository, TreeRepository, IsNull, DataSource, In } from 'typeorm';
+import { Category, CategoryType, Transaction, UserCategoryPreference } from '@database/entities';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 
 @Injectable()
@@ -15,6 +15,8 @@ export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private categoryRepository: TreeRepository<Category>,
+    @InjectRepository(UserCategoryPreference)
+    private userCategoryPreferenceRepository: Repository<UserCategoryPreference>,
     private dataSource: DataSource,
   ) {}
 
@@ -46,25 +48,80 @@ export class CategoriesService {
   }
 
   async findAll(userId: string, includeDefault = true) {
-    if (includeDefault) {
-      // Include both user's custom categories and default categories
-      // Use query builder to properly handle OR condition with IsNull
-      return this.categoryRepository
-        .createQueryBuilder('category')
-        .leftJoinAndSelect('category.parent', 'parent')
-        .leftJoinAndSelect('category.children', 'children')
-        .where('category.isActive = :isActive', { isActive: true })
-        .andWhere('(category.userId = :userId OR category.userId IS NULL)', { userId })
-        .orderBy('category.name', 'ASC')
-        .getMany();
-    } else {
-      // Only user's custom categories
-      return this.categoryRepository.find({
-        where: { isActive: true, userId },
-        relations: ['parent', 'children'],
-        order: { name: 'ASC' },
-      });
-    }
+    console.log('🔍 findAll called for userId:', userId);
+
+    // Get all default categories (shared across all users)
+    // Use getRawMany to get parentId directly from database
+    const defaultCategories = await this.categoryRepository
+      .createQueryBuilder('category')
+      .select([
+        'category.id',
+        'category.name',
+        'category.type',
+        'category.icon',
+        'category.color',
+        'category.description',
+        'category.isDefault',
+        'category.isActive',
+        'category.isArchived',
+        'category.usageCount',
+        'category.userId',
+        'category.parentId',
+        'category.createdAt',
+        'category.updatedAt'
+      ])
+      .where('category.isActive = :isActive', { isActive: true })
+      .andWhere('category.isDefault = :isDefault', { isDefault: true })
+      .andWhere('category.userId IS NULL')
+      .getMany();
+
+    console.log('📊 Default categories found:', defaultCategories.length);
+
+    // Get user's custom categories
+    const customCategories = await this.categoryRepository
+      .createQueryBuilder('category')
+      .select([
+        'category.id',
+        'category.name',
+        'category.type',
+        'category.icon',
+        'category.color',
+        'category.description',
+        'category.isDefault',
+        'category.isActive',
+        'category.isArchived',
+        'category.usageCount',
+        'category.userId',
+        'category.parentId',
+        'category.createdAt',
+        'category.updatedAt'
+      ])
+      .where('category.isActive = :isActive', { isActive: true })
+      .andWhere('category.userId = :userId', { userId })
+      .getMany();
+
+    // Get user's hidden categories
+    const hiddenPreferences = await this.userCategoryPreferenceRepository.find({
+      where: { userId, isHidden: true },
+    });
+    const hiddenCategoryIds = new Set(hiddenPreferences.map((p) => p.categoryId));
+
+    // Filter out hidden default categories
+    const visibleDefaults = defaultCategories.filter((cat) => !hiddenCategoryIds.has(cat.id));
+
+    // Combine and add isReadOnly field for frontend
+    const allCategories = [...visibleDefaults, ...customCategories];
+
+    const result = allCategories.map((cat: any) => ({
+      ...cat,
+      isReadOnly: cat.isDefault && cat.userId === null, // Default categories are read-only
+    }));
+
+    console.log('✅ Returning categories count:', result.length);
+    console.log('📊 Root categories:', result.filter(c => c.parentId === null).length);
+    console.log('🔍 First category:', result[0]);
+
+    return result;
   }
 
   async findTree(userId: string) {
@@ -260,5 +317,63 @@ export class CategoriesService {
       relations: ['parent', 'children'],
       order: { name: 'ASC' },
     });
+  }
+
+  // NEW: Hide a default category
+  async hideCategory(categoryId: string, userId: string) {
+    const category = await this.findOne(categoryId, userId);
+
+    if (!category.isDefault) {
+      throw new BadRequestException('Can only hide default categories. Delete custom categories instead.');
+    }
+
+    // Create or update preference
+    let preference = await this.userCategoryPreferenceRepository.findOne({
+      where: { userId, categoryId },
+    });
+
+    if (!preference) {
+      preference = this.userCategoryPreferenceRepository.create({
+        userId,
+        categoryId,
+        isHidden: true,
+      });
+    } else {
+      preference.isHidden = true;
+    }
+
+    await this.userCategoryPreferenceRepository.save(preference);
+
+    return {
+      success: true,
+      message: `Category "${category.name}" has been hidden`,
+    };
+  }
+
+  // NEW: Show a hidden default category
+  async showCategory(categoryId: string, userId: string) {
+    const preference = await this.userCategoryPreferenceRepository.findOne({
+      where: { userId, categoryId },
+    });
+
+    if (preference) {
+      preference.isHidden = false;
+      await this.userCategoryPreferenceRepository.save(preference);
+    }
+
+    return {
+      success: true,
+      message: 'Category has been shown',
+    };
+  }
+
+  // NEW: Get hidden categories
+  async getHiddenCategories(userId: string) {
+    const preferences = await this.userCategoryPreferenceRepository.find({
+      where: { userId, isHidden: true },
+      relations: ['category'],
+    });
+
+    return preferences.map((p) => p.category);
   }
 }

@@ -456,4 +456,117 @@ export class GroupsService {
 
     return member;
   }
+
+  async createWithExternalContact(userId: string, data: {
+    name: string;
+    description?: string;
+    currency?: string;
+    externalContact: {
+      name: string;
+      email?: string;
+      phone?: string;
+    };
+    initialTransaction?: {
+      description: string;
+      amount: number;
+      date: Date;
+      paidBy: string;
+      notes?: string;
+      attachments?: string[];
+    };
+  }) {
+    // Create group
+    const group = this.groupRepository.create({
+      name: data.name,
+      description: data.description,
+      currency: data.currency || 'USD',
+      createdBy: userId,
+    });
+    const savedGroup = await this.groupRepository.save(group);
+
+    // Add user as admin
+    await this.memberRepository.save({
+      groupId: savedGroup.id,
+      userId,
+      role: GroupMemberRole.ADMIN,
+      isActive: true,
+    });
+
+    // Add external contact as member
+    const externalMember = await this.memberRepository.save({
+      groupId: savedGroup.id,
+      userId: null,
+      isExternalContact: true,
+      externalName: data.externalContact.name,
+      externalEmail: data.externalContact.email,
+      externalPhone: data.externalContact.phone,
+      role: GroupMemberRole.MEMBER,
+      isActive: true,
+    });
+
+    // Create initial transaction if provided
+    if (data.initialTransaction) {
+      const paidBy = data.initialTransaction.paidBy === 'external'
+        ? externalMember.id
+        : data.initialTransaction.paidBy;
+
+      const transaction = this.transactionRepository.create({
+        groupId: savedGroup.id,
+        description: data.initialTransaction.description,
+        amount: data.initialTransaction.amount,
+        date: data.initialTransaction.date,
+        currency: data.currency || 'USD',
+        paidBy,
+        splitType: SplitType.EQUAL,
+        splits: {
+          [userId]: data.initialTransaction.amount / 2,
+          [externalMember.id]: data.initialTransaction.amount / 2,
+        },
+        notes: data.initialTransaction.notes,
+        attachments: data.initialTransaction.attachments,
+        createdBy: userId,
+      });
+
+      await this.transactionRepository.save(transaction);
+      await this.updateMemberBalances(savedGroup.id, transaction);
+    }
+
+    return this.findOne(savedGroup.id, userId);
+  }
+
+  async getUnifiedBalances(userId: string) {
+    // Get all groups where user is a member
+    const memberships = await this.memberRepository.find({
+      where: { userId, isActive: true },
+      relations: ['group', 'group.members'],
+    });
+
+    const groupBalances = await Promise.all(
+      memberships.map(async (membership) => {
+        const balances = await this.getBalances(membership.groupId, userId);
+        const userBalance = balances.find((b) => b.userId === userId);
+
+        return {
+          groupId: membership.group.id,
+          groupName: membership.group.name,
+          balance: userBalance?.balance || 0,
+          owes: userBalance?.owes || 0,
+          isOwed: userBalance?.isOwed || 0,
+          memberCount: membership.group.members.filter((m) => m.isActive).length,
+        };
+      })
+    );
+
+    const totalOwed = groupBalances.reduce((sum, g) => sum + g.isOwed, 0);
+    const totalOwing = groupBalances.reduce((sum, g) => sum + g.owes, 0);
+
+    return {
+      groups: groupBalances,
+      summary: {
+        totalOwed: Number(totalOwed.toFixed(2)),
+        totalOwing: Number(totalOwing.toFixed(2)),
+        netPosition: Number((totalOwed - totalOwing).toFixed(2)),
+      },
+    };
+  }
 }

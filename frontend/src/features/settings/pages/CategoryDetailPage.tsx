@@ -23,32 +23,8 @@ export default function CategoryDetailPage() {
     enabled: !!id,
   });
 
-  if (categoryLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading category details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!category?.data) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Category not found</p>
-        <button
-          onClick={() => navigate('/settings?tab=categories')}
-          className="mt-4 text-primary hover:underline"
-        >
-          Back to Categories
-        </button>
-      </div>
-    );
-  }
-
-  const categoryData = category.data;
+  // Calculate stats BEFORE any conditional returns (React hooks must be called in same order)
+  const categoryData = category?.data;
   const transactionsList = transactions?.data || [];
   const totalAmount = transactionsList.reduce((sum, t) => sum + Number(t.amount), 0);
   const transactionCount = transactionsList.length;
@@ -66,7 +42,7 @@ export default function CategoryDetailPage() {
       label: 'Total Amount',
       value: formatLocale(totalAmount),
       icon: DollarSign,
-      color: categoryData.type === 'income' ? '#10b981' : '#ef4444',
+      color: categoryData?.type === 'income' ? '#10b981' : '#ef4444',
       details: [
         { label: 'Total Amount', value: formatLocale(totalAmount) },
         { label: 'Average per Transaction', value: transactionCount > 0 ? formatLocale(totalAmount / transactionCount) : formatLocale(0) },
@@ -75,11 +51,37 @@ export default function CategoryDetailPage() {
     {
       id: 'type',
       label: 'Type',
-      value: categoryData.type === 'income' ? 'Income' : 'Expense',
-      icon: categoryData.type === 'income' ? TrendingUp : TrendingDown,
-      color: categoryData.type === 'income' ? '#10b981' : '#ef4444',
+      value: categoryData?.type === 'income' ? 'Income' : 'Expense',
+      icon: categoryData?.type === 'income' ? TrendingUp : TrendingDown,
+      color: categoryData?.type === 'income' ? '#10b981' : '#ef4444',
     },
   ], [transactionCount, totalAmount, categoryData, formatLocale]);
+
+  // NOW conditional returns are safe (all hooks called above)
+  if (categoryLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading category details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!categoryData) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Category not found</p>
+        <button
+          onClick={() => navigate('/settings?tab=categories')}
+          className="mt-4 text-primary hover:underline"
+        >
+          Back to Categories
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

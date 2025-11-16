@@ -121,4 +121,25 @@ export class CategoriesController {
   getArchived(@CurrentUser('id') userId: string) {
     return this.categoriesService.getArchived(userId);
   }
+
+  // NEW: Hide a default category
+  @Post(':id/hide')
+  @ApiOperation({ summary: 'Hide a default category from view' })
+  hideCategory(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.categoriesService.hideCategory(id, userId);
+  }
+
+  // NEW: Show a hidden category
+  @Post(':id/show')
+  @ApiOperation({ summary: 'Show a hidden category' })
+  showCategory(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.categoriesService.showCategory(id, userId);
+  }
+
+  // NEW: Get hidden categories
+  @Get('hidden/list')
+  @ApiOperation({ summary: 'Get all hidden categories' })
+  getHiddenCategories(@CurrentUser('id') userId: string) {
+    return this.categoriesService.getHiddenCategories(userId);
+  }
 }

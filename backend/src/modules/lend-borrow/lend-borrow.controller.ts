@@ -100,4 +100,11 @@ export class LendBorrowController {
   markAsSettled(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.lendBorrowService.markAsSettled(id, userId);
   }
+
+  @Post(':id/convert-to-group')
+  @ApiOperation({ summary: 'Convert lend/borrow record to a shared expense group' })
+  @ApiResponse({ status: 200, description: 'Successfully converted to group' })
+  convertToGroup(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    return this.lendBorrowService.convertToGroup(id, userId);
+  }
 }

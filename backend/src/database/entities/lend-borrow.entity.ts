@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
+import { Group } from './group.entity';
 
 export enum LendBorrowType {
   LEND = 'lend',
@@ -73,6 +74,16 @@ export class LendBorrow {
   @ManyToOne(() => User, (user) => user.lendBorrowRecords, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column({ nullable: true })
+  groupId: string;
+
+  @ManyToOne(() => Group, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'groupId' })
+  group: Group;
+
+  @Column({ default: false })
+  convertedToGroup: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

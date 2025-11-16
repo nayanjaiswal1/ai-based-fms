@@ -24,32 +24,8 @@ export default function TagDetailPage() {
     enabled: !!id,
   });
 
-  if (tagLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading tag details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!tag?.data) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Tag not found</p>
-        <button
-          onClick={() => navigate('/settings?tab=tags')}
-          className="mt-4 text-primary hover:underline"
-        >
-          Back to Tags
-        </button>
-      </div>
-    );
-  }
-
-  const tagData = tag.data;
+  // Calculate stats BEFORE any conditional returns
+  const tagData = tag?.data;
   const transactionsList = transactions?.data || [];
   const transactionCount = transactionsList.length;
   const totalIncome = transactionsList
@@ -97,6 +73,32 @@ export default function TagDetailPage() {
       color: (totalIncome - totalExpense) >= 0 ? '#10b981' : '#ef4444',
     },
   ], [transactionCount, totalIncome, totalExpense, transactionsList, formatLocale]);
+
+  // NOW conditional returns are safe (all hooks called above)
+  if (tagLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading tag details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!tagData) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Tag not found</p>
+        <button
+          onClick={() => navigate('/settings?tab=tags')}
+          className="mt-4 text-primary hover:underline"
+        >
+          Back to Tags
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

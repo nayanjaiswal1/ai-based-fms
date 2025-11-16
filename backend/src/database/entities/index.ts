@@ -2,6 +2,7 @@ export { User, UserRole, SubscriptionTier } from './user.entity';
 export { Account, AccountType, AccountReconciliationStatus } from './account.entity';
 export { Category, CategoryType } from './category.entity';
 export { Tag } from './tag.entity';
+export { UserCategoryPreference } from './user-category-preference.entity';
 export { Transaction, TransactionType, TransactionSource, TransactionSourceType } from './transaction.entity';
 export { TransactionLineItem } from './transaction-line-item.entity';
 export { Budget, BudgetPeriod, BudgetType } from './budget.entity';
