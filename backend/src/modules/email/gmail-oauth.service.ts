@@ -9,14 +9,20 @@ export class GmailOAuthService {
   private oauth2Client: OAuth2Client;
 
   constructor(private configService: ConfigService) {
-    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
-    const redirectUri = this.configService.get<string>('GOOGLE_REDIRECT_URI') ||
-      `${this.configService.get<string>('FRONTEND_URL')}/email/callback`;
+    // Use Gmail-specific OAuth credentials if available, otherwise fall back to Google OAuth
+    const clientId = this.configService.get<string>('GMAIL_CLIENT_ID') ||
+                     this.configService.get<string>('GOOGLE_CLIENT_ID');
+    const clientSecret = this.configService.get<string>('GMAIL_CLIENT_SECRET') ||
+                        this.configService.get<string>('GOOGLE_CLIENT_SECRET');
+    const redirectUri = this.configService.get<string>('GMAIL_REDIRECT_URI') ||
+                       this.configService.get<string>('GOOGLE_REDIRECT_URI') ||
+                       `${this.configService.get<string>('FRONTEND_URL')}/email/callback`;
 
     if (!clientId || !clientSecret) {
-      this.logger.warn('Google OAuth credentials not configured');
+      this.logger.warn('Gmail OAuth credentials not configured. Please set GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET in .env');
     }
+
+    this.logger.log(`Gmail OAuth initialized with redirect URI: ${redirectUri}`);
 
     this.oauth2Client = new google.auth.OAuth2(
       clientId,

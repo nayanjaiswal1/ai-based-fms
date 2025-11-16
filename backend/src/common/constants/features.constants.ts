@@ -116,7 +116,7 @@ export const FEATURE_ACCESS: Record<FeatureFlag, SubscriptionTier[]> = {
   [FeatureFlag.CUSTOM_DASHBOARDS]: [SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
   [FeatureFlag.ADVANCED_IMPORT]: [SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
   [FeatureFlag.BULK_OPERATIONS]: [SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
-  [FeatureFlag.EMAIL_INTEGRATION]: [SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
+  [FeatureFlag.EMAIL_INTEGRATION]: [SubscriptionTier.FREE, SubscriptionTier.BASIC, SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE], // Made available for all tiers for testing
   [FeatureFlag.AUTOMATED_CATEGORIZATION]: [SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
   [FeatureFlag.MULTI_USER]: [SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],
   [FeatureFlag.SHARED_REPORTS]: [SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE],

@@ -157,7 +157,7 @@ export const FEATURE_ACCESS: Record<FeatureFlag, SubscriptionTier[]> = {
 
   // Enterprise tier features
   [FeatureFlag.AI_ASSISTANT]: [SubscriptionTier.ENTERPRISE],
-  [FeatureFlag.EMAIL_INTEGRATION]: [SubscriptionTier.ENTERPRISE],
+  [FeatureFlag.EMAIL_INTEGRATION]: [SubscriptionTier.FREE, SubscriptionTier.BASIC, SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE], // Made available for all tiers for testing
   [FeatureFlag.ADVANCED_IMPORT]: [SubscriptionTier.ENTERPRISE],
   [FeatureFlag.ACTIVITY_LOG]: [SubscriptionTier.ENTERPRISE],
   [FeatureFlag.OAUTH_CONNECTIONS]: [SubscriptionTier.ENTERPRISE],

@@ -58,6 +58,18 @@ export default function LendBorrowPage() {
     },
   });
 
+  const convertToGroupMutation = useMutation({
+    mutationFn: lendBorrowApi.convertToGroup,
+    onSuccess: (response: any) => {
+      queryClient.invalidateQueries({ queryKey: ['lend-borrow'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      // Navigate to the new group
+      if (response.data?.groupId) {
+        navigate(`/groups/${response.data.groupId}`);
+      }
+    },
+  });
+
   const handleEdit = (record: any) => {
     const basePath = location.pathname.includes('/shared-finance') ? '/shared-finance/lend-borrow' : '/lend-borrow';
     navigate(`${basePath}/edit/${record.id}`);
@@ -83,6 +95,18 @@ export default function LendBorrowPage() {
   const handleRecordPayment = (record: any) => {
     setSelectedRecord(record);
     setIsPaymentModalOpen(true);
+  };
+
+  const handleConvertToGroup = async (record: any) => {
+    confirm({
+      title: 'Convert to Shared Expense Group',
+      message: `Convert this ${record.type} record with ${record.personName} into a 2-person shared expense group? This will allow you to track multiple expenses together.`,
+      variant: 'primary',
+      confirmLabel: 'Convert to Group',
+      onConfirm: async () => {
+        await convertToGroupMutation.mutateAsync(record.id);
+      },
+    });
   };
 
   const { formatLocale } = useCurrency();
@@ -134,7 +158,7 @@ export default function LendBorrowPage() {
     },
   ], [summaryData, formatLocale]);
 
-  const columns = getLendBorrowColumns(handleEdit, handleDelete, handleRecordPayment);
+  const columns = getLendBorrowColumns(handleEdit, handleDelete, handleRecordPayment, handleConvertToGroup);
   const filterConfigs = getLendBorrowFilters();
 
   const handleFilterChange = (key: string, value: any) => {

@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { EmailConnection, EmailProvider, Transaction, ConnectionStatus } from '@database/entities';
+import { Repository, DataSource } from 'typeorm';
+import { EmailConnection, EmailProvider, Transaction, ConnectionStatus, TransactionType, Account } from '@database/entities';
 import { ConnectEmailDto, SyncEmailDto, EmailPreferencesDto } from './dto/email.dto';
 import { GmailOAuthService } from './gmail-oauth.service';
 import { EmailParserService } from './email-parser.service';
@@ -15,8 +15,11 @@ export class EmailService {
     private emailConnectionRepository: Repository<EmailConnection>,
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
+    @InjectRepository(Account)
+    private accountRepository: Repository<Account>,
     private gmailOAuthService: GmailOAuthService,
     private emailParserService: EmailParserService,
+    private dataSource: DataSource,
   ) {}
 
   /**
@@ -178,6 +181,7 @@ export class EmailService {
         // Extract transactions
         if (connection.preferences?.parseTransactions) {
           const transactions = await this.emailParserService.parseTransactions(
+            userId,
             headers.from,
             headers.subject,
             body.text,
@@ -189,6 +193,7 @@ export class EmailService {
         // Extract orders
         if (connection.preferences?.parseOrders) {
           const orders = await this.emailParserService.parseOrders(
+            userId,
             headers.from,
             headers.subject,
             body.text,
@@ -197,6 +202,12 @@ export class EmailService {
           extractedOrders.push(...orders);
         }
       }
+
+      // Save extracted transactions to database
+      const savedTransactions = await this.saveExtractedTransactions(
+        userId,
+        extractedTransactions,
+      );
 
       // Update connection status
       connection.status = ConnectionStatus.CONNECTED;
@@ -215,8 +226,9 @@ export class EmailService {
         success: true,
         emailsProcessed: messages.length,
         transactionsExtracted: extractedTransactions.length,
+        transactionsSaved: savedTransactions.length,
         ordersExtracted: extractedOrders.length,
-        transactions: extractedTransactions,
+        transactions: savedTransactions, // Return saved transactions with IDs
         orders: extractedOrders,
       };
     } catch (error) {
@@ -250,6 +262,85 @@ export class EmailService {
     }
 
     return connection.accessToken;
+  }
+
+  /**
+   * Save extracted transactions to database
+   */
+  private async saveExtractedTransactions(
+    userId: string,
+    extractedTransactions: any[],
+  ): Promise<Transaction[]> {
+    if (!extractedTransactions || extractedTransactions.length === 0) {
+      return [];
+    }
+
+    // Get user's default account (or create one if doesn't exist)
+    let defaultAccount = await this.accountRepository.findOne({
+      where: { userId },
+      order: { createdAt: 'ASC' },
+    });
+
+    // If user has no accounts, create a default "Email Sync" account
+    if (!defaultAccount) {
+      defaultAccount = this.accountRepository.create({
+        userId,
+        name: 'Email Transactions',
+        type: 'wallet' as any,
+        balance: 0,
+        currency: 'USD',
+        description: 'Auto-created account for email-synced transactions',
+      });
+      defaultAccount = await this.accountRepository.save(defaultAccount);
+    }
+
+    const savedTransactions: Transaction[] = [];
+
+    for (const extracted of extractedTransactions) {
+      try {
+        // Check if transaction already exists (avoid duplicates)
+        const exists = await this.transactionRepository.findOne({
+          where: {
+            userId,
+            description: extracted.description,
+            amount: extracted.amount,
+            date: new Date(extracted.date),
+          },
+        });
+
+        if (exists) {
+          this.logger.log(`Transaction already exists, skipping: ${extracted.description}`);
+          continue;
+        }
+
+        // Create new transaction
+        const transaction = this.transactionRepository.create({
+          userId,
+          accountId: defaultAccount.id,
+          type: extracted.type === 'income' ? TransactionType.INCOME : TransactionType.EXPENSE,
+          amount: extracted.amount,
+          description: extracted.description,
+          date: new Date(extracted.date),
+          notes: `Auto-imported from email. Merchant: ${extracted.merchant || 'Unknown'}. Confidence: ${extracted.confidence}`,
+          metadata: {
+            source: 'email',
+            ...extracted.metadata,
+            merchant: extracted.merchant,
+            confidence: extracted.confidence,
+          },
+          isVerified: extracted.confidence >= 0.85, // Auto-verify high confidence transactions
+        });
+
+        const saved = await this.transactionRepository.save(transaction);
+        savedTransactions.push(saved);
+
+        this.logger.log(`Saved email transaction: ${saved.description} - $${saved.amount}`);
+      } catch (error) {
+        this.logger.error(`Failed to save transaction: ${extracted.description}`, error);
+      }
+    }
+
+    return savedTransactions;
   }
 
   /**

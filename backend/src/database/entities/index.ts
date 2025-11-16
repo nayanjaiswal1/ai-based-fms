@@ -46,3 +46,5 @@ export { UserDashboardPreference } from './user-dashboard-preference.entity';
 export { Job, JobStatus, JobPriority, JobType } from './job.entity';
 export type { JobProgress, JobResult } from './job.entity';
 export { JobLog, JobLogLevel } from './job-log.entity';
+export { AiConfig, AIProvider, AIModel } from './ai-config.entity';
+export { EmailMessage, ParsingStatus } from './email-message.entity';

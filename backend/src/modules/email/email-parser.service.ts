@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-// import { AiService } from '@modules/ai/ai.service';
+import { AiProviderService } from '@modules/ai/ai-provider.service';
 import * as cheerio from 'cheerio';
 
 export interface ParsedTransaction {
@@ -43,7 +43,7 @@ export interface ParsedOrder {
 export class EmailParserService {
   private readonly logger = new Logger(EmailParserService.name);
 
-  // constructor(private readonly aiService: AiService) {}
+  constructor(private readonly aiProviderService: AiProviderService) {}
 
   // Common e-commerce senders
   private readonly knownMerchants = [
@@ -66,6 +66,7 @@ export class EmailParserService {
    * Parse email for transactions using AI and pattern matching
    */
   async parseTransactions(
+    userId: string,
     from: string,
     subject: string,
     body: string,
@@ -91,9 +92,10 @@ export class EmailParserService {
     if (patternBasedTransactions.length > 0) {
       transactions.push(...patternBasedTransactions);
     } else {
-      // Fall back to AI-powered extraction
+      // Fall back to AI-powered extraction using user's configured provider
       try {
         const aiTransactions = await this.extractTransactionsWithAI(
+          userId,
           from,
           subject,
           cleanText,
@@ -111,6 +113,7 @@ export class EmailParserService {
    * Parse email for order information
    */
   async parseOrders(
+    userId: string,
     from: string,
     subject: string,
     body: string,
@@ -424,58 +427,33 @@ export class EmailParserService {
   }
 
   /**
-   * Extract transactions using AI (OpenAI)
+   * Extract transactions using AI (user's configured provider: OpenAI/Ollama/etc)
    */
   private async extractTransactionsWithAI(
+    userId: string,
     from: string,
     subject: string,
     body: string,
   ): Promise<ParsedTransaction[]> {
-    const prompt = `Extract transaction information from this email:
-
-From: ${from}
-Subject: ${subject}
-Body: ${body.substring(0, 2000)}
-
-Extract the following if present:
-- Amount (number only)
-- Date (YYYY-MM-DD format)
-- Merchant/Payee name
-- Transaction type (income or expense)
-- Description
-
-Respond in JSON format:
-{
-  "transactions": [
-    {
-      "amount": number,
-      "date": "YYYY-MM-DD",
-      "merchant": "string",
-      "type": "income|expense",
-      "description": "string"
-    }
-  ]
-}
-
-If no transaction found, return empty array.`;
-
     try {
-      // TODO: Implement AI extraction when AI service is available
-      // const result = await this.aiService.chat([{ role: 'user', content: prompt }]);
-      const result = '{"transactions":[]}'; // Placeholder
+      // Use user's configured AI provider
+      const aiResult = await this.aiProviderService.extractTransactionData(userId, {
+        from,
+        subject,
+        body,
+      });
 
-      const parsed = JSON.parse(result);
       const transactions: ParsedTransaction[] = [];
 
-      if (parsed.transactions && Array.isArray(parsed.transactions)) {
-        for (const tx of parsed.transactions) {
+      if (aiResult.transactions && Array.isArray(aiResult.transactions)) {
+        for (const tx of aiResult.transactions) {
           transactions.push({
             description: tx.description || subject,
             amount: tx.amount,
             date: tx.date,
             type: tx.type || 'expense',
             merchant: tx.merchant,
-            confidence: 0.85,
+            confidence: tx.confidence || 0.85,
             metadata: {
               from,
               subject,

@@ -7,6 +7,7 @@ import MobileNav from './MobileNav';
 import { SkipNav } from '@/components/a11y';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { API_CONFIG } from '@/config/api.config';
+import { QuickAddFAB } from '@/components/quick-add';
 
 export default function Layout() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -78,6 +79,9 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Quick Add Floating Action Button */}
+      <QuickAddFAB />
     </div>
   );
 }

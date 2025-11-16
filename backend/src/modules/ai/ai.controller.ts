@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Query } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Query, Patch } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AiService } from './ai.service';
 import {
@@ -14,6 +14,8 @@ import {
   SmartSuggestionsDto,
   GenerateBudgetDto,
 } from './dto/ai.dto';
+import { CreateAiConfigDto, UpdateAiConfigDto } from './dto/ai-config.dto';
+import { AiProviderService } from './ai-provider.service';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 
@@ -25,6 +27,7 @@ export class AiController {
   constructor(
     private readonly aiService: AiService,
     private readonly feedbackService: AiCategorizationFeedbackService,
+    private readonly aiProviderService: AiProviderService,
   ) {}
 
   @Post('categorize')
@@ -109,5 +112,42 @@ export class AiController {
   @ApiResponse({ status: 200, description: 'Returns categorization patterns' })
   getCategorizationPatterns(@CurrentUser('id') userId: string) {
     return this.feedbackService.getCategorizationPatterns(userId);
+  }
+
+  // AI Configuration Endpoints
+  @Get('config')
+  @ApiOperation({ summary: 'Get user AI configuration' })
+  @ApiResponse({ status: 200, description: 'Returns user AI configuration' })
+  getUserAiConfig(@CurrentUser('id') userId: string) {
+    return this.aiProviderService.getOrCreateUserConfig(userId);
+  }
+
+  @Post('config')
+  @ApiOperation({ summary: 'Create or update user AI configuration' })
+  @ApiResponse({ status: 201, description: 'AI configuration created/updated' })
+  async createOrUpdateAiConfig(@CurrentUser('id') userId: string, @Body() dto: CreateAiConfigDto) {
+    return this.aiProviderService.updateConfig(userId, dto);
+  }
+
+  @Patch('config')
+  @ApiOperation({ summary: 'Update user AI configuration' })
+  @ApiResponse({ status: 200, description: 'AI configuration updated' })
+  updateAiConfig(@CurrentUser('id') userId: string, @Body() dto: UpdateAiConfigDto) {
+    return this.aiProviderService.updateConfig(userId, dto);
+  }
+
+  @Post('config/test')
+  @ApiOperation({ summary: 'Test AI configuration' })
+  @ApiResponse({ status: 200, description: 'Returns test results' })
+  testAiConfig(@CurrentUser('id') userId: string) {
+    return this.aiProviderService.testConfiguration(userId);
+  }
+
+  @Get('config/models')
+  @ApiOperation({ summary: 'Get available models for configured provider' })
+  @ApiResponse({ status: 200, description: 'Returns list of available models' })
+  async getAvailableModels(@CurrentUser('id') userId: string) {
+    const models = await this.aiProviderService.getAvailableModels(userId);
+    return { models };
   }
 }

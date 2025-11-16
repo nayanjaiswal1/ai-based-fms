@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Edit, Trash2, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Edit, Trash2, CheckCircle, Clock, AlertCircle, Users } from 'lucide-react';
 import { ColumnConfig } from '@components/table';
 import { getCurrencySymbol } from '@/stores/preferencesStore';
 
@@ -32,7 +32,8 @@ const getStatusColor = (status: string) => {
 export const getLendBorrowColumns = (
   onEdit: (record: any) => void,
   onDelete: (id: string) => void,
-  onRecordPayment: (record: any) => void
+  onRecordPayment: (record: any) => void,
+  onConvertToGroup?: (record: any) => void
 ): ColumnConfig[] => [
   {
     key: 'type',
@@ -120,28 +121,45 @@ export const getLendBorrowColumns = (
     align: 'right',
     render: (_, row) => (
       <div className="flex justify-end gap-2">
-        {row.status !== 'settled' && (
-          <button
-            onClick={() => onRecordPayment(row)}
-            className="text-sm text-green-600 hover:text-green-900"
-          >
-            Record Payment
-          </button>
+        {row.status !== 'settled' && !row.convertedToGroup && (
+          <>
+            <button
+              onClick={() => onRecordPayment(row)}
+              className="text-sm text-green-600 hover:text-green-900"
+            >
+              Record Payment
+            </button>
+            {onConvertToGroup && (
+              <button
+                onClick={() => onConvertToGroup(row)}
+                className="text-sm text-purple-600 hover:text-purple-900 flex items-center gap-1"
+                title="Convert to shared expense group"
+              >
+                <Users className="inline h-4 w-4" />
+                <span>Convert</span>
+              </button>
+            )}
+          </>
+        )}
+        {row.convertedToGroup && (
+          <span className="text-sm text-gray-500 italic">Converted to Group</span>
         )}
         <button
           onClick={() => onEdit(row)}
           className="text-blue-600 hover:text-blue-900"
+          disabled={row.convertedToGroup}
         >
           <Edit className="inline h-4 w-4" />
         </button>
         <button
           onClick={() => onDelete(row.id)}
           className="text-red-600 hover:text-red-900"
+          disabled={row.convertedToGroup}
         >
           <Trash2 className="inline h-4 w-4" />
         </button>
       </div>
     ),
-    width: '200px',
+    width: '280px',
   },
 ];
