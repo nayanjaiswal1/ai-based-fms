@@ -1,6 +1,7 @@
 import { TrendingUp } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface NetWorthData {
   month: string;
@@ -16,6 +17,7 @@ interface Props {
 
 export function NetWorthTrackerWidget({ data = [], config }: Props) {
   const navigate = useNavigate();
+  const { symbol } = useCurrency();
 
   const latestData = data[data.length - 1];
   const previousData = data[data.length - 2];
@@ -41,11 +43,11 @@ export function NetWorthTrackerWidget({ data = [], config }: Props) {
       <div className="mb-4">
         <p className="text-sm text-gray-600">Current Net Worth</p>
         <p className="text-2xl font-bold text-gray-900">
-          ${currentNetWorth.toFixed(2)}
+          {symbol()}{currentNetWorth.toFixed(2)}
         </p>
         {previousData && (
           <p className={`text-sm ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-            {isPositive ? '+' : ''}${change.toFixed(2)} ({isPositive ? '+' : ''}{changePercentage.toFixed(2)}%)
+            {isPositive ? '+' : ''}{symbol()}{change.toFixed(2)} ({isPositive ? '+' : ''}{changePercentage.toFixed(2)}%)
           </p>
         )}
       </div>
@@ -54,13 +56,13 @@ export function NetWorthTrackerWidget({ data = [], config }: Props) {
         <div className="p-2 bg-blue-50 rounded">
           <p className="text-xs text-gray-600">Assets</p>
           <p className="text-sm font-semibold text-blue-600">
-            ${latestData?.assets?.toFixed(2) || '0.00'}
+            {symbol()}{latestData?.assets?.toFixed(2) || '0.00'}
           </p>
         </div>
         <div className="p-2 bg-red-50 rounded">
           <p className="text-xs text-gray-600">Liabilities</p>
           <p className="text-sm font-semibold text-red-600">
-            ${latestData?.liabilities?.toFixed(2) || '0.00'}
+            {symbol()}{latestData?.liabilities?.toFixed(2) || '0.00'}
           </p>
         </div>
       </div>

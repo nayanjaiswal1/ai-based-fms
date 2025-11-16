@@ -4,6 +4,7 @@ import Modal from '@components/ui/Modal';
 import { ConfigurableForm } from '@components/form/ConfigurableForm';
 import { useFormProtection } from '@hooks/useFormProtection';
 import { getPaymentFormConfig, PaymentFormData } from '../config/paymentFormConfig';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface PaymentModalProps {
   record: any;
@@ -13,6 +14,7 @@ interface PaymentModalProps {
 
 export default function PaymentModal({ record, isOpen, onClose }: PaymentModalProps) {
   const queryClient = useQueryClient();
+  const { symbol } = useCurrency();
   const formConfig = getPaymentFormConfig(record);
   const total = Number(record?.amount ?? 0);
   const paid = Number(record?.paidAmount ?? 0);
@@ -59,15 +61,15 @@ export default function PaymentModal({ record, isOpen, onClose }: PaymentModalPr
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Total Amount:</span>
-            <span className="font-medium text-gray-900">${Number(record?.amount ?? 0).toFixed(2)}</span>
+            <span className="font-medium text-gray-900">{symbol()}{Number(record?.amount ?? 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Already Paid:</span>
-            <span className="font-medium text-gray-900">${Number(record?.paidAmount ?? 0).toFixed(2)}</span>
+            <span className="font-medium text-gray-900">{symbol()}{Number(record?.paidAmount ?? 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between border-t border-blue-200 pt-2">
             <span className="font-semibold text-gray-900">Remaining:</span>
-            <span className="font-semibold text-blue-600">${remaining.toFixed(2)}</span>
+            <span className="font-semibold text-blue-600">{symbol()}{remaining.toFixed(2)}</span>
           </div>
         </div>
       </div>

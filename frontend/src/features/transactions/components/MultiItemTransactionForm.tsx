@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface LineItem {
   categoryId: string;
@@ -22,6 +23,7 @@ export function MultiItemTransactionForm({
   value,
   onChange,
 }: MultiItemTransactionFormProps) {
+  const { symbol } = useCurrency();
   const handleAddItem = () => {
     onChange([...value, { categoryId: '', description: '', amount: 0 }]);
   };
@@ -132,7 +134,7 @@ export function MultiItemTransactionForm({
         <div className="flex justify-end items-center gap-2 pt-2 border-t">
           <span className="text-sm font-medium text-gray-600">Total:</span>
           <span className="text-lg font-bold text-gray-900">
-            ${totalAmount.toFixed(2)}
+            {symbol()}{totalAmount.toFixed(2)}
           </span>
         </div>
       )}

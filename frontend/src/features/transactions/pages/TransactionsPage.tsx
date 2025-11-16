@@ -7,6 +7,8 @@ import TransactionModal from '../components/TransactionModal';
 import TransactionHistoryModal from '../components/TransactionHistoryModal';
 import TransactionCards from '../components/TransactionCards';
 import FilterModal from '../components/FilterModal';
+import FileUploadModal from '../components/FileUploadModal';
+import { InlineEditableTransactionTable } from '../components/InlineEditableTransactionTable';
 import { useConfirm } from '@/hooks/useConfirm';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@components/table';
@@ -30,6 +32,7 @@ export default function TransactionsPage() {
   const { confirmState, confirm, closeConfirm } = useConfirm();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [historyTransaction, setHistoryTransaction] = useState<any>(null);
+  const [isFileUploadModalOpen, setIsFileUploadModalOpen] = useState(false);
   const isMobile = useIsMobile();
   const { handleTransactionClick } = useTransactionNavigation();
 
@@ -387,6 +390,12 @@ export default function TransactionsPage() {
             className: 'hidden sm:flex',
           },
           {
+            label: 'Upload File',
+            icon: Upload,
+            onClick: () => setIsFileUploadModalOpen(true),
+            variant: 'outline' as const,
+          },
+          {
             label: 'Add Transaction',
             icon: Plus,
             onClick: () => navigate('/transactions/new'),
@@ -452,7 +461,7 @@ export default function TransactionsPage() {
         </div>
       )}
 
-      {/* Transactions - Switch between Table (desktop) and Cards (mobile) */}
+      {/* Transactions - Switch between Inline Table (desktop) and Cards (mobile) */}
       {isMobile ? (
         <TransactionCards
           transactions={transactions?.data || []}
@@ -467,34 +476,15 @@ export default function TransactionsPage() {
           selectedIds={selectedIds}
           onSelectOne={handleSelectOne}
         />
-      ) : useVirtualScrolling ? (
-        <VirtualTable
-          columns={columns}
-          data={transactions?.data || []}
-          keyExtractor={(row) => row.id}
-          loading={isLoading}
-          emptyMessage="No transactions found. Add your first transaction to get started."
-          selectable
-          selectedIds={selectedIds}
-          onSelectAll={handleSelectAll}
-          onSelectOne={handleSelectOne}
-          onRowClick={(row) => handleTransactionClick(row.id, () => handleEdit(row))}
-          rowHeight={65}
-          height="calc(100vh - 400px)"
-          overscan={10}
-        />
       ) : (
-        <DataTable
-          columns={columns}
-          data={transactions?.data || []}
-          keyExtractor={(row) => row.id}
+        <InlineEditableTransactionTable
+          transactions={transactions?.data || []}
+          accounts={accounts?.data || []}
+          categories={categories?.data || []}
+          tags={tags?.data || []}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
           loading={isLoading}
-          emptyMessage="No transactions found. Add your first transaction to get started."
-          selectable
-          selectedIds={selectedIds}
-          onSelectAll={handleSelectAll}
-          onSelectOne={handleSelectOne}
-          onRowClick={(row) => handleTransactionClick(row.id, () => handleEdit(row))}
         />
       )}
 
@@ -521,6 +511,11 @@ export default function TransactionsPage() {
       )}
 
       <ConfirmDialog {...confirmState} onClose={closeConfirm} />
+
+      <FileUploadModal
+        isOpen={isFileUploadModalOpen}
+        onClose={() => setIsFileUploadModalOpen(false)}
+      />
 
       {/* Excel-style Status Bar */}
       {transactionData.length > 0 && <StatusBar items={statusBarItems} />}

@@ -15,6 +15,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Insight, InsightSeverity } from '../types/insights.types';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface InsightCardProps {
   insight: Insight;
@@ -23,6 +24,7 @@ interface InsightCardProps {
 
 export const InsightCard: React.FC<InsightCardProps> = ({ insight, onActionClick }) => {
   const [expanded, setExpanded] = useState(false);
+  const { symbol } = useCurrency();
 
   const getSeverityStyles = (severity: InsightSeverity) => {
     switch (severity) {
@@ -123,7 +125,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ insight, onActionClick
 
             {insight.amount !== undefined && (
               <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${styles.badge}`}>
-                ${Math.abs(insight.amount).toFixed(2)}
+                {symbol()}{Math.abs(insight.amount).toFixed(2)}
                 {insight.percentage !== undefined && (
                   <span className="ml-1">({Math.abs(insight.percentage).toFixed(1)}%)</span>
                 )}

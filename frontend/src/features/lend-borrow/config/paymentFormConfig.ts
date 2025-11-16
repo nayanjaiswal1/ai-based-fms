@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { FormConfig } from '../../../lib/form/types';
 import { format } from 'date-fns';
+import { getCurrencySymbol } from '@/stores/preferencesStore';
 
 export const paymentSchema = z.object({
   amount: z.number().positive('Payment amount must be greater than 0'),
@@ -26,7 +27,7 @@ export function getPaymentFormConfig(record: any): FormConfig<PaymentFormData> {
             label: 'Payment Amount',
             type: 'currency',
             required: true,
-            description: `Max: $${remaining.toFixed(2)}`,
+            description: `Max: ${getCurrencySymbol()}${remaining.toFixed(2)}`,
           },
           {
             name: 'date',

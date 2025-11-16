@@ -1,5 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
+import { getCurrencySymbol } from '@/stores/preferencesStore';
 
 interface FieldDiffProps {
   fieldName: string;
@@ -50,6 +51,10 @@ export const FieldDiff: React.FC<FieldDiffProps> = ({ fieldName, before, after, 
     const isIncrease = difference > 0;
     const isDecrease = difference < 0;
 
+    // Check if this is a currency field based on field name
+    const currencyFields = ['amount', 'price', 'cost', 'balance', 'total', 'spent', 'income', 'expense', 'savings', 'invested', 'value', 'payment', 'deposit', 'withdrawal'];
+    const isCurrency = currencyFields.some(field => fieldName.toLowerCase().includes(field));
+
     return (
       <span
         className={`font-medium ${
@@ -62,7 +67,7 @@ export const FieldDiff: React.FC<FieldDiffProps> = ({ fieldName, before, after, 
             : 'text-blue-600'
         }`}
       >
-        {typeof value === 'number' ? `$${value.toFixed(2)}` : value}
+        {typeof value === 'number' ? (isCurrency ? `${getCurrencySymbol()}${value.toFixed(2)}` : value) : value}
       </span>
     );
   };

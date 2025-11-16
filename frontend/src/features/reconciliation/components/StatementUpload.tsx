@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, Plus, Trash2, FileText } from 'lucide-react';
 import Papa from 'papaparse';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface StatementTransaction {
   amount: number;
@@ -15,6 +16,7 @@ interface StatementUploadProps {
 }
 
 export const StatementUpload: React.FC<StatementUploadProps> = ({ onUpload, isLoading }) => {
+  const { symbol } = useCurrency();
   const [transactions, setTransactions] = useState<StatementTransaction[]>([]);
   const [manualEntry, setManualEntry] = useState({
     amount: '',
@@ -227,7 +229,7 @@ export const StatementUpload: React.FC<StatementUploadProps> = ({ onUpload, isLo
                       {tx.referenceNumber || '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900">
-                      ${Math.abs(tx.amount).toFixed(2)}
+                      {symbol()}{Math.abs(tx.amount).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <button
