@@ -28,6 +28,9 @@ const AIPage = lazy(() => import('@features/ai/pages/AIPage'));
 const ImportPage = lazy(() => import('@features/import/pages/ImportPage'));
 const EmailPage = lazy(() => import('@features/email/pages/EmailPage'));
 const EmailCallbackPage = lazy(() => import('@features/email/pages/EmailCallbackPage'));
+const EmailMessagesPage = lazy(() => import('@features/email/pages/EmailMessagesPage'));
+const EmailDetailPage = lazy(() => import('@features/email/pages/EmailDetailPage'));
+const AIConfigPage = lazy(() => import('@features/settings/pages/AIConfigPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/pages/NotificationsPage'));
 const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage'));
 const CategoryDetailPage = lazy(() => import('@features/settings/pages/CategoryDetailPage'));
@@ -259,6 +262,26 @@ export const protectedRoutes: RouteObject[] = [
         <EmailCallbackPage />
       </FeatureGate>
     ),
+  },
+  {
+    path: '/email/messages',
+    element: (
+      <FeatureGate feature={FeatureFlag.EMAIL_INTEGRATION}>
+        <EmailMessagesPage />
+      </FeatureGate>
+    ),
+  },
+  {
+    path: '/email/messages/:emailId',
+    element: (
+      <FeatureGate feature={FeatureFlag.EMAIL_INTEGRATION}>
+        <EmailDetailPage />
+      </FeatureGate>
+    ),
+  },
+  {
+    path: '/settings/ai-config',
+    element: <AIConfigPage />,
   },
   {
     path: '/notifications',

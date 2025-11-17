@@ -7,12 +7,14 @@ import {
   Param,
   UseGuards,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { EmailService } from './email.service';
 import { ConnectEmailDto, SyncEmailDto, EmailPreferencesDto } from './dto/email.dto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { ParsingStatus } from '@database/entities';
 
 @ApiTags('Email')
 @ApiBearerAuth()
@@ -88,5 +90,68 @@ export class EmailController {
     @Param('connectionId') connectionId: string,
   ) {
     return this.emailService.getSyncStatus(userId, connectionId);
+  }
+
+  // Email Message Management Endpoints
+
+  @Get('messages')
+  @ApiOperation({ summary: 'List emails with parsed data' })
+  @ApiResponse({ status: 200, description: 'Returns list of emails with parsed transaction data' })
+  listEmails(
+    @CurrentUser('id') userId: string,
+    @Query('connectionId') connectionId?: string,
+    @Query('parsingStatus') parsingStatus?: ParsingStatus,
+    @Query('hasTransactions') hasTransactions?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.emailService.listEmails(userId, {
+      connectionId,
+      parsingStatus,
+      hasTransactions: hasTransactions === 'true',
+      limit: limit ? parseInt(limit) : undefined,
+      offset: offset ? parseInt(offset) : undefined,
+    });
+  }
+
+  @Get('messages/:emailId')
+  @ApiOperation({ summary: 'Get email details with parsed data' })
+  @ApiResponse({ status: 200, description: 'Returns email with full details' })
+  getEmail(
+    @CurrentUser('id') userId: string,
+    @Param('emailId') emailId: string,
+  ) {
+    return this.emailService.getEmail(userId, emailId);
+  }
+
+  @Post('messages/:emailId/reparse')
+  @ApiOperation({ summary: 'Retrigger parsing for a specific email' })
+  @ApiResponse({ status: 200, description: 'Email reparsed successfully' })
+  reparseEmail(
+    @CurrentUser('id') userId: string,
+    @Param('emailId') emailId: string,
+  ) {
+    return this.emailService.reparseEmail(userId, emailId);
+  }
+
+  @Patch('messages/:emailId/parsed-data')
+  @ApiOperation({ summary: 'Manually update parsed transaction data' })
+  @ApiResponse({ status: 200, description: 'Parsed data updated successfully' })
+  updateParsedData(
+    @CurrentUser('id') userId: string,
+    @Param('emailId') emailId: string,
+    @Body() updatedData: { transactions?: any[]; orders?: any[] },
+  ) {
+    return this.emailService.updateParsedData(userId, emailId, updatedData);
+  }
+
+  @Delete('messages/:emailId')
+  @ApiOperation({ summary: 'Delete email message' })
+  @ApiResponse({ status: 200, description: 'Email deleted successfully' })
+  deleteEmail(
+    @CurrentUser('id') userId: string,
+    @Param('emailId') emailId: string,
+  ) {
+    return this.emailService.deleteEmail(userId, emailId);
   }
 }
