@@ -31,7 +31,7 @@ const EmailCallbackPage = lazy(() => import('@features/email/pages/EmailCallback
 const EmailMessagesPage = lazy(() => import('@features/email/pages/EmailMessagesPage'));
 const EmailDetailPage = lazy(() => import('@features/email/pages/EmailDetailPage'));
 const AIConfigPage = lazy(() => import('@features/settings/pages/AIConfigPage'));
-const NotificationsPage = lazy(() => import('@features/notifications/pages/NotificationsPage'));
+// NotificationsPage removed - using floating notification bell instead
 const SettingsPage = lazy(() => import('@features/settings/pages/SettingsPage'));
 const CategoryDetailPage = lazy(() => import('@features/settings/pages/CategoryDetailPage'));
 const TagDetailPage = lazy(() => import('@features/settings/pages/TagDetailPage'));
@@ -283,10 +283,7 @@ export const protectedRoutes: RouteObject[] = [
     path: '/settings/ai-config',
     element: <AIConfigPage />,
   },
-  {
-    path: '/notifications',
-    element: <NotificationsPage />,
-  },
+  // Notifications route removed - using floating notification bell instead
   {
     path: '/activity-log',
     element: <ActivityLogPage />,

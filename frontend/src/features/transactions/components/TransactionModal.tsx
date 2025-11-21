@@ -10,11 +10,13 @@ import { MultiItemTransactionForm } from './MultiItemTransactionForm';
 import { Checkbox } from '@components/ui/checkbox';
 import { Label } from '@components/ui/label';
 import { toast } from 'sonner';
+import { Upload } from 'lucide-react';
 
 interface TransactionModalProps {
   transaction?: any;
   isOpen: boolean;
   onClose: () => void;
+  onImportClick?: () => void;
 }
 
 interface LineItem {
@@ -23,7 +25,7 @@ interface LineItem {
   amount: number;
 }
 
-export default function TransactionModal({ transaction, isOpen, onClose }: TransactionModalProps) {
+export default function TransactionModal({ transaction, isOpen, onClose, onImportClick }: TransactionModalProps) {
   const queryClient = useQueryClient();
   const [isMultiItem, setIsMultiItem] = useState(false);
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
@@ -165,6 +167,23 @@ export default function TransactionModal({ transaction, isOpen, onClose }: Trans
       onBeforeClose={checkBeforeClose}
     >
       <div className="space-y-4">
+        {/* Import from File button - Only show when creating new transaction */}
+        {!transaction && onImportClick && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onImportClick();
+              }}
+              className="btn-outline flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Import from File
+            </button>
+          </div>
+        )}
+
         {/* Multi-item toggle */}
         <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
           <Checkbox

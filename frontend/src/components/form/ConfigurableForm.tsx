@@ -83,12 +83,12 @@ export function ConfigurableForm<TFieldValues extends FieldValues>({
         return (
           <div key={sectionIndex} className="space-y-4">
             {section.title && (
-              <div className="border-b border-gray-200 pb-2">
-                <h3 className="text-lg font-semibold text-gray-900">
+              <div className="border-b border-border pb-2">
+                <h3 className="text-lg font-semibold text-foreground">
                   {section.title}
                 </h3>
                 {section.description && (
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {section.description}
                   </p>
                 )}
@@ -134,13 +134,13 @@ export function ConfigurableForm<TFieldValues extends FieldValues>({
 
       {/* Form Actions - only render if not hidden */}
       {!hideButtons && (
-        <div className="flex items-center justify-end gap-3 pt-4 border-t mt-6">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border mt-6">
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
               disabled={isLoading}
-              className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {cancelLabel}
             </button>
@@ -148,7 +148,7 @@ export function ConfigurableForm<TFieldValues extends FieldValues>({
           <button
             type="submit"
             disabled={isLoading || !isDirty}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             {isLoading ? 'Saving...' : submitLabel}

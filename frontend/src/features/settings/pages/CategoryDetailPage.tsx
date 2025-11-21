@@ -74,10 +74,10 @@ export default function CategoryDetailPage() {
       <div className="text-center py-12">
         <p className="text-muted-foreground">Category not found</p>
         <button
-          onClick={() => navigate('/settings?tab=categories')}
+          onClick={() => navigate(-1)}
           className="mt-4 text-primary hover:underline"
         >
-          Back to Categories
+          Go Back
         </button>
       </div>
     );
@@ -88,7 +88,7 @@ export default function CategoryDetailPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate('/settings?tab=categories')}
+          onClick={() => navigate(-1)}
           className="p-2 hover:bg-accent rounded-lg transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />

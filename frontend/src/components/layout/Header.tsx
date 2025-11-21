@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '@stores/authStore';
 import { useNavigate } from 'react-router-dom';
-import { Bell, LogOut, User, Menu, Settings, CreditCard } from 'lucide-react';
+import { LogOut, User, Menu, Settings, CreditCard } from 'lucide-react';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -21,9 +22,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     navigate('/login');
   };
 
-  const handleNotificationClick = () => {
-    navigate('/notifications');
-  };
+  // Notification bell now uses popover - no need for navigation
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -65,15 +64,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <div className="relative flex items-center gap-1 sm:gap-2" role="toolbar" aria-label="User actions">
         <ThemeToggleButton />
 
-        {/* Notification button */}
-        <button
-          onClick={handleNotificationClick}
-          className="group relative rounded-lg p-2 text-muted-foreground transition-all duration-200 hover:bg-accent/20 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-          aria-label="View notifications"
-          type="button"
-        >
-          <Bell className="h-5 w-5 transition-transform group-hover:scale-110 group-hover:rotate-12" aria-hidden="true" />
-        </button>
+        {/* Notification bell with popover */}
+        <NotificationBell />
 
         {/* Profile dropdown */}
         <div className="relative" ref={dropdownRef}>

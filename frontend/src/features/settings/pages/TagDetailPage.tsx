@@ -91,10 +91,10 @@ export default function TagDetailPage() {
       <div className="text-center py-12">
         <p className="text-muted-foreground">Tag not found</p>
         <button
-          onClick={() => navigate('/settings?tab=tags')}
+          onClick={() => navigate(-1)}
           className="mt-4 text-primary hover:underline"
         >
-          Back to Tags
+          Go Back
         </button>
       </div>
     );
@@ -105,7 +105,7 @@ export default function TagDetailPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate('/settings?tab=tags')}
+          onClick={() => navigate(-1)}
           className="p-2 hover:bg-accent rounded-lg transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />

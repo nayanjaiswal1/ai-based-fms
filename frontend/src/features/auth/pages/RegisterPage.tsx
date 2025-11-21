@@ -74,10 +74,10 @@ export default function RegisterPage() {
               submitLabel="Create account"
             >
               {registerMutation.error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 mb-4 animate-in slide-in-from-top-1">
-                  <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3.5 mb-4 animate-in slide-in-from-top-2 duration-300">
+                  <div className="flex items-center gap-2.5">
                     <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
-                    <p className="text-xs text-destructive font-medium">Registration failed. Please try again.</p>
+                    <p className="text-sm text-destructive font-medium">Registration failed. Please try again.</p>
                   </div>
                 </div>
               )}
@@ -94,7 +94,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={handleGoogleSignup}
-                className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-card hover:bg-accent/50 px-4 py-2.5 text-sm font-medium text-foreground transition-all duration-200 active:scale-[0.98]"
+                className="btn-outline w-full"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24">
                   <path
@@ -130,23 +130,23 @@ export default function RegisterPage() {
 
       {/* Right Side - Visual */}
       <div className="relative hidden w-0 flex-1 lg:block">
-        <div className="absolute inset-0 bg-zinc-900">
-          <div className="absolute inset-0 bg-gradient-to-bl from-primary/20 to-accent/20 mix-blend-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary/80">
+          <div className="absolute inset-0 bg-gradient-to-bl from-primary/50 to-accent/30" />
           <div className="flex h-full items-center justify-center p-12">
             <div className="max-w-lg text-center space-y-8">
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl font-serif">
+              <h1 className="text-4xl font-bold tracking-tight text-primary-foreground sm:text-5xl font-serif">
                 Join FMS Today
               </h1>
-              <p className="text-lg text-zinc-400">
+              <p className="text-lg text-primary-foreground/80">
                 Experience the next generation of financial management. Simple, powerful, and secure.
               </p>
 
               {/* Abstract Visual Element */}
               <div className="relative mx-auto w-64 h-64 mt-12">
-                <div className="absolute inset-0 rotate-45 border border-white/10 animate-[spin_15s_linear_infinite]" />
-                <div className="absolute inset-8 -rotate-45 border border-white/20 animate-[spin_20s_linear_infinite_reverse]" />
+                <div className="absolute inset-0 rotate-45 border border-primary-foreground/10 animate-[spin_15s_linear_infinite]" />
+                <div className="absolute inset-8 -rotate-45 border border-primary-foreground/20 animate-[spin_20s_linear_infinite_reverse]" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-32 h-32 bg-gradient-to-tr from-accent to-primary rounded-full blur-3xl opacity-20 animate-pulse" />
+                  <div className="w-32 h-32 bg-gradient-to-tr from-primary-foreground/10 to-primary-foreground/20 rounded-full blur-3xl animate-pulse" />
                 </div>
               </div>
             </div>

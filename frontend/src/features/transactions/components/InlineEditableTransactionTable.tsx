@@ -391,19 +391,6 @@ export function InlineEditableTransactionTable({
           </tbody>
         </table>
       </div>
-
-      {/* Add Transaction Button */}
-      {!isAddingNew && (
-        <div className="border-t border-gray-200 bg-gray-50 px-6 py-3">
-          <button
-            onClick={() => setIsAddingNew(true)}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4" />
-            Add Transaction
-          </button>
-        </div>
-      )}
     </div>
   );
 }

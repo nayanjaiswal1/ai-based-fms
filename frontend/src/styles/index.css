@@ -143,9 +143,85 @@
       transition-duration: 0.01ms !important;
     }
   }
+
+  /* Remove focus outline on mouse click, but preserve for keyboard navigation (a11y) */
+  button:focus:not(:focus-visible),
+  a:focus:not(:focus-visible),
+  input[type="button"]:focus:not(:focus-visible),
+  input[type="submit"]:focus:not(:focus-visible),
+  input[type="reset"]:focus:not(:focus-visible),
+  [role="button"]:focus:not(:focus-visible),
+  select:focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Ensure keyboard focus is always visible for accessibility */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
+  /* Standardized spacing utilities */
+  .section-spacing {
+    @apply space-y-6 md:space-y-8;
+  }
+
+  .card-spacing {
+    @apply p-6;
+  }
+
+  .form-spacing {
+    @apply space-y-4;
+  }
+
+  .input-spacing {
+    @apply space-y-2;
+  }
+
+  /* Standardized button styles */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md;
+  }
+
+  .btn-secondary {
+    @apply btn-base bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .btn-destructive {
+    @apply btn-base bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+
+  .btn-outline {
+    @apply btn-base border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .btn-ghost {
+    @apply btn-base hover:bg-accent hover:text-accent-foreground;
+  }
+
+  /* Standardized form input styles */
+  .input-base {
+    @apply flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm;
+    @apply ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium;
+    @apply placeholder:text-muted-foreground focus-visible:outline-none;
+    @apply focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+    transition: border-color 200ms, box-shadow 200ms;
+  }
+
   /* Atmospheric card with gradient border */
   .card-gradient {
     position: relative;
@@ -183,12 +259,11 @@
 
   /* Elevated surface with depth */
   .surface-elevated {
-    background: hsl(var(--card));
+    @apply bg-card shadow-sm border border-border/50;
     box-shadow:
       0 1px 3px rgba(0, 0, 0, 0.05),
       0 10px 25px rgba(0, 0, 0, 0.03),
       0 20px 40px rgba(0, 0, 0, 0.02);
-    border: 1px solid hsl(var(--border) / 0.5);
   }
 
   /* Geometric accent shapes */
@@ -208,5 +283,31 @@
     opacity: 0.1;
     transform: rotate(45deg);
     pointer-events: none;
+  }
+
+  /* Status badges - theme aware */
+  .badge-success {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply bg-success/10 text-success border border-success/20;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply bg-warning/10 text-warning border border-warning/20;
+  }
+
+  .badge-destructive {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply bg-destructive/10 text-destructive border border-destructive/20;
+  }
+
+  .badge-info {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply bg-primary/10 text-primary border border-primary/20;
+  }
+
+  .badge-muted {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply bg-muted text-muted-foreground border border-border;
   }
 }

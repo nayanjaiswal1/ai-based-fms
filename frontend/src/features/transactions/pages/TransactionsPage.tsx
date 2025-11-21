@@ -370,32 +370,6 @@ export default function TransactionsPage() {
         activeFiltersCount={activeFiltersCount}
         buttons={[
           {
-            label: 'Duplicates',
-            icon: Copy,
-            onClick: () => navigate('/transactions/duplicates'),
-            variant: 'outline' as const,
-            className: 'hidden sm:flex',
-          },
-          {
-            label: 'Unverified',
-            icon: Filter,
-            onClick: () => setParam('isVerified', 'false'),
-            variant: 'outline' as const,
-          },
-          {
-            label: 'Import',
-            icon: Upload,
-            onClick: () => navigate('/import'),
-            variant: 'outline' as const,
-            className: 'hidden sm:flex',
-          },
-          {
-            label: 'Upload File',
-            icon: Upload,
-            onClick: () => setIsFileUploadModalOpen(true),
-            variant: 'outline' as const,
-          },
-          {
             label: 'Add Transaction',
             icon: Plus,
             onClick: () => navigate('/transactions/new'),
@@ -493,6 +467,7 @@ export default function TransactionsPage() {
         transaction={modalMode === 'edit' ? selectedTransactionData?.data : null}
         isOpen={!!modalMode}
         onClose={handleCloseModal}
+        onImportClick={() => setIsFileUploadModalOpen(true)}
       />
 
       <FilterModal

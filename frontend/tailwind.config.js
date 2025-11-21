@@ -87,6 +87,14 @@ export default {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: 0 },
         },
+        'collapsible-down': {
+          from: { height: 0 },
+          to: { height: 'var(--radix-collapsible-content-height)' },
+        },
+        'collapsible-up': {
+          from: { height: 'var(--radix-collapsible-content-height)' },
+          to: { height: 0 },
+        },
         // Page load staggered reveal animations
         'fade-in-up': {
           '0%': {
@@ -174,6 +182,8 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'collapsible-down': 'collapsible-down 0.2s ease-out',
+        'collapsible-up': 'collapsible-up 0.2s ease-out',
         'fade-in-up': 'fade-in-up 0.6s ease-out',
         'fade-in-down': 'fade-in-down 0.6s ease-out',
         'fade-in-left': 'fade-in-left 0.6s ease-out',
