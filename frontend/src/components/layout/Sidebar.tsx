@@ -88,16 +88,16 @@ export default function Sidebar() {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <div className="flex w-64 flex-col border-r bg-background transition-colors overflow-hidden">
+    <div className="flex w-64 flex-col border-r bg-background transition-colors h-full">
       {/* Header */}
-      <div className="flex h-16 items-center border-b px-6">
+      <div className="flex h-16 items-center border-b px-6 flex-shrink-0">
         <h2 className="text-xl font-bold text-foreground" aria-label="Finance Management System">
           FMS
         </h2>
       </div>
 
       {/* Scrollable navigation */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4" aria-label="Main navigation">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 min-h-0" aria-label="Main navigation">
         {/* Core Navigation (always visible) */}
         <div className="space-y-1 mb-4">
           {coreMenuItems.map((item) => (
@@ -130,7 +130,7 @@ export default function Sidebar() {
       </nav>
 
       {/* System Navigation (pinned at bottom) */}
-      <div className="border-t bg-background px-3 py-3">
+      <div className="border-t bg-background px-3 py-3 flex-shrink-0">
         <div className="space-y-1">
           {systemMenuItems.map((item) => (
             <NavItem key={item.id} item={item} />

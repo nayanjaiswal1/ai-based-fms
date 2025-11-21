@@ -61,7 +61,7 @@ export default function Layout() {
       <SkipNav />
 
       {/* Desktop Sidebar - Hidden on mobile */}
-      <aside className="hidden lg:block" aria-label="Main navigation">
+      <aside className="hidden lg:flex h-screen" aria-label="Main navigation">
         <Sidebar />
       </aside>
 
