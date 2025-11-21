@@ -32,21 +32,21 @@ export class AuthController {
   private setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
     const isProduction = process.env.NODE_ENV === 'production';
 
-    // Set access token cookie
+    // Set access token cookie (aligned with JWT_EXPIRATION in .env - 7 days)
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: isProduction, // Only use secure in production (HTTPS)
       sameSite: isProduction ? 'strict' : 'lax',
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (matches JWT_EXPIRATION)
       path: '/',
     });
 
-    // Set refresh token cookie
+    // Set refresh token cookie (aligned with JWT_REFRESH_EXPIRATION in .env - 30 days)
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'strict' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days (matches JWT_REFRESH_EXPIRATION)
       path: '/',
     });
   }

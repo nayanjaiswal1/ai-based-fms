@@ -38,16 +38,14 @@ export function TextField<TFieldValues extends FieldValues>({
         max={field.max}
         step={field.step}
         className={`
-          w-full rounded-lg border px-4 py-2.5 text-sm transition-all
-          ${
-            error
-              ? 'border-destructive/50 bg-destructive/10 text-foreground focus:border-destructive focus:ring-destructive'
-              : 'border-input bg-background text-foreground focus:border-ring focus:ring-ring'
+          w-full rounded-md border bg-transparent px-3 py-2 text-sm transition-colors
+          ${error
+            ? 'border-destructive text-destructive placeholder:text-destructive/60 focus:border-destructive focus:ring-1 focus:ring-destructive'
+            : 'border-border text-foreground placeholder:text-muted-foreground hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary'
           }
-          ${field.disabled || field.readonly ? 'cursor-not-allowed bg-muted text-muted-foreground' : ''}
-          focus:outline-none focus:ring-2 focus:ring-opacity-50
-          disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground
-          placeholder:text-muted-foreground
+          ${field.disabled || field.readonly ? 'cursor-not-allowed opacity-50' : ''}
+          focus:outline-none
+          disabled:cursor-not-allowed
           ${field.className || ''}
         `}
       />

@@ -41,7 +41,10 @@
       "Bash(cmd /c \"taskkill /F /PID 15784\")",
       "Bash(cmd /c \"taskkill /F /PID 29340\")",
       "Bash(powershell -Command \"Stop-Process -Id 15784 -Force\")",
-      "Bash(powershell -Command \"Stop-Process -Id 29340 -Force\")"
+      "Bash(powershell -Command \"Stop-Process -Id 29340 -Force\")",
+      "Bash(docker logs:*)",
+      "Bash(docker restart:*)",
+      "Bash(cmd /c \"C:\\Users\\nayan\\OneDrive\\Desktop\\test\\ai-based-fms\\auto-fix-auth.bat\")"
     ],
     "deny": [],
     "ask": []

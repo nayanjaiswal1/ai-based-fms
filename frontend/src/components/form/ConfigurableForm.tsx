@@ -22,6 +22,11 @@ interface ConfigurableFormProps<TFieldValues extends FieldValues> {
    * If true, buttons will not be rendered (useful when modal footer handles them)
    */
   hideButtons?: boolean;
+  /**
+   * Function to render extra content for a specific field
+   */
+  renderFieldExtra?: (name: string) => React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export function ConfigurableForm<TFieldValues extends FieldValues>({
@@ -34,6 +39,8 @@ export function ConfigurableForm<TFieldValues extends FieldValues>({
   className = '',
   onDirtyChange,
   hideButtons = false,
+  renderFieldExtra,
+  children,
 }: ConfigurableFormProps<TFieldValues>) {
   const form = useForm<TFieldValues>({
     resolver: zodResolver(config.schema),
@@ -111,13 +118,19 @@ export function ConfigurableForm<TFieldValues extends FieldValues>({
                       : undefined,
                   }}
                 >
-                  <FormField field={field} form={form} />
+                  <FormField
+                    field={field}
+                    form={form}
+                    renderFieldExtra={renderFieldExtra}
+                  />
                 </div>
               ))}
             </div>
           </div>
         );
       })}
+
+      {children}
 
       {/* Form Actions - only render if not hidden */}
       {!hideButtons && (

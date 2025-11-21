@@ -16,11 +16,13 @@ import { RadioField } from './fields/RadioField';
 interface FormFieldProps<TFieldValues extends FieldValues> {
   field: FieldConfig<TFieldValues>;
   form: UseFormReturn<TFieldValues>;
+  renderFieldExtra?: (name: string) => React.ReactNode;
 }
 
 export function FormField<TFieldValues extends FieldValues>({
   field,
   form,
+  renderFieldExtra,
 }: FormFieldProps<TFieldValues>) {
   const {
     formState: { errors },
@@ -44,49 +46,58 @@ export function FormField<TFieldValues extends FieldValues>({
     error: errorMessage,
   };
 
-  switch (field.type) {
-    case 'text':
-    case 'email':
-    case 'password':
-    case 'number':
-      return <TextField {...commonProps} />;
+  const fieldComponent = (() => {
+    switch (field.type) {
+      case 'text':
+      case 'email':
+      case 'password':
+      case 'number':
+        return <TextField {...commonProps} />;
 
-    case 'currency':
-    case 'percentage':
-      return <CurrencyField {...commonProps} />;
+      case 'currency':
+      case 'percentage':
+        return <CurrencyField {...commonProps} />;
 
-    case 'date':
-    case 'datetime-local':
-      return <DateField {...commonProps} />;
+      case 'date':
+      case 'datetime-local':
+        return <DateField {...commonProps} />;
 
-    case 'select':
-      return <SelectField {...commonProps} />;
+      case 'select':
+        return <SelectField {...commonProps} />;
 
-    case 'searchable-select':
-      return <SearchableSelectField {...commonProps} onCreateNew={field.onCreateNew} />;
+      case 'searchable-select':
+        return <SearchableSelectField {...commonProps} onCreateNew={field.onCreateNew} />;
 
-    case 'multiselect':
-      return <MultiSelectField {...commonProps} />;
+      case 'multiselect':
+        return <MultiSelectField {...commonProps} />;
 
-    case 'creatable-multiselect':
-      return <CreatableMultiSelectField {...commonProps} onCreateNew={field.onCreateNew} />;
+      case 'creatable-multiselect':
+        return <CreatableMultiSelectField {...commonProps} onCreateNew={field.onCreateNew} />;
 
-    case 'textarea':
-      return <TextAreaField {...commonProps} />;
+      case 'textarea':
+        return <TextAreaField {...commonProps} />;
 
-    case 'checkbox':
-      return <CheckboxField {...commonProps} />;
+      case 'checkbox':
+        return <CheckboxField {...commonProps} />;
 
-    case 'switch':
-      return <SwitchField {...commonProps} />;
+      case 'switch':
+        return <SwitchField {...commonProps} />;
 
-    case 'radio':
-      return <RadioField {...commonProps} />;
+      case 'radio':
+        return <RadioField {...commonProps} />;
 
-    case 'color':
-      return <ColorField {...commonProps} />;
+      case 'color':
+        return <ColorField {...commonProps} />;
 
-    default:
-      return null;
-  }
+      default:
+        return null;
+    }
+  })();
+
+  return (
+    <>
+      {fieldComponent}
+      {renderFieldExtra?.(field.name)}
+    </>
+  );
 }

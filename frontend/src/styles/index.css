@@ -3,40 +3,116 @@
 @tailwind utilities;
 
 @layer base {
-  /* Subtle texture background */
+  /* CSS Variables - Light Mode (Default) */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 142 76% 36%;
+    --success-foreground: 144 61% 95%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 89%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+
+    /* Gradient definitions */
+    --gradient-dawn: linear-gradient(135deg, hsl(210 100% 97%) 0%, hsl(220 100% 98%) 50%, hsl(200 100% 97%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(221.2 83.2% 53.3%) 0%, hsl(217 91% 60%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(270 50% 40%) 0%, hsl(310 48% 45%) 100%);
+  }
+
+  /* Dark Mode Variables */
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 142 71% 45%;
+    --success-foreground: 144 61% 95%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 89%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    /* Dark mode gradient adjustments */
+    --gradient-dawn: linear-gradient(135deg, hsl(222.2 84% 8%) 0%, hsl(220 84% 10%) 50%, hsl(218 84% 8%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(217.2 91.2% 59.8%) 0%, hsl(213 91% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(270 60% 50%) 0%, hsl(310 58% 55%) 100%);
+  }
+
+  /* Subtle texture background - theme aware */
   body {
+    @apply bg-background text-foreground;
     background-image:
-      radial-gradient(circle at 20% 50%, hsla(12, 55%, 51%, 0.03) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, hsla(135, 17%, 49%, 0.03) 0%, transparent 50%);
+      radial-gradient(circle at 20% 50%, hsla(221, 83%, 53%, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, hsla(270, 50%, 45%, 0.03) 0%, transparent 50%);
     background-attachment: fixed;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(circle at 20% 50%, hsla(217, 91%, 60%, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, hsla(270, 60%, 50%, 0.05) 0%, transparent 50%);
   }
 
   /* Typography hierarchy */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Crimson Pro', Georgia, serif;
+    @apply font-serif text-foreground;
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: -0.02em;
   }
 
   h1 {
-    font-size: 3.5rem;
-    font-weight: 800;
+    @apply text-4xl md:text-5xl lg:text-6xl font-extrabold;
   }
 
   h2 {
-    font-size: 2.5rem;
-    font-weight: 700;
+    @apply text-3xl md:text-4xl font-bold;
   }
 
   h3 {
-    font-size: 2rem;
-    font-weight: 600;
+    @apply text-2xl md:text-3xl font-semibold;
   }
 
   h4 {
-    font-size: 1.5rem;
-    font-weight: 600;
+    @apply text-xl md:text-2xl font-semibold;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl font-medium;
+  }
+
+  h6 {
+    @apply text-base md:text-lg font-medium;
   }
 
   /* Monospace for financial data */
@@ -60,6 +136,11 @@
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
+    }
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
     }
   }
 }

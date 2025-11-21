@@ -117,3 +117,77 @@ export const registerFormConfig: FormConfig<RegisterFormData> = {
     confirmPassword: '',
   },
 };
+
+// Forgot Password Schema
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+
+export const forgotPasswordFormConfig: FormConfig<ForgotPasswordFormData> = {
+  title: 'Reset Password',
+  description: 'Enter your email to receive reset instructions',
+  sections: [
+    {
+      fields: [
+        {
+          name: 'email',
+          label: 'Email Address',
+          type: 'email',
+          required: true,
+          placeholder: 'you@example.com',
+        },
+      ],
+    },
+  ],
+  schema: forgotPasswordSchema,
+  defaultValues: {
+    email: '',
+  },
+};
+
+// Reset Password Schema
+export const resetPasswordSchema = z.object({
+  password: z.string().min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Must contain an uppercase letter')
+    .regex(/[a-z]/, 'Must contain a lowercase letter')
+    .regex(/[\d!@#$%^&*(),.?":{}|<>]/, 'Must contain a number or special character'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+
+export const resetPasswordFormConfig: FormConfig<ResetPasswordFormData> = {
+  title: 'Set New Password',
+  description: 'Create a strong password for your account',
+  sections: [
+    {
+      fields: [
+        {
+          name: 'password',
+          label: 'New Password',
+          type: 'password',
+          required: true,
+          placeholder: '••••••••',
+          description: 'Min 8 chars, uppercase, lowercase, & number/special',
+        },
+        {
+          name: 'confirmPassword',
+          label: 'Confirm Password',
+          type: 'password',
+          required: true,
+          placeholder: '••••••••',
+        },
+      ],
+    },
+  ],
+  schema: resetPasswordSchema,
+  defaultValues: {
+    password: '',
+    confirmPassword: '',
+  },
+};
