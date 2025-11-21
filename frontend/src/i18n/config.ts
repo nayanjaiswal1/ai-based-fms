@@ -72,7 +72,7 @@ i18n
 
     // React specific options
     react: {
-      useSuspense: true,
+      useSuspense: false,
       bindI18n: 'languageChanged loaded',
       bindI18nStore: 'added',
       transEmptyNodeValue: '',

@@ -6,7 +6,15 @@
       "Bash(npm run migration:generate:*)",
       "Bash(npm run migration:run:*)",
       "Bash(psql:*)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(npm run typeorm:generate:*)",
+      "Bash(docker exec:*)",
+      "Bash(npm run seed:*)",
+      "Bash(curl:*)",
+      "Bash(npm run typeorm:generate:AddGroupIntegrationToLendBorrow:*)",
+      "Bash(nul)",
+      "Bash(find:*)",
+      "Bash(npm run typeorm:generate:CreateEmailConnection:*)"
     ],
     "deny": [],
     "ask": []

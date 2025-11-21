@@ -1,93 +1,111 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { budgetsApi, categoriesApi, tagsApi } from '@services/api';
-import { format } from 'date-fns';
-import { ArrowLeft, Save, Calendar, DollarSign, Tag, AlertTriangle } from 'lucide-react';
+import { budgetsApi, categoriesApi, aiApi } from '@services/api';
+import { ArrowLeft, Save, Sparkles, X, Loader2, Plus, TrendingUp, Calendar, DollarSign, PieChart, Lightbulb, Info, Tag } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useCurrency } from '@/hooks/useCurrency';
 
-interface BudgetFormData {
-  budgetMonth: string;
-  name: string;
+interface CategoryBudget {
+  categoryId: string;
+  categoryName: string;
   amount: number;
-  period: 'monthly';
-  type: 'category' | 'tag' | 'overall';
-  categoryId?: string;
-  tagId?: string;
-  alertEnabled: boolean;
-  alertThreshold: number;
-  notes: string;
+  reasoning?: string;
+  suggestedTags?: string[];
+}
+
+interface AIResponse {
+  income: number;
+  fixedExpenses: {
+    savings: number;
+    debt: number;
+    regular: number;
+    total: number;
+  };
+  availableForBudgets: number;
+  budgets: any[];
+  summary: {
+    totalAllocated: number;
+    remaining: number;
+    distribution: {
+      needs: number;
+      wants: number;
+      savings: number;
+    };
+  };
+  recommendations: string[];
 }
 
 export default function CreateBudgetPage() {
+  const { symbol } = useCurrency();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  const [formData, setFormData] = useState<BudgetFormData>({
-    budgetMonth: currentMonth,
-    name: '',
-    amount: 0,
-    period: 'monthly',
-    type: 'category',
-    categoryId: '',
-    tagId: '',
-    alertEnabled: true,
-    alertThreshold: 80,
-    notes: '',
-  });
+  const [budgetMonth, setBudgetMonth] = useState(currentMonth);
+  const [categoryBudgets, setCategoryBudgets] = useState<CategoryBudget[]>([]);
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(0);
+  const [aiContext, setAiContext] = useState('');
+  const [aiResponse, setAiResponse] = useState<AIResponse | null>(null);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: categoriesApi.getAll,
   });
 
-  const { data: tags } = useQuery({
-    queryKey: ['tags'],
-    queryFn: tagsApi.getAll,
+  // AI Budget Generation
+  const generateAIMutation = useMutation({
+    mutationFn: async () => {
+      return aiApi.generateBudget({
+        monthlyIncome,
+        additionalContext: aiContext || undefined,
+      });
+    },
+    onSuccess: (response: any) => {
+      const responseData = response.data || response;
+
+      if (responseData.budgets && Array.isArray(responseData.budgets)) {
+        const aiBudgets: CategoryBudget[] = responseData.budgets.map((b: any) => ({
+          categoryId: b.categoryId,
+          categoryName: b.categoryName,
+          amount: b.amount,
+          reasoning: b.reasoning,
+          suggestedTags: b.suggestedTags || [],
+        }));
+
+        setCategoryBudgets(aiBudgets);
+        setAiResponse(responseData);
+        toast.success(`Generated ${aiBudgets.length} category budgets!`);
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to generate budgets');
+    },
   });
 
-  const createMutation = useMutation({
-    mutationFn: async (data: BudgetFormData) => {
-      // Calculate start and end dates from month
-      const [year, month] = data.budgetMonth.split('-').map(Number);
+  // Save Budget
+  const saveBudgetMutation = useMutation({
+    mutationFn: async () => {
+      const [year, month] = budgetMonth.split('-').map(Number);
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
+      const monthLabel = startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
-      const monthLabel = startDate.toLocaleDateString('en-US', {
-        month: 'short',
-        year: 'numeric',
-      });
+      const promises = categoryBudgets.map((cb) =>
+        budgetsApi.create({
+          name: `${cb.categoryName} - ${monthLabel}`,
+          amount: cb.amount,
+          period: 'monthly',
+          type: 'category',
+          categoryId: cb.categoryId,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+          alertEnabled: true,
+          alertThreshold: 80,
+        })
+      );
 
-      // Auto-generate name if not provided
-      let budgetName = data.name;
-      if (!budgetName) {
-        if (data.type === 'category' && data.categoryId) {
-          const category = categories?.data?.find((c: any) => c.id === data.categoryId);
-          budgetName = `${category?.name || 'Category'} - ${monthLabel}`;
-        } else if (data.type === 'tag' && data.tagId) {
-          const tag = tags?.data?.find((t: any) => t.id === data.tagId);
-          budgetName = `${tag?.name || 'Tag'} - ${monthLabel}`;
-        } else {
-          budgetName = `Budget - ${monthLabel}`;
-        }
-      } else if (!budgetName.includes(monthLabel)) {
-        budgetName = `${budgetName} - ${monthLabel}`;
-      }
-
-      return budgetsApi.create({
-        name: budgetName,
-        amount: data.amount,
-        period: data.period,
-        type: data.type,
-        categoryId: data.categoryId || undefined,
-        tagId: data.tagId || undefined,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        alertEnabled: data.alertEnabled,
-        alertThreshold: data.alertThreshold,
-        notes: data.notes,
-      });
+      return Promise.all(promises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
@@ -99,290 +117,395 @@ export default function CreateBudgetPage() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const addCategoryBudget = (categoryId: string) => {
+    const category = categories?.data?.find((c: any) => c.id === categoryId);
+    if (!category) return;
 
-    // Validation
-    if (formData.amount <= 0) {
-      toast.error('Amount must be greater than 0');
+    if (categoryBudgets.find(cb => cb.categoryId === categoryId)) {
+      toast.error('Category already added');
       return;
     }
 
-    if (formData.type === 'category' && !formData.categoryId) {
-      toast.error('Please select a category');
-      return;
-    }
-
-    if (formData.type === 'tag' && !formData.tagId) {
-      toast.error('Please select a tag');
-      return;
-    }
-
-    createMutation.mutate(formData);
+    setCategoryBudgets([
+      ...categoryBudgets,
+      { categoryId, categoryName: category.name, amount: 0 }
+    ]);
   };
 
-  const handleChange = (field: keyof BudgetFormData, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const removeCategoryBudget = (categoryId: string) => {
+    setCategoryBudgets(categoryBudgets.filter(cb => cb.categoryId !== categoryId));
   };
 
-  const selectedMonth = formData.budgetMonth
-    ? new Date(formData.budgetMonth + '-01').toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      })
-    : '';
+  const updateAmount = (categoryId: string, amount: number) => {
+    setCategoryBudgets(categoryBudgets.map(cb =>
+      cb.categoryId === categoryId ? { ...cb, amount } : cb
+    ));
+  };
+
+  const handleSave = () => {
+    if (categoryBudgets.length === 0) {
+      toast.error('Add at least one category budget');
+      return;
+    }
+
+    if (categoryBudgets.some(cb => cb.amount <= 0)) {
+      toast.error('All amounts must be greater than 0');
+      return;
+    }
+
+    saveBudgetMutation.mutate();
+  };
+
+  const totalBudget = categoryBudgets.reduce((sum, cb) => sum + cb.amount, 0);
+  const selectedMonth = new Date(budgetMonth + '-01').toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const availableCategories = categories?.data?.filter(
+    (c: any) => !categoryBudgets.find(cb => cb.categoryId === c.id)
+  ) || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-8">
           <button
             onClick={() => navigate('/budgets')}
-            className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors group"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Budgets
+            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Back to Budgets</span>
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Create Budget</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Set up a budget for {selectedMonth || 'a specific month'}
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+              <Calendar className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Create Budget</h1>
+              <p className="text-gray-600 mt-1">{selectedMonth}</p>
+            </div>
+          </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Month Selection */}
-          <div className="rounded-lg bg-white p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="rounded-lg bg-blue-100 p-2">
-                <Calendar className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Budget Month</h2>
-                <p className="text-sm text-gray-600">Select the month for this budget</p>
-              </div>
-            </div>
-            <input
-              type="month"
-              value={formData.budgetMonth}
-              onChange={(e) => handleChange('budgetMonth', e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-              required
-            />
-          </div>
-
-          {/* Budget Details */}
-          <div className="rounded-lg bg-white p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="rounded-lg bg-green-100 p-2">
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Budget Details</h2>
-                <p className="text-sm text-gray-600">Configure your budget amount and type</p>
-              </div>
+        {/* Month & AI Section */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            {/* Month */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                Budget Month
+              </label>
+              <input
+                type="month"
+                value={budgetMonth}
+                onChange={(e) => setBudgetMonth(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
+              />
             </div>
 
-            <div className="space-y-4">
-              {/* Budget Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Budget Type *
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => handleChange('type', e.target.value as any)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                  required
-                >
-                  <option value="category">Category</option>
-                  <option value="tag">Tag</option>
-                  <option value="overall">Overall</option>
-                </select>
-              </div>
-
-              {/* Category Selection (if type is category) */}
-              {formData.type === 'category' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category *
-                  </label>
-                  <select
-                    value={formData.categoryId}
-                    onChange={(e) => handleChange('categoryId', e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {categories?.data?.map((category: any) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Tag Selection (if type is tag) */}
-              {formData.type === 'tag' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tag *
-                  </label>
-                  <select
-                    value={formData.tagId}
-                    onChange={(e) => handleChange('tagId', e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                    required
-                  >
-                    <option value="">Select a tag</option>
-                    {tags?.data?.map((tag: any) => (
-                      <option key={tag.id} value={tag.id}>
-                        {tag.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Budget Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Budget Name (Optional)
-                </label>
+            {/* Income */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                <DollarSign className="h-4 w-4 text-green-600" />
+                Monthly Income
+                <span className="text-xs font-normal text-gray-500">(for AI generation)</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+                  {symbol()}
+                </span>
                 <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  placeholder="Auto-generated if left blank"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                  maxLength={100}
+                  type="number"
+                  value={monthlyIncome || ''}
+                  onChange={(e) => setMonthlyIncome(parseFloat(e.target.value) || 0)}
+                  placeholder="5000"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-base"
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Leave blank to auto-generate based on category/tag and month
-                </p>
-              </div>
-
-              {/* Budget Amount */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Budget Amount *
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                    $
-                  </span>
-                  <input
-                    type="number"
-                    value={formData.amount || ''}
-                    onChange={(e) => handleChange('amount', parseFloat(e.target.value) || 0)}
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0"
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                    required
-                  />
-                </div>
               </div>
             </div>
           </div>
 
-          {/* Alert Settings */}
-          <div className="rounded-lg bg-white p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="rounded-lg bg-yellow-100 p-2">
-                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+          {/* AI Context */}
+          {monthlyIncome > 0 && (
+            <div className="mb-6 p-4 bg-purple-50 border-2 border-purple-200 rounded-xl">
+              <label className="block text-sm font-semibold text-purple-900 mb-2">
+                Additional Context (Optional)
+              </label>
+              <input
+                type="text"
+                value={aiContext}
+                onChange={(e) => setAiContext(e.target.value)}
+                placeholder="e.g., Family of 4, saving for vacation, rent $1200"
+                className="w-full px-4 py-2.5 border-2 border-purple-200 bg-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm"
+              />
+              <p className="mt-2 text-xs text-purple-700">
+                Add any relevant information to help AI create personalized budgets
+              </p>
+            </div>
+          )}
+
+          {/* AI Button */}
+          <button
+            onClick={() => generateAIMutation.mutate()}
+            disabled={generateAIMutation.isPending || monthlyIncome <= 0}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 via-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
+          >
+            {generateAIMutation.isPending ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Generating AI Budget...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-5 w-5" />
+                <span>Generate Budget with AI</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* AI Insights */}
+        {aiResponse && (
+          <div className="space-y-4 mb-6">
+            {/* Summary Cards */}
+            <div className="grid md:grid-cols-3 gap-4">
+              {/* Distribution */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border-2 border-blue-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <PieChart className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-bold text-blue-900">Distribution</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-blue-800">Needs</span>
+                    <span className="font-bold text-blue-900">{symbol()}{aiResponse.summary.distribution.needs.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-blue-800">Wants</span>
+                    <span className="font-bold text-blue-900">{symbol()}{aiResponse.summary.distribution.wants.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-blue-800">Savings</span>
+                    <span className="font-bold text-blue-900">{symbol()}{aiResponse.summary.distribution.savings.toLocaleString()}</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Alert Settings</h2>
-                <p className="text-sm text-gray-600">Get notified when reaching limits</p>
+
+              {/* Fixed Expenses */}
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-5 border-2 border-orange-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Info className="h-5 w-5 text-orange-600" />
+                  <h3 className="font-bold text-orange-900">Fixed Expenses</h3>
+                </div>
+                <div className="space-y-2">
+                  {aiResponse.fixedExpenses.savings > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-orange-800">Savings</span>
+                      <span className="font-bold text-orange-900">{symbol()}{aiResponse.fixedExpenses.savings.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {aiResponse.fixedExpenses.debt > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-orange-800">Debt</span>
+                      <span className="font-bold text-orange-900">{symbol()}{aiResponse.fixedExpenses.debt.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {aiResponse.fixedExpenses.regular > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-orange-800">Regular</span>
+                      <span className="font-bold text-orange-900">{symbol()}{aiResponse.fixedExpenses.regular.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t-2 border-orange-200">
+                    <span className="text-sm font-bold text-orange-800">Total</span>
+                    <span className="font-bold text-orange-900">{symbol()}{aiResponse.fixedExpenses.total.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Available Budget */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border-2 border-green-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  <h3 className="font-bold text-green-900">Budget Summary</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-green-800">Income</span>
+                    <span className="font-bold text-green-900">{symbol()}{aiResponse.income.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-green-800">Allocated</span>
+                    <span className="font-bold text-green-900">{symbol()}{aiResponse.summary.totalAllocated.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t-2 border-green-200">
+                    <span className="text-sm font-bold text-green-800">Remaining</span>
+                    <span className="font-bold text-green-900">{symbol()}{aiResponse.summary.remaining.toLocaleString()}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Enable Alerts */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Enable Alerts</label>
-                  <p className="text-xs text-gray-500">Receive notifications when threshold is reached</p>
+            {/* Recommendations */}
+            {aiResponse.recommendations.length > 0 && (
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border-2 border-purple-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Lightbulb className="h-5 w-5 text-purple-600" />
+                  <h3 className="font-bold text-purple-900">AI Recommendations</h3>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleChange('alertEnabled', !formData.alertEnabled)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.alertEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                  }`}
+                <ul className="space-y-2">
+                  {aiResponse.recommendations.map((rec, index) => (
+                    <li key={index} className="flex gap-2 text-sm text-purple-800">
+                      <span className="text-purple-600 font-bold">•</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Category Budgets */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Category Budgets</h2>
+                <p className="text-sm text-gray-600">{categoryBudgets.length} categories</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600 font-medium">Total Budget</p>
+              <p className="text-2xl font-bold text-blue-600">{symbol()}{totalBudget.toLocaleString()}</p>
+            </div>
+          </div>
+
+          {/* Budget Items */}
+          {categoryBudgets.length > 0 ? (
+            <div className="space-y-2 mb-6">
+              {categoryBudgets.map((cb, index) => (
+                <div
+                  key={cb.categoryId}
+                  className="group flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
                 >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      formData.alertEnabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
+                  {/* Left: Category Name */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 mb-1">{cb.categoryName}</div>
+                    {cb.suggestedTags && cb.suggestedTags.length > 0 && (
+                      <div className="flex gap-1.5 mb-1 flex-wrap">
+                        {cb.suggestedTags.slice(0, 3).map((tag, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center px-2.5 py-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {cb.reasoning && (
+                      <div className="text-xs text-gray-500 truncate">{cb.reasoning}</div>
+                    )}
+                  </div>
 
-              {/* Alert Threshold */}
-              {formData.alertEnabled && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Alert Threshold (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.alertThreshold}
-                    onChange={(e) =>
-                      handleChange('alertThreshold', parseInt(e.target.value) || 80)
-                    }
-                    min="0"
-                    max="100"
-                    step="5"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    You'll be notified when you reach {formData.alertThreshold}% of your budget
-                  </p>
+                  {/* Right: Amount and Remove */}
+                  <div className="flex items-center gap-2 ml-4">
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        {symbol()}
+                      </span>
+                      <input
+                        type="number"
+                        value={cb.amount || ''}
+                        onChange={(e) => updateAmount(cb.categoryId, parseFloat(e.target.value) || 0)}
+                        placeholder="0"
+                        step="0.01"
+                        className="w-32 pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right font-medium"
+                      />
+                    </div>
+                    <button
+                      onClick={() => removeCategoryBudget(cb.categoryId)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="inline-flex p-4 bg-gray-100 rounded-full mb-4">
+                <TrendingUp className="h-8 w-8 text-gray-400" />
+              </div>
+              <p className="text-gray-600 font-medium mb-2">No categories added yet</p>
+              <p className="text-sm text-gray-500">
+                Add categories manually or use AI to generate a complete budget
+              </p>
+            </div>
+          )}
 
-          {/* Notes */}
-          <div className="rounded-lg bg-white p-6 shadow-sm border border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notes (Optional)
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => handleChange('notes', e.target.value)}
-              placeholder="Add any additional notes about this budget..."
-              rows={3}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base resize-none"
-            />
-          </div>
+          {/* Add Category */}
+          {availableCategories.length > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Add Category Manually
+              </label>
+              <select
+                onChange={(e) => {
+                  if (e.target.value) {
+                    addCategoryBudget(e.target.value);
+                    e.target.value = '';
+                  }
+                }}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base font-medium text-gray-700 bg-white hover:border-gray-300 cursor-pointer"
+              >
+                <option value="">+ Select a category to add...</option>
+                {availableCategories.map((cat: any) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 justify-end">
+        {/* Actions */}
+        {categoryBudgets.length > 0 && (
+          <div className="flex gap-4">
             <button
-              type="button"
               onClick={() => navigate('/budgets')}
-              className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-semibold text-gray-700 transition-all"
             >
               Cancel
             </button>
             <button
-              type="submit"
-              disabled={createMutation.isPending}
-              className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleSave}
+              disabled={saveBudgetMutation.isPending}
+              className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
             >
-              <Save className="h-4 w-4" />
-              {createMutation.isPending ? 'Creating...' : 'Create Budget'}
+              {saveBudgetMutation.isPending ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Saving Budget...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-5 w-5" />
+                  <span>Save Budget</span>
+                </>
+              )}
             </button>
           </div>
-        </form>
+        )}
       </div>
     </div>
   );

@@ -9,14 +9,14 @@ import { Repository, LessThan } from 'typeorm';
 import { Session, DeviceInfo } from '@database/entities';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { SessionResponseDto } from './dto/session-response.dto';
-import UAParser from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
 
 @Injectable()
 export class SessionsService {
   constructor(
     @InjectRepository(Session)
     private sessionRepository: Repository<Session>,
-  ) {}
+  ) { }
 
   /**
    * Create a new session on login
@@ -159,7 +159,7 @@ export class SessionsService {
    * Parse user agent string to extract device information
    */
   private parseUserAgent(userAgent: string): DeviceInfo {
-    const parser = new (UAParser as any)(userAgent);
+    const parser = new UAParser(userAgent);
     const result = parser.getResult();
 
     return {
