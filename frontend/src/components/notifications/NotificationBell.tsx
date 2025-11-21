@@ -118,13 +118,12 @@ export function NotificationBell() {
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-96 p-0 max-h-[600px] overflow-hidden flex flex-col"
+        className="w-96 p-0 max-h-[600px] overflow-hidden flex flex-col  bg-muted/30"
         align="end"
         sideOffset={8}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-4 py-3 bg-muted/30">
-          <h3 className="font-semibold text-foreground">Notifications</h3>
+        <div className="flex items-center justify-between ">
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}

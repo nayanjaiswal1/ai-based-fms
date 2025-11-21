@@ -15,6 +15,7 @@ import { UsageLimitBanner, ProtectedAction } from '@/components/feature-gate';
 import { FeatureFlag } from '@/config/features.config';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useSubscriptionStatus } from '@/hooks/useFeatureAccess';
 
 export default function BudgetsPage() {
   const { symbol } = useCurrency();
@@ -26,6 +27,7 @@ export default function BudgetsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [periodFilter, setPeriodFilter] = useState<string>('');
+  const { hasReachedLimit } = useSubscriptionStatus();
 
   // Detect modal state from URL path
   const isNewModal = location.pathname === '/budgets/new';
@@ -183,6 +185,16 @@ export default function BudgetsPage() {
   };
 
   const activeFiltersCount = periodFilter ? 1 : 0;
+  const isLimitReached = hasReachedLimit('maxBudgets');
+
+  const handleCreateClick = () => {
+    if (isLimitReached) {
+      toast.error('You have reached your budgets limit. Please upgrade your plan.');
+      navigate('/settings/subscription');
+      return;
+    }
+    navigate('/budgets/new');
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -202,8 +214,9 @@ export default function BudgetsPage() {
           {
             label: 'Create Budget',
             icon: Plus,
-            onClick: () => navigate('/budgets/new'),
+            onClick: handleCreateClick,
             variant: 'primary' as const,
+            disabled: isLimitReached,
           },
         ]}
       />
@@ -258,14 +271,16 @@ export default function BudgetsPage() {
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
             <button
               onClick={() => navigate('/budgets/ai-wizard')}
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:from-purple-700 hover:to-blue-700 shadow-md hover:shadow-lg transition-all"
+              disabled={isLimitReached}
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:from-purple-700 hover:to-blue-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Sparkles className="h-4 w-4" />
               Try AI Budget Wizard
             </button>
             <button
-              onClick={() => navigate('/budgets/new')}
-              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+              onClick={handleCreateClick}
+              disabled={isLimitReached}
+              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Create Manually
             </button>

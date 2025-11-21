@@ -56,7 +56,7 @@ export function StatusBar({ items, className = '' }: StatusBarProps) {
     <>
       {/* Status Bar - Offset for sidebar on desktop */}
       <div
-        className={`fixed bottom-0 left-0 md:left-64 right-0 bg-gradient-to-r from-slate-800 to-slate-900 border-t border-slate-700 z-40 ${className}`}
+        className={`fixed bottom-0 left-0 md:left-64 right-0 bg-card border-t border-border z-40 ${className}`}
         onClick={handleClick}
         style={{ cursor: ctrlPressed ? 'pointer' : 'default' }}
       >
@@ -70,14 +70,14 @@ export function StatusBar({ items, className = '' }: StatusBarProps) {
               >
                 {Icon && (
                   <Icon
-                    className="h-3.5 w-3.5"
-                    style={{ color: item.color || '#94a3b8' }}
+                    className="h-3.5 w-3.5 text-muted-foreground"
+                    style={{ color: item.color }}
                   />
                 )}
-                <span className="text-xs text-slate-400">{item.label}:</span>
+                <span className="text-xs text-muted-foreground">{item.label}:</span>
                 <span
-                  className="text-xs font-semibold"
-                  style={{ color: item.color || '#e2e8f0' }}
+                  className="text-xs font-semibold text-foreground"
+                  style={{ color: item.color }}
                 >
                   {item.value}
                 </span>
@@ -87,7 +87,7 @@ export function StatusBar({ items, className = '' }: StatusBarProps) {
 
           {/* Hint for Ctrl+Click */}
           {ctrlPressed && (
-            <div className="ml-auto flex-shrink-0 text-xs text-slate-400 animate-pulse">
+            <div className="ml-auto flex-shrink-0 text-xs text-muted-foreground animate-pulse">
               Click for details
             </div>
           )}
@@ -96,9 +96,9 @@ export function StatusBar({ items, className = '' }: StatusBarProps) {
 
       {/* Details Panel (Excel-style) */}
       {showDetails && (
-        <div className="fixed bottom-8 right-4 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl z-50 w-80 max-h-96 overflow-y-auto">
-          <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-4 py-2 border-b border-slate-600">
-            <h3 className="text-sm font-semibold text-slate-200">Statistics</h3>
+        <div className="fixed bottom-8 right-4 bg-card border border-border rounded-lg shadow-2xl z-50 w-80 max-h-96 overflow-y-auto">
+          <div className="bg-muted/50 px-4 py-2 border-b border-border">
+            <h3 className="text-sm font-semibold text-foreground">Statistics</h3>
           </div>
           <div className="p-3 space-y-2">
             {items.map((item) => {
@@ -113,17 +113,17 @@ export function StatusBar({ items, className = '' }: StatusBarProps) {
                     <div className="flex items-center gap-2">
                       {Icon && (
                         <Icon
-                          className="h-4 w-4"
-                          style={{ color: item.color || '#94a3b8' }}
+                          className="h-4 w-4 text-muted-foreground"
+                          style={{ color: item.color }}
                         />
                       )}
-                      <span className="text-xs font-medium text-slate-300">
+                      <span className="text-xs font-medium text-foreground">
                         {item.label}
                       </span>
                     </div>
                     <span
-                      className="text-sm font-bold"
-                      style={{ color: item.color || '#e2e8f0' }}
+                      className="text-sm font-bold text-foreground"
+                      style={{ color: item.color }}
                     >
                       {item.value}
                     </span>
@@ -137,10 +137,10 @@ export function StatusBar({ items, className = '' }: StatusBarProps) {
                           key={idx}
                           className="flex items-center justify-between py-0.5"
                         >
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-muted-foreground">
                             {detail.label}
                           </span>
-                          <span className="text-xs font-medium text-slate-300">
+                          <span className="text-xs font-medium text-foreground">
                             {detail.value}
                           </span>
                         </div>
@@ -151,8 +151,8 @@ export function StatusBar({ items, className = '' }: StatusBarProps) {
               );
             })}
           </div>
-          <div className="bg-slate-900 px-4 py-2 border-t border-slate-700">
-            <p className="text-xs text-slate-500 text-center">
+          <div className="bg-muted/30 px-4 py-2 border-t border-border">
+            <p className="text-xs text-muted-foreground text-center">
               Press Ctrl again to close
             </p>
           </div>

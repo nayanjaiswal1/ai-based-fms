@@ -9,6 +9,7 @@ const DashboardPage = lazy(() => import('@features/dashboard/pages/DashboardPage
 const TransactionsPage = lazy(() => import('@features/transactions/pages/TransactionsPage'));
 const DuplicatesPage = lazy(() => import('@features/transactions/pages/DuplicatesPage'));
 const AccountsPage = lazy(() => import('@features/accounts/pages/AccountsPage'));
+const AccountDetailPage = lazy(() => import('@features/accounts/pages/AccountDetailPage'));
 const ReconciliationPage = lazy(() =>
   import('@features/reconciliation/pages/ReconciliationPage').then(module => ({
     default: module.ReconciliationPage
@@ -44,6 +45,7 @@ const AppearanceTab = lazy(() => import('@features/settings/components/Appearanc
 const CategoriesTab = lazy(() => import('@features/settings/components/CategoriesTab'));
 const TagsTab = lazy(() => import('@features/settings/components/TagsTab'));
 const RemindersTab = lazy(() => import('@features/settings/components/RemindersTab'));
+const EmailTab = lazy(() => import('@features/settings/components/EmailTab'));
 const ExportTab = lazy(() => import('@features/settings/components/ExportTab'));
 const SecurityTab = lazy(() => import('@features/settings/components/SecurityTab'));
 const SessionsTab = lazy(() => import('@features/settings/components/SessionsTab'));
@@ -85,6 +87,10 @@ export const protectedRoutes: RouteObject[] = [
   {
     path: '/accounts/edit/:id',
     element: <AccountsPage />,
+  },
+  {
+    path: '/accounts/:id',
+    element: <AccountDetailPage />,
   },
   {
     path: '/reconciliation',
@@ -323,6 +329,10 @@ export const protectedRoutes: RouteObject[] = [
       {
         path: 'reminders',
         element: <RemindersTab />,
+      },
+      {
+        path: 'email',
+        element: <EmailTab />,
       },
       {
         path: 'export',

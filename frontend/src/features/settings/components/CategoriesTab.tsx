@@ -19,11 +19,6 @@ export default function CategoriesTab() {
     queryFn: categoriesApi.getAll,
   });
 
-  // Debug logging
-  console.log('📦 Categories data:', categories);
-  console.log('🔄 Is loading:', isLoading);
-  console.log('📊 Categories array:', categories?.data);
-  console.log('🔢 Categories count:', categories?.data?.length);
 
   const deleteMutation = useMutation({
     mutationFn: categoriesApi.delete,
@@ -57,18 +52,6 @@ export default function CategoriesTab() {
       return categoryParentId === searchParentId;
     }) || [];
 
-    if (level === 0) {
-      console.log('🎯 Root categories (parentId=null):', filtered);
-      console.log('🔍 Sample category structure:', categories?.data?.[0]);
-      console.log('📊 Parent ID types:', categories?.data?.slice(0, 5).map((c: any) => ({
-        name: c.name,
-        parentId: c.parentId,
-        type: typeof c.parentId,
-        isNull: c.parentId === null,
-        isUndefined: c.parentId === undefined,
-        isEmpty: c.parentId === ''
-      })));
-    }
 
     return filtered.map((category: any) => (
       <div key={category.id}>

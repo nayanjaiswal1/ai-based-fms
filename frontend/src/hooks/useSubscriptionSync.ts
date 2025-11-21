@@ -60,10 +60,11 @@ export function useSubscriptionSync() {
       setSubscription({
         tier: subscriptionData.tier,
         status: subscriptionData.status,
-        startDate: subscriptionData.startDate,
-        endDate: subscriptionData.endDate,
+        startDate: subscriptionData.startDate || subscriptionData.currentPeriodStart,
+        endDate: subscriptionData.endDate || subscriptionData.currentPeriodEnd,
         trialEndsAt: subscriptionData.trialEndsAt,
-        features: subscriptionData.features,
+        features: subscriptionData.features || [],
+        limits: subscriptionData.limits, // Store limits from backend
       });
     }
   }, [subscriptionData, setSubscription]);

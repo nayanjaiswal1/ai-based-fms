@@ -3,17 +3,37 @@ import { SubscriptionTier } from '@/config/features.config';
 
 export interface SubscriptionResponse {
   id: string;
-  userId: string;
+  userId?: string;
   tier: SubscriptionTier;
-  status: 'active' | 'expired' | 'trial' | 'cancelled';
-  startDate: string;
+  status: 'active' | 'expired' | 'trial' | 'cancelled' | 'trialing';
+  startDate?: string;
   endDate?: string;
   trialEndsAt?: string;
-  features: string[];
-  addons: string[];
-  billingCycle: 'monthly' | 'yearly';
-  amount: number;
-  currency: string;
+  features?: string[];
+  addons?: string[];
+  billingCycle?: 'monthly' | 'yearly';
+  amount?: number;
+  currency?: string;
+  price?: number;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
+  isActive?: boolean;
+  limits: {
+    maxTransactions: number;
+    maxAccounts: number;
+    maxBudgets: number;
+    maxGroups: number;
+    maxInvestments: number;
+    maxReports: number;
+    maxApiCalls: number;
+    maxExports: number;
+    maxImports: number;
+    maxStorage: number;
+    maxUsers: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UsageResponse {

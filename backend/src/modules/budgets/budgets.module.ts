@@ -4,9 +4,16 @@ import { BudgetsService } from './budgets.service';
 import { BudgetsController } from './budgets.controller';
 import { Budget, Transaction } from '@database/entities';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
+import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Budget, Transaction]), NotificationsModule],
+  imports: [
+    TypeOrmModule.forFeature([Budget, Transaction]),
+    NotificationsModule,
+    SubscriptionsModule,
+    AuditModule,
+  ],
   controllers: [BudgetsController],
   providers: [BudgetsService],
   exports: [BudgetsService],

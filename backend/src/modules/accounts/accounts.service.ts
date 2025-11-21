@@ -10,6 +10,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Account, Transaction } from '@database/entities';
 import { encrypt, decrypt } from '@common/utils/encryption.util';
+import { AuditService } from '../audit/audit.service';
+import { AuditAction } from '@database/entities/audit-log.entity';
 
 @Injectable()
 export class AccountsService {
@@ -21,6 +23,7 @@ export class AccountsService {
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
     private dataSource: DataSource,
+    private auditService: AuditService,
   ) {}
 
   async create(userId: string, createDto: any) {
@@ -32,7 +35,23 @@ export class AccountsService {
     }
 
     const account = this.accountRepository.create(accountData);
-    return this.accountRepository.save(account);
+    const saved = await this.accountRepository.save(account);
+
+    // Audit log (fire and forget)
+    this.auditService.createAuditLog({
+      userId,
+      action: AuditAction.CREATE,
+      entityType: 'Account',
+      entityId: saved['id'] || (saved as any).id,
+      newValues: {
+        name: saved['name'] || (saved as any).name,
+        type: saved['type'] || (saved as any).type,
+        balance: saved['balance'] || (saved as any).balance,
+      },
+      description: `Created account: ${saved['name'] || (saved as any).name}`,
+    }).catch(err => this.logger.error('Failed to create audit log', err));
+
+    return saved;
   }
 
   async findAll(userId: string, includeTemp = false) {
@@ -74,6 +93,14 @@ export class AccountsService {
     });
     if (!account) throw new NotFoundException('Account not found');
 
+    // Store old values for audit
+    const oldValues = {
+      name: account.name,
+      type: account.type,
+      balance: account.balance,
+      description: account.description,
+    };
+
     const updateData = { ...updateDto };
 
     // Encrypt statement password if provided
@@ -82,7 +109,25 @@ export class AccountsService {
     }
 
     Object.assign(account, updateData);
-    return this.accountRepository.save(account);
+    const saved = await this.accountRepository.save(account);
+
+    // Audit log
+    await this.auditService.createAuditLog({
+      userId,
+      action: AuditAction.UPDATE,
+      entityType: 'Account',
+      entityId: saved.id,
+      oldValues,
+      newValues: {
+        name: saved.name,
+        type: saved.type,
+        balance: saved.balance,
+        description: saved.description,
+      },
+      description: `Updated account: ${saved.name}`,
+    });
+
+    return saved;
   }
 
   async remove(id: string, userId: string) {
@@ -91,8 +136,22 @@ export class AccountsService {
     });
     if (!account) throw new NotFoundException('Account not found');
 
+    const accountName = account.name;
     account.isActive = false;
-    return this.accountRepository.save(account);
+    const saved = await this.accountRepository.save(account);
+
+    // Audit log
+    await this.auditService.createAuditLog({
+      userId,
+      action: AuditAction.DELETE,
+      entityType: 'Account',
+      entityId: saved.id,
+      oldValues: { name: accountName, isActive: true },
+      newValues: { name: accountName, isActive: false },
+      description: `Deleted account: ${accountName}`,
+    });
+
+    return saved;
   }
 
   async updateBalance(accountId: string, amount: number, userId?: string) {

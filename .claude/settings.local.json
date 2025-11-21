@@ -44,7 +44,9 @@
       "Bash(powershell -Command \"Stop-Process -Id 29340 -Force\")",
       "Bash(docker logs:*)",
       "Bash(docker restart:*)",
-      "Bash(cmd /c \"C:\\Users\\nayan\\OneDrive\\Desktop\\test\\ai-based-fms\\auto-fix-auth.bat\")"
+      "Bash(cmd /c \"C:\\Users\\nayan\\OneDrive\\Desktop\\test\\ai-based-fms\\auto-fix-auth.bat\")",
+      "Bash(git checkout:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

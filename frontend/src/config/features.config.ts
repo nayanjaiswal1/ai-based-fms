@@ -57,7 +57,7 @@ export const FEATURE_LIMITS = {
     maxTransactions: 100,
     maxAccounts: 2,
     maxCategories: 10,
-    maxBudgets: 0,
+    maxBudgets: 2,
     dataRetentionDays: 30,
     exportFormats: [],
   },

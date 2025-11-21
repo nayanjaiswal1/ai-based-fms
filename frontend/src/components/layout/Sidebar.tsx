@@ -54,7 +54,7 @@ function NavItem({ item }: NavItemProps) {
       }
     >
       <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-      <span className="truncate">{item.label}</span>
+      <span className="flex-1 truncate">{item.label}</span>
     </NavLink>
   );
 }

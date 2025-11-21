@@ -14,6 +14,8 @@ import { BudgetsService } from './budgets.service';
 import { CreateBudgetDto, UpdateBudgetDto } from './dto/budget.dto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { UsageLimitGuard } from '@common/guards/usage-limit.guard';
+import { CheckUsageLimit } from '@common/decorators/usage-limit.decorator';
 
 @ApiTags('Budgets')
 @ApiBearerAuth()

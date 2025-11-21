@@ -90,9 +90,9 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
       />
 
       {/* Drawer */}
-      <div className="fixed inset-y-0 left-0 z-50 w-64 transform bg-background shadow-xl transition-transform lg:hidden">
+      <div className="fixed inset-y-0 left-0 z-50 w-64 transform bg-background shadow-xl transition-transform lg:hidden flex flex-col">
         {/* Header */}
-        <div className="flex h-16 items-center justify-between border-b px-6">
+        <div className="flex h-16 items-center justify-between border-b px-6 flex-shrink-0">
           <h1 className="text-xl font-bold text-foreground">FMS</h1>
           <button
             onClick={onClose}
@@ -104,7 +104,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 py-4 min-h-0">
           {navigation.map((item) => (
             <NavLink
               key={item.name}
@@ -153,7 +153,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
         </nav>
 
         {/* Footer (optional) */}
-        <div className="border-t p-4">
+        <div className="border-t p-4 flex-shrink-0">
           <p className="text-xs text-muted-foreground text-center">
             Finance Management System
           </p>

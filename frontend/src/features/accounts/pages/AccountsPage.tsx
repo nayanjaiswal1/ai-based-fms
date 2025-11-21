@@ -364,7 +364,8 @@ export default function AccountsPage() {
             return (
               <div
                 key={account.id}
-                className="rounded-lg bg-white p-4 sm:p-6 shadow-sm transition-shadow hover:shadow-md"
+                onClick={() => navigate(`/accounts/${account.id}`)}
+                className="rounded-lg bg-white p-4 sm:p-6 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -380,14 +381,20 @@ export default function AccountsPage() {
                   </div>
                   <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                     <button
-                      onClick={() => handleEdit(account)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(account);
+                      }}
                       className="rounded-lg p-2 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                       aria-label="Edit account"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(account.id, account.name)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(account.id, account.name);
+                      }}
                       className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
                       aria-label="Delete account"
                     >
@@ -419,7 +426,10 @@ export default function AccountsPage() {
                     {getReconciliationBadge(account.reconciliationStatus, account.lastReconciledAt)}
                   </div>
                   <button
-                    onClick={() => handleReconcile(account)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReconcile(account);
+                    }}
                     className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline"
                   >
                     <GitCompare className="w-3 h-3" />

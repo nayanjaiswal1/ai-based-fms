@@ -7,7 +7,7 @@ import MobileNav from './MobileNav';
 import { SkipNav } from '@/components/a11y';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { API_CONFIG } from '@/config/api.config';
-import { QuickAddFAB } from '@/components/quick-add';
+import { AIChatbot } from '@/components/ai-chatbot';
 
 export default function Layout() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -80,8 +80,10 @@ export default function Layout() {
         </main>
       </div>
 
+      {/* AI Chatbot - Floating Widget */}
+      <AIChatbot />
+
       {/* Quick Add Floating Action Button */}
-      <QuickAddFAB />
     </div>
   );
 }

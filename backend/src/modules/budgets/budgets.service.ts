@@ -4,6 +4,9 @@ import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { Budget, Transaction, NotificationType, TransactionType } from '@database/entities';
 import { CreateBudgetDto, UpdateBudgetDto } from './dto/budget.dto';
 import { NotificationsGateway } from '@modules/notifications/notifications.gateway';
+import { SubscriptionsService } from '@modules/subscriptions/subscriptions.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditAction } from '@database/entities/audit-log.entity';
 
 @Injectable()
 export class BudgetsService {
@@ -16,15 +19,44 @@ export class BudgetsService {
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
     @Optional() private notificationsGateway: NotificationsGateway,
+    @Optional() private subscriptionsService: SubscriptionsService,
+    private auditService: AuditService,
   ) {}
 
   async create(userId: string, createDto: CreateBudgetDto) {
+    // Check usage limit
+    if (this.subscriptionsService) {
+      const hasReachedLimit = await this.subscriptionsService.checkUsageLimit(userId, 'maxBudgets');
+      if (hasReachedLimit) {
+        const subscription = await this.subscriptionsService.getCurrentSubscription(userId);
+        const limit = subscription.limits.maxBudgets;
+        throw new ForbiddenException(
+          `You have reached your budgets limit of ${limit}. Upgrade your plan to add more.`,
+        );
+      }
+    }
+
     const budget = this.budgetRepository.create({
       ...createDto,
       userId,
     });
 
     const saved = await this.budgetRepository.save(budget);
+
+    // Increment usage tracking
+    if (this.subscriptionsService) {
+      await this.subscriptionsService.incrementUsage(userId, 'budgets', 1);
+    }
+
+    // Audit log
+    await this.auditService.createAuditLog({
+      userId,
+      action: AuditAction.CREATE,
+      entityType: 'Budget',
+      entityId: saved.id,
+      newValues: { name: saved.name, amount: saved.amount, type: saved.type },
+      description: `Created budget: ${saved.name} ($${saved.amount})`,
+    });
 
     // Return budget with calculated spent amount
     return this.findOne(saved.id, userId);
@@ -83,14 +115,51 @@ export class BudgetsService {
 
   async update(id: string, userId: string, updateDto: UpdateBudgetDto) {
     const budget = await this.findOne(id, userId);
+
+    // Store old values
+    const oldValues = { name: budget.name, amount: budget.amount, type: budget.type };
+
     Object.assign(budget, updateDto);
-    return this.budgetRepository.save(budget);
+    const saved = await this.budgetRepository.save(budget);
+
+    // Audit log
+    await this.auditService.createAuditLog({
+      userId,
+      action: AuditAction.UPDATE,
+      entityType: 'Budget',
+      entityId: saved.id,
+      oldValues,
+      newValues: { name: saved.name, amount: saved.amount, type: saved.type },
+      description: `Updated budget: ${saved.name}`,
+    });
+
+    return saved;
   }
 
   async remove(id: string, userId: string) {
     const budget = await this.findOne(id, userId);
+    const budgetName = budget.name;
+
     budget.isActive = false;
-    return this.budgetRepository.save(budget);
+    const result = await this.budgetRepository.save(budget);
+
+    // Decrement usage tracking
+    if (this.subscriptionsService) {
+      await this.subscriptionsService.incrementUsage(userId, 'budgets', -1);
+    }
+
+    // Audit log
+    await this.auditService.createAuditLog({
+      userId,
+      action: AuditAction.DELETE,
+      entityType: 'Budget',
+      entityId: result.id,
+      oldValues: { name: budgetName, isActive: true },
+      newValues: { name: budgetName, isActive: false },
+      description: `Deleted budget: ${budgetName}`,
+    });
+
+    return result;
   }
 
   async updateSpentAmount(budgetId: string) {
