@@ -1,0 +1,61 @@
+{
+  "name": "ai-based-fms",
+  "version": "1.0.0",
+  "description": "Finance Management System - Full Stack Application",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "dev:all": "concurrently -n \"DOCKER,BACKEND,FRONTEND\" -c \"yellow,blue,green\" \"npm run docker:up\" \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:ps": "docker-compose ps",
+    "backend:dev": "cd backend && npm run start:dev",
+    "backend:debug": "cd backend && npm run start:debug",
+    "backend:build": "cd backend && npm run build",
+    "backend:prod": "cd backend && npm run start:prod",
+    "backend:lint": "cd backend && npm run lint",
+    "backend:test": "cd backend && npm test",
+    "backend:test:e2e": "cd backend && npm run test:e2e",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build",
+    "frontend:preview": "cd frontend && npm run preview",
+    "frontend:lint": "cd frontend && npm run lint",
+    "frontend:test": "cd frontend && npm test",
+    "db:migrate": "cd backend && npm run migration:run",
+    "db:migrate:revert": "cd backend && npm run migration:revert",
+    "db:seed": "cd backend && npm run seed",
+    "db:create-admin": "cd backend && npm run create-admin",
+    "lint": "npm run backend:lint && npm run frontend:lint",
+    "build": "npm run backend:build && npm run frontend:build",
+    "test": "npm run backend:test && npm run frontend:test",
+    "format:backend": "cd backend && npm run format",
+    "format:frontend": "cd frontend && npm run format",
+    "format": "npm run format:backend && npm run format:frontend",
+    "setup:dev": "npm run docker:up && timeout /t 10 && npm run db:migrate && npm run db:seed",
+    "clean": "rimraf backend/dist frontend/dist backend/node_modules/.cache frontend/node_modules/.cache"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ai-based-fms.git"
+  },
+  "keywords": [
+    "finance",
+    "management",
+    "ai",
+    "nestjs",
+    "react",
+    "typescript"
+  ],
+  "author": "FMS Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
