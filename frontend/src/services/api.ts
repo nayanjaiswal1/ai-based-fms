@@ -330,6 +330,41 @@ export const chatApi = {
   clearHistory: (conversationId: string) => api.delete(`/chat/history/${conversationId}`),
   executeCommand: (data: any) => api.post('/chat/command', data),
   getSuggestions: () => api.get('/chat/suggestions'),
+  uploadDocument: (file: File, conversationId?: string, accountId?: string, provider?: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (conversationId) formData.append('conversationId', conversationId);
+    if (accountId) formData.append('accountId', accountId);
+    if (provider) formData.append('provider', provider);
+
+    return api.post('/chat/upload-document', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};
+
+export const documentProcessingApi = {
+  uploadDocument: (file: File, provider?: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (provider) formData.append('provider', provider);
+
+    return api.post('/document-processing/process', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  reprocessDocument: (requestId: string, newProvider: string) =>
+    api.post(`/document-processing/${requestId}/reprocess`, { provider: newProvider }),
+  saveEditedData: (responseId: string, editedData: any) =>
+    api.patch(`/document-processing/response/${responseId}/edit`, { editedData }),
+  getRetryHistory: (requestId: string) =>
+    api.get(`/document-processing/${requestId}/retry-history`),
+  mergeResults: (responseIds: string[]) =>
+    api.post('/document-processing/merge', { responseIds }),
+  getHistory: (limit?: number, offset?: number) =>
+    api.get('/document-processing/history', { params: { limit, offset } }),
+  getRequest: (requestId: string) =>
+    api.get(`/document-processing/${requestId}`),
 };
 
 export const adminApi = {

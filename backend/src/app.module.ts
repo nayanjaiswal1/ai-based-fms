@@ -30,10 +30,11 @@ import { GroupsModule } from '@modules/groups/groups.module';
 import { SharedExpensesModule } from '@modules/shared-expenses/shared-expenses.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
 // import { AnalyticsModule } from '@modules/analytics/analytics.module';
-// import { AiModule } from '@modules/ai/ai.module';
+import { AiModule } from '@modules/ai/ai.module';
 import { ImportModule } from '@modules/import/import.module';
 import { EmailModule } from '@modules/email/email.module';
-// import { ChatModule } from '@modules/chat/chat.module';
+import { ChatModule } from '@modules/chat/chat.module';
+import { DocumentProcessingModule } from '@modules/document-processing/document-processing.module';
 import { AdminModule } from '@modules/admin/admin.module';
 import { SessionsModule } from '@modules/sessions/sessions.module';
 import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module';
@@ -101,11 +102,12 @@ import { ReportsModule } from '@modules/reports/reports.module';
     // LendBorrowModule,
     NotificationsModule.forRoot(),
     // AnalyticsModule,
-    // AiModule,
+    AiModule,
     InsightsModule,
     ImportModule,
     EmailModule,
-    // ChatModule,
+    ChatModule,
+    DocumentProcessingModule,
     AdminModule,
     SessionsModule,
     SubscriptionsModule,

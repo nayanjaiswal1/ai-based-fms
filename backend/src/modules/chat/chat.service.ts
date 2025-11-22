@@ -4,7 +4,11 @@ import { Repository, Between } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { OpenAI } from 'openai';
 import { Transaction, Category, TransactionType, TransactionSource } from '@database/entities';
-import { SendMessageDto, ProcessCommandDto } from './dto/chat.dto';
+import { SendMessageDto, ProcessCommandDto, ProcessDocumentDto } from './dto/chat.dto';
+import { DocumentProcessingService } from '../document-processing/document-processing.service';
+import { DocumentProcessingProvider } from '@database/entities/document-processing-request.entity';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -28,6 +32,7 @@ export class ChatService {
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
     private configService: ConfigService,
+    private documentProcessingService: DocumentProcessingService,
   ) {
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
     if (apiKey) {
@@ -180,6 +185,117 @@ For other queries, respond conversationally.`,
         { text: 'Budget status', command: 'Show my budget status' },
       ],
     };
+  }
+
+  async processDocument(userId: string, file: Express.Multer.File, dto: ProcessDocumentDto) {
+    try {
+      // Use DocumentProcessingService for multi-provider support
+      const provider = dto.provider as DocumentProcessingProvider || undefined;
+
+      const result = await this.documentProcessingService.processDocument({
+        userId,
+        file,
+        provider,
+      });
+
+      return {
+        success: true,
+        extractedData: result.response.extractedData,
+        requestId: result.request.id,
+        responseId: result.response.id,
+        provider: result.response.provider,
+        confidence: result.response.confidence,
+        fileInfo: {
+          fileName: file.originalname,
+          filePath: result.request.filePath,
+          mimeType: file.mimetype,
+          size: file.size,
+        },
+        conversationId: dto.conversationId,
+      };
+    } catch (error) {
+      throw new BadRequestException('Failed to process document: ' + error.message);
+    }
+  }
+
+  private async processImageDocument(file: Express.Multer.File, categories: Category[]) {
+    // Convert buffer to base64
+    const base64Image = file.buffer.toString('base64');
+    const dataUrl = `data:${file.mimetype};base64,${base64Image}`;
+
+    const categoryList = categories
+      .map((c) => `- ${c.name}`)
+      .join('\n');
+
+    const prompt = `You are a financial document analyzer. Extract transaction details from this receipt/invoice image.
+
+Available Categories:
+${categoryList}
+
+Extract and return ONLY a valid JSON object with these fields:
+{
+  "merchantName": "merchant or vendor name",
+  "amount": total amount as number,
+  "date": "YYYY-MM-DD" (if visible, otherwise null),
+  "items": ["item1", "item2"] (if itemized),
+  "category": "suggested category from the list above",
+  "paymentMethod": "cash/card/etc" (if visible, otherwise null),
+  "description": "brief description for the transaction",
+  "confidence": "high/medium/low" (your confidence in the extraction)
+}
+
+If a field cannot be determined, use null. Be accurate and conservative in your extraction.`;
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: dataUrl } },
+            ],
+          },
+        ],
+        max_tokens: 1000,
+      });
+
+      const responseText = completion.choices[0]?.message?.content?.trim();
+      if (!responseText) {
+        throw new Error('No response from AI');
+      }
+
+      // Extract JSON from response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('Could not extract data from document');
+      }
+
+      const parsedData = JSON.parse(jsonMatch[0]);
+
+      // Match category with user's categories
+      const matchedCategory = categories.find(
+        (c) => c.name.toLowerCase() === parsedData.category?.toLowerCase(),
+      );
+
+      return {
+        ...parsedData,
+        categoryId: matchedCategory?.id || null,
+        categoryName: matchedCategory?.name || 'Uncategorized',
+        type: parsedData.amount > 0 ? TransactionType.EXPENSE : TransactionType.INCOME,
+      };
+    } catch (error) {
+      throw new Error('Failed to extract data from image: ' + error.message);
+    }
+  }
+
+  private async processPDFDocument(file: Express.Multer.File, categories: Category[]) {
+    // For PDF processing, we could use pdf-parse or similar library
+    // For now, we'll return a placeholder that indicates PDF processing needs additional setup
+    throw new BadRequestException(
+      'PDF processing requires additional setup. Please use image files (JPG, PNG) for now.',
+    );
   }
 
   private async executeCreateTransaction(userId: string, data: any) {

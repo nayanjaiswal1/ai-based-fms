@@ -35,3 +35,20 @@ export class ProcessCommandDto {
   @ApiProperty({ example: { description: 'Coffee', amount: 5.50 } })
   params: Record<string, any>;
 }
+
+export class ProcessDocumentDto {
+  @ApiPropertyOptional({ example: 'uuid' })
+  @IsOptional()
+  @IsString()
+  conversationId?: string;
+
+  @ApiPropertyOptional({ example: 'uuid' })
+  @IsOptional()
+  @IsString()
+  accountId?: string;
+
+  @ApiPropertyOptional({ example: 'openai', enum: ['openai', 'gemini', 'ocr_space'] })
+  @IsOptional()
+  @IsString()
+  provider?: string;
+}
